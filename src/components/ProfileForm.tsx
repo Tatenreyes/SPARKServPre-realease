@@ -2,28 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { Camera, Check, Loader2, MapPin, Phone, Save, UserRound, Wrench, X } from "lucide-react";
+import { APPLIANCE_TYPES } from "@/lib/appliance-brands";
 
 type ProfileFormProps = { role: "customer" | "technician" };
 type Profile = { first_name: string; last_name: string; middle_initial: string | null; email: string; phone: string | null; address: string | null; avatar_url: string | null };
 type TechnicianProfile = { specializations: string[]; experience_years: number; availability: boolean } | null;
 
-const APPLIANCE_TYPES = [
-  "Refrigerator",
-  "Air Conditioner",
-  "Washing Machine",
-  "Television",
-  "Electric Fan",
-  "Microwave Oven",
-  "Rice Cooker",
-  "Electric Stove",
-  "Induction Cooker",
-  "Water Dispenser",
-  "Electric Kettle",
-  "Vacuum Cleaner",
-  "Clothes Dryer",
-  "Freezer",
-  "Water Heater",
-];
+/**
+ * The specialisations a technician can claim are the same appliance list the
+ * customer registers (`src/lib/appliance-brands.ts`) — a technician can never
+ * cover an appliance a customer cannot request, or vice versa.
+ */
 
 export default function ProfileForm({ role }: ProfileFormProps) {
   const [profile, setProfile] = useState<Profile>({ first_name: "", last_name: "", middle_initial: "", email: "", phone: "", address: "", avatar_url: null });

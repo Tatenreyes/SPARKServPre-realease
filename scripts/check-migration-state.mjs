@@ -402,6 +402,27 @@ const MIGRATIONS = [
     // fires on `bookings`, so it must not be applied before either of them exists.
     prerequisiteOf: [],
   },
+  {
+    // Step 19, the workmanship warranty on a completed repair. Both columns are
+    // probeable, and `service_warranty_days` is the function signal: it is granted to
+    // service_role, so PostgREST lists it. The trigger function cannot be the signal
+    // — a `returns trigger` function is not callable as an RPC and never appears in
+    // the OpenAPI document.
+    order: 19,
+    file: "supabase/migration_service_warranty.sql",
+    purpose:
+      "A completed repair records the workmanship warranty it carries (service_history.warranty_days / warranty_until, service_warranty_days(), the stamp_service_warranty BEFORE INSERT trigger)",
+    columns: [
+      ["service_history", "warranty_days"],
+      ["service_history", "warranty_until"],
+    ],
+    tables: [],
+    functions: ["service_warranty_days"],
+    // It reads `system_settings` and stamps rows of `service_history`, so it must not
+    // be applied before those tables exist (they arrive with schema.sql / the base
+    // migrations).
+    prerequisiteOf: [],
+  },
 ];
 
 /**

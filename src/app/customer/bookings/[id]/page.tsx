@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, MessageSquareText, Star } from "lucide-react";
+import { ChevronRight, MessageSquareText, ReceiptText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import StatusBadge from "@/components/StatusBadge";
@@ -8,6 +8,8 @@ import PaymentForm from "@/components/PaymentForm";
 import CustomerInspectionControl from "@/components/CustomerInspectionControl";
 import CancelBookingControl from "@/components/CancelBookingControl";
 import RatingForm from "@/components/RatingForm";
+import AssignedTechnicianCard from "@/components/AssignedTechnicianCard";
+import { buildTechnicianProfile } from "@/lib/technician-profile";
 
 export default async function CustomerBookingDetailPage({
   params,
@@ -30,7 +32,7 @@ export default async function CustomerBookingDetailPage({
 
   const { data: technicianUser } = await supabase
     .from("users")
-    .select("name")
+    .select("id, name, avatar_url")
     .eq("id", booking.technician_id)
     .single();
 
@@ -54,20 +56,26 @@ export default async function CustomerBookingDetailPage({
     .eq("booking_id", params.id)
     .maybeSingle();
 
-  // The technician's live average, computed from real ratings. The cached
-  // `technicians.rating` column has no trigger maintaining it yet, so deriving
-  // it here avoids displaying a permanent zero.
+  // Who is coming: the published profile, built from the real ratings plus the
+  // technician's own record. The cached `technicians.rating` column has no trigger
+  // maintaining it, so the average is derived from the `ratings` rows — and a
+  // technician with no reviews shows no rating rather than a permanent zero.
   const { data: technicianRatings } = await supabase
     .from("ratings")
     .select("rating")
     .eq("technician_id", booking.technician_id);
 
-  const technicianReviewCount = technicianRatings?.length ?? 0;
-  const technicianAvg =
-    technicianReviewCount > 0
-      ? (technicianRatings ?? []).reduce((sum, row) => sum + row.rating, 0) /
-        technicianReviewCount
-      : null;
+  const { data: technicianRecord } = await supabase
+    .from("technicians")
+    .select("approved, jobs_completed, experience_years, specializations")
+    .eq("id", booking.technician_id)
+    .maybeSingle();
+
+  const technicianProfile = buildTechnicianProfile({
+    user: technicianUser,
+    technician: technicianRecord,
+    ratings: technicianRatings,
+  });
 
   // What the customer owes. The technician records `final_cost` when finishing
   // the job; legacy bookings may not have it, so fall back to the accepted
@@ -93,16 +101,46 @@ export default async function CustomerBookingDetailPage({
           <p className="text-sm text-ink/50">
             Scheduled: {new Date(booking.scheduled_at).toLocaleString()}
           </p>
-          {technicianAvg != null && (
-            <p className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-warn-ink">
-              <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
-              {technicianAvg.toFixed(1)} · {technicianReviewCount} review
-              {technicianReviewCount === 1 ? "" : "s"}
-            </p>
-          )}
         </div>
         <StatusBadge status={booking.status} />
       </div>
+
+      {/* Who is coming. This is the moment a customer decides whether to trust the
+          visit, so the card carries the photo, the verification the queue itself
+          applies, the rating from real reviews and the technician's record — and no
+          contact details, which stay in the booking thread. */}
+      {technicianProfile && (
+        <section className="rounded-card border border-ink/8 bg-surface p-5 shadow-card">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+            Your technician
+          </p>
+          <AssignedTechnicianCard technician={technicianProfile} className="mt-3" />
+        </section>
+      )}
+
+      {/* The job order is the record the customer keeps: the appliance, the work
+          performed, the parts, the amount and the verified reference, on one
+          printable page. It exists only once the repair is closed, so the link
+          appears only then — the receipt route explains itself otherwise. */}
+      {booking.status === "completed" && (
+        <Link
+          href={`/customer/bookings/${booking.id}/receipt`}
+          className="flex items-center justify-between gap-3 rounded-card border border-brand-300 bg-brand-soft/60 p-4 shadow-card transition hover:border-brand-400"
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-brand-ink">
+              <ReceiptText className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate font-medium text-ink">View your job order</span>
+              <span className="block text-sm text-ink/50">
+                The record of this repair — printable and keepable
+              </span>
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-ink/35" aria-hidden="true" />
+        </Link>
+      )}
 
       {booking.status === "pending" && (
         <CancelBookingControl bookingId={booking.id} scheduledAt={booking.scheduled_at} />

@@ -4,6 +4,7 @@ import { getCurrentUser, AuthError } from "@/lib/auth";
 import { assignTechnician } from "@/lib/assignment";
 import { readRequestedWindow } from "@/lib/service-time";
 import { getIssueById } from "@/lib/appliance-issues";
+import { buildTechnicianProfile, type TechnicianProfile } from "@/lib/technician-profile";
 import {
   isValidLatitude,
   isValidLongitude,
@@ -203,14 +204,31 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    let assignedTechnician = null;
+    // The published profile, not the raw rows. Assembled on the server so the
+    // customer never receives a technician's contact columns — the profile shape
+    // has none. Read with the service-role client because an assigned technician's
+    // `technicians` row is not readable by the customer role.
+    let assignedTechnician: TechnicianProfile | null = null;
     if (serviceRoleClient && assigned.assigned_technician_id) {
-      const { data: tech } = await serviceRoleClient
-        .from("users")
-        .select("id, name")
-        .eq("id", assigned.assigned_technician_id)
-        .single();
-      assignedTechnician = tech ?? null;
+      const technicianId = assigned.assigned_technician_id;
+      const [userResult, technicianResult, ratingsResult] = await Promise.all([
+        serviceRoleClient
+          .from("users")
+          .select("id, name, avatar_url")
+          .eq("id", technicianId)
+          .single(),
+        serviceRoleClient
+          .from("technicians")
+          .select("approved, jobs_completed, experience_years, specializations")
+          .eq("id", technicianId)
+          .maybeSingle(),
+        serviceRoleClient.from("ratings").select("rating").eq("technician_id", technicianId),
+      ]);
+      assignedTechnician = buildTechnicianProfile({
+        user: userResult.data,
+        technician: technicianResult.data,
+        ratings: ratingsResult.data,
+      });
     }
 
     return NextResponse.json(

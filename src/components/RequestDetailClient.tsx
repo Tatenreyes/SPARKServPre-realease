@@ -9,16 +9,12 @@ import ServiceLocationCard from "@/components/ServiceLocationCard";
 import StatusBadge from "@/components/StatusBadge";
 import { isOpenEstimateStatus } from "@/lib/estimate-costs";
 import type { EstimateRow, ServiceRequestRow } from "@/types/database";
-
-interface AssignedTechnician {
-  id: string;
-  name: string;
-}
+import type { TechnicianProfile } from "@/lib/technician-profile";
 
 interface RequestDetailClientProps {
   request: ServiceRequestRow;
   initialEstimates: EstimateRow[];
-  assignedTechnician: AssignedTechnician | null;
+  assignedTechnician: TechnicianProfile | null;
   /** IANA zone the queue and the booking clocks run on (e.g. Asia/Manila). */
   serviceTimeZone: string;
   /**

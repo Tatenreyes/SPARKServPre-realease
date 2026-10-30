@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SPARKServ">
+  <!--
+    Placeholder app mark. A full-bleed brand-blue field with a white spark, drawn
+    inside the maskable safe area: Android may crop this to a circle of 80% of the
+    canvas (a 410px circle centred on 256,256), and the bolt spans x 176–300,
+    y 96–416, which fits inside it with room to spare.
+
+    This exists so the manifest never points at a missing file. Replace it — or add
+    the 192/512/maskable PNGs beside it — before the app is presented as installable;
+    see the comment in `src/app/manifest.ts`.
+  -->
+  <rect width="512" height="512" fill="#0E429F" />
+  <path d="M300 96 176 288h72l-36 128 124-192h-72z" fill="#FFFFFF" />
+</svg>

@@ -23,6 +23,8 @@
 | `supabase/migration_reject_payment.sql` | **Batch 3 (step 16).** Database-enforced payment rejection: `reject_payment()`, the rejection metadata, the decision trigger and the narrowed `payments` privileges. |
 | `supabase/migration_booking_eligibility.sql` | **Step 17.** A booking requires an assigned technician who is still QUALIFIED for the request's appliance type: `technician_qualification_failure()`, `appliance_has_qualified_technician()`, and the re-declared `create_booking_atomic()` / `technician_eligibility_failure()`. |
 | `supabase/migration_cancel_release.sql` | **Step 18.** A cancellation releases the technician's slot and refreshes their operational status in the same transaction, for every writer: the `release_slot_after_booking_cancel` AFTER UPDATE trigger on `bookings`, plus the `booking_status_holds_slot()` predicate. |
+| `supabase/migration_service_warranty.sql` | **Step 19.** A completed repair records the workmanship warranty it carries: `service_history.warranty_days` / `warranty_until`, the `service_warranty_days()` reader and the `stamp_service_warranty` BEFORE INSERT trigger. The job order prints a warranty date only when a row carries one — the system records the period and does not administer claims. |
+
 | `supabase/migration_technician_queue.sql` | Historical, superseded by `schema.sql` + the redesign. Do not apply it on top of them. |
 | `migration_appliances_tickets.sql`, `migration_appliance_centric_flow.sql`, `migration_notifications.sql`, `migration_profile_photos.sql`, `migration_security_hardening.sql`, `migration_system_settings.sql`, `migration_visits_payments.sql`, `migration_fix_technician_signup.sql` | Pre-queue history: applied on the live project already, and folded into `schema.sql` for fresh installs. Not part of the upgrade path below. |
 
@@ -82,7 +84,7 @@ rejected row that the old route recorded as verified is reported as a notice and
 exactly as it is. Neither case is cleaned up automatically.
 
 Step 17 is the booking eligibility invariant and **is applied** — `npm run db:check`
-reports all 18. It had to come after 3 (it re-declares `technician_eligibility_failure()`,
+reports all 19. It had to come after 3 (it re-declares `technician_eligibility_failure()`,
 which the queue engine creates) and after 15 (it re-declares `create_booking_atomic()`).
 
 Step 18 is the atomic cancellation release and **is applied**. It only
@@ -92,7 +94,26 @@ creates functions and a trigger, so it needed no preflight. It had to come after
 
 ```
 18. supabase/migration_cancel_release.sql
+19. supabase/migration_service_warranty.sql
 ```
+
+Step 19 is the workmanship warranty and **is applied** — `npm run db:check` reports all
+19 (79 checks passed, including `service_history.warranty_days`, `warranty_until` and
+`service_warranty_days()`). It only adds two columns, a constraint, a setting, two
+functions and a trigger, so it needs no preflight and no ordering beyond the tables it
+touches (`service_history` and `system_settings`, both from the base schema). It is
+safe to re-run: the columns are `if not exists`, the constraint is dropped before it is
+added, the setting insert does nothing when the key already exists (so a tuned value is
+never reset), and the trigger is dropped before it is created. It deliberately does
+**not** re-declare `confirm_payment()`: stamping the row is the archive table's own
+invariant, so it covers every writer rather than one function.
+
+One thing `db:check` **cannot** confirm: the `stamp_service_warranty` trigger. A
+`returns trigger` function is not callable as an RPC, so it never appears in the
+PostgREST document — the two columns and the reader are probeable, the trigger is not.
+Prove it by completing a repair and reading `service_history` for that booking:
+`warranty_days` should be 30 and `warranty_until` should be the completion date plus
+30 days, counted in the service timezone.
 
 **The matching code is written but not yet deployed.** The trigger makes the release
 automatic, so a route that also released the slot itself would decrement twice for every

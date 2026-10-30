@@ -85,7 +85,7 @@ export default function DashboardTopbar({
   return (
     <>
       {signingOut && <LoadingScreen message="Signing you out..." />}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#070D12]/95 text-white shadow-sm backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#070D12]/95 text-white shadow-sm backdrop-blur print:hidden">
         <div className="mx-auto flex h-16 w-full max-w-[1800px] items-center gap-3 px-4 sm:px-6 lg:px-8">
           {/* Desktop rail collapse toggle. Its own control, distinct from the
               hamburger below (which only opens the mobile drawer): the rail is a

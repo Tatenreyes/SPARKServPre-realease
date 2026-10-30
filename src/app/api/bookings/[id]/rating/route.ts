@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
+import { notify } from "@/lib/notifications";
 
 const MAX_COMMENT_LENGTH = 1000;
 
@@ -98,6 +99,22 @@ export async function POST(
         );
       }
       throw error;
+    }
+
+    // The technician hears about the rating. Sent after the row exists, so the
+    // notification can never announce a rating that failed to save.
+    try {
+      await notify(createServiceRoleClient(), {
+        userId: booking.technician_id,
+        type: "rating_received",
+        title: `You received a ${rating}-star rating`,
+        body: comment
+          ? comment.slice(0, 120)
+          : "Open your jobs to see how the customer rated this repair.",
+        link: "/technician/jobs",
+      });
+    } catch (notifyError) {
+      console.error("Rating notification failed", notifyError);
     }
 
     return NextResponse.json({ data }, { status: 201 });

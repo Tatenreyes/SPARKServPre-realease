@@ -10,7 +10,7 @@ rules themselves are in `QUEUE-SYSTEM.md`; how to re-prove them is in
 The technician queue redesign, Batches 1–3, the booking-eligibility invariant
 (step 17) and the atomic cancellation release (step 18) are **code-complete and
 locally verified, and the live database now has every migration applied —
-steps 1–18** (`npm run db:check` exits 0 with 76 checks passed). What is still
+steps 1–19** (`npm run db:check` exits 0 with 79 checks passed). What is still
 owed is on the code side: the whole implementation sits uncommitted in the
 working tree, and no deployment has been verified. Until the release is committed
 and deployed, the *deployed* app is not the app this document describes.
@@ -24,7 +24,7 @@ and deployed, the *deployed* app is not the app this document describes.
 | Technician / Admin / Customer screens | Implemented; build succeeds, `/technician/queue` present in the route table |
 | Forbidden behaviour removed | Ranking endpoint, scoring engine and ranked card deleted |
 | Documentation | Updated across 8 files (see below) |
-| **Live database migration** | **Applied — steps 1–18; `npm run db:check` exits 0 (76 checks passed)** |
+| **Live database migration** | **Applied — steps 1–19; `npm run db:check` exits 0 (79 checks passed)** |
 | **Application code** | **Uncommitted — the whole release is in the working tree (93 modified, 29 deleted, 93 untracked paths)** |
 | **Deployment** | **Not verified — no deployment URL is recorded in this repo; do not describe production as running this code** |
 | **Live verification** (`npm run verify:queue`) | **Pending — deliberately not run: it creates and cleans up live fixtures** |

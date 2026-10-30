@@ -391,6 +391,29 @@ img {
   }
 }
 
+/* ---------------------------------------------------------------- printing
+   The job order (`JobOrderDocument`) is the only printable document in the app.
+   Printing a route prints the whole page, so the workspace chrome has to be
+   removed rather than left to a `print:` utility on each element: the sidebar and
+   the fixed bottom bars are styled by `@apply`'d component classes, and this rule
+   is declared outside `@layer components` and after `@tailwind utilities`, so it
+   wins the cascade the same way the mobile-clearance rules below do. The topbar
+   is a plain `<header>`, so it hides itself with `print:hidden` in place.
+
+   The page margin is set here too: the browser's default is wide enough that a
+   job order comes out with a needlessly small text column. */
+@page {
+  margin: 12mm;
+}
+
+@media print {
+  #dashboard-sidebar,
+  .spark-bottom-nav,
+  .spark-sticky-action {
+    display: none !important;
+  }
+}
+
 /* ------------------------------------------------------- mobile clearance
    Declared outside `@layer components` and at the end of the sheet so they win
    the cascade against the column's own `py-5` / `sm:py-6` padding utility —

@@ -30,6 +30,15 @@ import {
   getIssueById,
 } from "@/lib/appliance-issues";
 import {
+  APPLIANCE_TYPES,
+  BRAND_OTHER,
+  MAX_BRAND_LENGTH,
+  brandOptionsFor,
+  cleanBrand,
+  isListedBrand,
+  sanitiseBrandInput,
+} from "@/lib/appliance-brands";
+import {
   MAX_MODEL_NUMBER_LENGTH,
   MAX_SERIAL_NUMBER_LENGTH,
   cleanCode,
@@ -43,6 +52,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import { formatCoordinates, toServiceCoordinates, type ServiceCoordinates } from "@/lib/geo";
 import type { ApplianceRow, AssignmentStatus } from "@/types/database";
+import type { TechnicianProfile } from "@/lib/technician-profile";
 
 /**
  * One control size for the whole form: 44px tall, 16px text on a phone.
@@ -75,34 +85,13 @@ const ALL_SECTIONS_OPEN: Record<SectionKey, boolean> = {
   summary: true,
 };
 
-const APPLIANCE_TYPES = [
-  "Refrigerator",
-  "Air Conditioner",
-  "Washing Machine",
-  "Television",
-  "Electric Fan",
-  "Microwave Oven",
-  "Rice Cooker",
-  "Electric Stove",
-  "Induction Cooker",
-  "Water Dispenser",
-  "Electric Kettle",
-  "Vacuum Cleaner",
-  "Clothes Dryer",
-  "Freezer",
-  "Water Heater",
-];
-
 /**
- * Brand shortcuts per appliance. The appliance ISSUE list no longer lives here:
- * it is the canonical catalogue in `src/lib/appliance-issues.ts`, shared with the
- * multilingual matcher and the troubleshooting guides.
+ * The appliance list and the brand choices now come from
+ * `src/lib/appliance-brands.ts`, which derives the appliances from the canonical
+ * issue catalogue. They used to be re-typed here — and the brand table here
+ * covered only three appliances, so every other appliance's Brand field offered
+ * nothing but "Other" (see that module's header).
  */
-const BRANDS: Record<string, string[]> = {
-  Refrigerator: ["Samsung", "LG", "Panasonic", "Whirlpool", "Haier", "Condura", "Fujidenzo", "Sharp", "Electrolux", "Other"],
-  "Air Conditioner": ["Samsung", "LG", "Panasonic", "Daikin", "Mitsubishi", "Carrier", "Other"],
-  "Washing Machine": ["Samsung", "LG", "Panasonic", "Whirlpool", "Haier", "Condura", "Fujidenzo", "Other"],
-};
 
 export default function RequestRepairWizard() {
   const router = useRouter();
@@ -116,7 +105,7 @@ export default function RequestRepairWizard() {
   const [submitted, setSubmitted] = useState(false);
   const [serviceRequestId, setServiceRequestId] = useState<string | null>(null);
   const [assignmentStatus, setAssignmentStatus] = useState<AssignmentStatus>("matching");
-  const [assignedTechnician, setAssignedTechnician] = useState<{ id: string; name: string } | null>(null);
+  const [assignedTechnician, setAssignedTechnician] = useState<TechnicianProfile | null>(null);
   const [offersExpiresAt, setOffersExpiresAt] = useState<string | null>(null);
   const [assignmentPending, setAssignmentPending] = useState(false);
   // `false` only when the API asked the database and it said nobody qualifies for this
@@ -126,7 +115,23 @@ export default function RequestRepairWizard() {
   >(null);
 
   const [applianceType, setApplianceType] = useState("");
+  /**
+   * The Brand `<select>`'s value: "" | a listed brand | BRAND_OTHER.
+   *
+   * Kept separate from `otherBrand` so choosing "Other" never destroys a name the
+   * customer already typed, and so what gets stored is the real word rather than
+   * the literal "Other" — which is what every appliance outside the old
+   * three-entry brand table ended up recording.
+   */
   const [brand, setBrand] = useState("");
+  /** The brand name typed when "Other" is chosen. */
+  const [otherBrand, setOtherBrand] = useState("");
+  /**
+   * What is stored and shown: the listed choice, or the typed name. Cleaned here
+   * as well as in the field, so a value saved before the cap existed is repaired
+   * the first time it is submitted.
+   */
+  const effectiveBrand = brand === BRAND_OTHER ? cleanBrand(otherBrand) : brand;
   const [modelNumber, setModelNumber] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const [purchaseDate, setPurchaseDate] = useState("");
@@ -341,7 +346,22 @@ export default function RequestRepairWizard() {
       const appliance = customerAppliances.find((a) => a.id === selectedExistingId);
       if (appliance) {
         setApplianceType(appliance.appliance_type);
-        setBrand(appliance.brand ?? "");
+        // A saved brand comes back as a SELECTION when the list knows it, and as
+        // free text when it does not: a legacy or unusual name ("Chigo" on a
+        // television) must survive the round trip. Restoring it blindly into a
+        // `required` select with no matching option is how an already-filled
+        // Brand field used to block its own submit.
+        const savedBrand = (appliance.brand ?? "").trim();
+        if (isListedBrand(appliance.appliance_type, savedBrand)) {
+          setBrand(savedBrand);
+          setOtherBrand("");
+        } else if (savedBrand) {
+          setBrand(BRAND_OTHER);
+          setOtherBrand(savedBrand);
+        } else {
+          setBrand("");
+          setOtherBrand("");
+        }
         setModelNumber(appliance.model_number ?? "");
         setSerialNumber(appliance.serial_number ?? "");
         setPurchaseDate(appliance.purchase_date ?? "");
@@ -561,7 +581,7 @@ export default function RequestRepairWizard() {
           throw new Error("We could not confirm your account yet. Reload the page and try again.");
         }
         const applianceName =
-          [brand.trim(), modelNumber.trim()].filter(Boolean).join(" ") || applianceType;
+          [effectiveBrand, modelNumber.trim()].filter(Boolean).join(" ") || applianceType;
 
         const { data: appliance, error: applianceError } = await supabase
           .from("appliances")
@@ -569,7 +589,7 @@ export default function RequestRepairWizard() {
             customer_id: customerId,
             name: applianceName,
             appliance_type: applianceType,
-            brand: brand || null,
+            brand: effectiveBrand || null,
             model_number: cleanCode(modelNumber, MAX_MODEL_NUMBER_LENGTH) || null,
             serial_number: cleanCode(serialNumber, MAX_SERIAL_NUMBER_LENGTH) || null,
             purchase_date: purchaseDate || null,
@@ -831,7 +851,16 @@ export default function RequestRepairWizard() {
               <select
                 id="appliance-type"
                 value={applianceType}
-                onChange={(e) => setApplianceType(e.target.value)}
+                onChange={(e) => {
+                  setApplianceType(e.target.value);
+                  // Brands belong to an appliance: "Samsung" is a choice for a
+                  // refrigerator, a television and an air conditioner, but
+                  // "Daikin" is not. Clearing both fields means a stale option can
+                  // never sit in a `required` select with no matching `<option>`,
+                  // which blocks the submit with no visible reason.
+                  setBrand("");
+                  setOtherBrand("");
+                }}
                 required
                 className={FIELD}
               >
@@ -847,21 +876,59 @@ export default function RequestRepairWizard() {
               <label htmlFor="appliance-brand" className="mb-1.5 block text-sm font-medium text-ink/80">
                 Brand *
               </label>
+              {/* Nothing to choose from until an appliance is picked, so the
+                  picker waits rather than showing an "Other"-only list — the very
+                  symptom this change removes. A disabled control is also skipped
+                  by the browser's validation, which is safe here because the
+                  appliance itself is required and comes first. */}
               <select
                 id="appliance-brand"
                 value={brand}
-                onChange={(e) => setBrand(e.target.value)}
+                onChange={(e) => {
+                  setBrand(e.target.value);
+                  // A real brand chosen after typing a name discards it, so a
+                  // stale word cannot be submitted by accident. Choosing "Other"
+                  // keeps whatever was typed.
+                  if (e.target.value !== BRAND_OTHER) setOtherBrand("");
+                }}
                 required
+                disabled={!applianceType}
                 className={FIELD}
               >
                 <option value="">Select brand</option>
-                {(BRANDS[applianceType] || ["Other"]).map((b) => (
+                {brandOptionsFor(applianceType).map((b) => (
                   <option key={b} value={b}>
                     {b}
                   </option>
                 ))}
               </select>
             </div>
+            {/* Every appliance has a real brand list now (see
+                src/lib/appliance-brands.ts), so "Other" is the exception rather
+                than the only choice it used to be. It is `required` while shown:
+                the word "Other" alone is not a brand, and storing it is the bug
+                this replaced. */}
+            {brand === BRAND_OTHER && (
+              <div className="min-w-0">
+                <label
+                  htmlFor="appliance-brand-other"
+                  className="mb-1.5 block text-sm font-medium text-ink/80"
+                >
+                  Brand name *
+                </label>
+                <input
+                  id="appliance-brand-other"
+                  value={otherBrand}
+                  onChange={(e) => setOtherBrand(sanitiseBrandInput(e.target.value))}
+                  maxLength={MAX_BRAND_LENGTH}
+                  autoComplete="off"
+                  required
+                  className={FIELD}
+                  placeholder="e.g. Chigo, Devant, Union"
+                />
+                <FieldCounter value={otherBrand} max={MAX_BRAND_LENGTH} />
+              </div>
+            )}
             <div className="min-w-0">
               <label htmlFor="appliance-model" className="mb-1.5 block text-sm font-medium text-ink/80">
                 Model number
@@ -1368,7 +1435,7 @@ export default function RequestRepairWizard() {
       >
         <dl className="grid gap-3 sm:grid-cols-2">
           <SummaryRow label="Appliance" value={applianceType || "—"} />
-          <SummaryRow label="Brand" value={brand || "—"} />
+          <SummaryRow label="Brand" value={effectiveBrand || "—"} />
           {modelNumber && <SummaryRow label="Model Number" value={modelNumber} />}
           {serialNumber && <SummaryRow label="Serial Number" value={serialNumber} />}
           <SummaryRow
@@ -1462,7 +1529,7 @@ export default function RequestRepairWizard() {
               </div>
               <dl className="divide-y divide-line px-4">
                 <LiveRow icon={LayoutGrid} label="Appliance" value={applianceType} />
-                <LiveRow icon={Tag} label="Brand" value={brand} />
+                <LiveRow icon={Tag} label="Brand" value={effectiveBrand} />
                 <LiveRow icon={Hash} label="Model Number" value={modelNumber} />
                 <LiveRow
                   icon={ShieldCheck}

@@ -2,6 +2,7 @@
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 import { applianceLabel } from "@/lib/queue";
+import { notify } from "@/lib/notifications";
 
 /**
  * The structured result of `create_booking_atomic()`.
@@ -111,9 +112,66 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
-    return mapBookingOutcome((data ?? {}) as BookingOutcome);
+    const outcome = (data ?? {}) as BookingOutcome;
+    // Announced only for a booking that actually committed, and only after the
+    // transaction returned — see `notifyBookedAppointment`.
+    if (outcome.outcome === "booked") {
+      await notifyBookedAppointment(serviceRole, outcome, user.id);
+    }
+
+    return mapBookingOutcome(outcome);
   } catch (err) {
     return handleError(err);
+  }
+}
+
+/**
+ * Announce a booked appointment to both parties.
+ *
+ * Sent only for a `booked` outcome and only after the transaction committed: the
+ * booking is the fact, the notification is the announcement. A failure here must
+ * never turn a booked repair into an error, so it is logged and swallowed — the
+ * same rule the payment decision follows.
+ *
+ * The technician is told about the appointment too: their own acceptance already
+ * notified them, but the appointment is the moment it becomes work on a calendar.
+ */
+async function notifyBookedAppointment(
+  serviceRole: ReturnType<typeof createServiceRoleClient>,
+  outcome: BookingOutcome,
+  customerId: string
+) {
+  const bookingId = outcome.booking_id;
+  if (!bookingId) return;
+
+  const scheduledAt = (outcome.booking as { scheduled_at?: string } | undefined)?.scheduled_at;
+  const body = scheduledAt
+    ? `Scheduled for ${new Date(scheduledAt).toLocaleString("en-PH")}`
+    : "Open the booking for the agreed schedule.";
+
+  const recipients: { userId: string; title: string; link: string }[] = [
+    {
+      userId: customerId,
+      title: "Appointment confirmed",
+      link: `/customer/bookings/${bookingId}`,
+    },
+  ];
+  if (outcome.technician_id) {
+    recipients.push({
+      userId: outcome.technician_id,
+      title: "New appointment on your schedule",
+      link: `/technician/bookings/${bookingId}`,
+    });
+  }
+
+  try {
+    await Promise.all(
+      recipients.map((recipient) =>
+        notify(serviceRole, { ...recipient, type: "booking_confirmed", body })
+      )
+    );
+  } catch (notifyError) {
+    console.error("Booking notification failed", notifyError);
   }
 }
 

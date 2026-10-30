@@ -1,0 +1,46 @@
+import type { MetadataRoute } from "next";
+
+/**
+ * The web app manifest — what makes SPARKServ installable.
+ *
+ * ## Why it matters here
+ *
+ * Every commercial service in this market ships an app (Teko and Trabahadoor are on
+ * Play and the App Store). A capstone cannot ship to a store, but a PWA installs to
+ * the home screen straight from the browser — no store, no review queue, no build
+ * cost — and the service worker it needs already existed for push notifications.
+ *
+ * ## The icons are the one thing this file cannot finish
+ *
+ * Chrome's install criteria want a **192×192 and a 512×512 PNG**, plus a maskable
+ * one; iOS uses its own `apple-touch-icon` (declared in `layout.tsx`). Until those
+ * PNGs exist this manifest declares the SVG mark only, because a manifest that
+ * references missing files fails validation with errors — worse than one that is
+ * merely not yet installable. Export the files (the recipe is in `TESTING.md`) and
+ * add these three lines:
+ *
+ *     { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+ *     { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+ *     { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+ *
+ * `theme_color` is `brand-600` (#0E429F) — the same blue as every primary button in
+ * the app — and `background_color` is `navy-900`, so the splash screen matches the
+ * product instead of flashing white.
+ */
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "SPARKServ — Appliance repair service",
+    short_name: "SPARKServ",
+    description: "Request an appliance repair, follow the work, and keep the record of it.",
+    start_url: "/",
+    scope: "/",
+    display: "standalone",
+    orientation: "portrait",
+    background_color: "#0E172A",
+    theme_color: "#0E429F",
+    lang: "en",
+    dir: "ltr",
+    categories: ["business", "utilities"],
+    icons: [{ src: "/icons/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }],
+  };
+}

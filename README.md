@@ -340,23 +340,37 @@ gets committed, since it holds your Supabase keys.
 
 ## 7. What's implemented vs. simplified
 
-This is a realistic but capstone-scoped build. Implemented end-to-end:
-auth + role routing, password recovery (forgot password — see section 3), service
-request submission, rule-based chatbot, technician scoring/ranking, estimates,
-booking, status tracking (Pending → In Progress → Completed), realtime
-messaging, admin technician approval, and super-admin role management.
+This is a realistic but capstone-scoped build. Implemented end-to-end: auth + role
+routing (customer / technician / admin / super admin) and password recovery (§3);
+the appliance register (15 appliance types, each with a curated list of brands
+commonly serviced in the Philippines, plus model, serial, purchase date and warranty
+details); service request submission with photos, a confirmed map pin and an
+optional preferred time window; rule-based troubleshooting (one canonical issue
+catalogue, a deterministic English/Tagalog/Bisaya matcher, and per-issue guides);
+the **fairness rotation queue** — approval, appliance specialisation, service area,
+requested-time availability and capacity decide who is offered a request, with **no
+ranking, no scoring and no bidding anywhere in the system**; itemised, versioned
+estimates with customer approval and revision; atomic booking (one live booking per
+request, no overlapping appointment); repair progress, customer inspection sign-off,
+GCash reference submission and administrator verification with a recorded reason;
+realtime messaging; in-app notifications and browser push; ratings and service
+history; a printable **job order** for every completed repair; support tickets; and
+the admin/super-admin operations screens with the queue audit trail.
 
 Deliberately simplified / left as extension points:
-- **Payments**: no payment gateway is wired in. If you add one, keep in
-  mind that only the **customer** should ever submit a payment
-  reference/proof — never the technician — since the customer carries the
-  burden of proof for a paid transaction.
-- **Image uploads** (e.g. appliance photos, proof-of-repair) aren't
-  included — Supabase Storage would be the natural place to add this.
-- **Notifications** (email/SMS/push) aren't wired in — Supabase has
-  built-in email triggers you could extend, or a service like Resend. The
-  password-reset email in §3 is Supabase Auth's own sender, not a
-  notification pipeline.
-- **Ratings** have a table + RLS policy ready in the schema, but no UI form
-  yet — a natural next page to add on the customer booking-detail view
-  once a booking's status is `completed`.
+- **Payments**: no payment gateway is wired in. A customer submits an external GCash
+  reference and an administrator verifies it. Only the **customer** ever submits a
+  reference — never the technician — since the customer carries the burden of proof
+  for a paid transaction. A rejection records a reason and leaves the repair open so
+  the customer can resubmit.
+- **Email** is not wired in: the password-reset mail in §3 is Supabase Auth's own
+  sender, not a notification pipeline. In-app notifications and browser push are
+  implemented; SMS (Semaphore) exists only as the administrator's test endpoint, so
+  no business event sends a text message yet.
+- **Route navigation and ETA** are not implemented: there is no maps routing and no
+  "technician on the way" state.
+- **PDF export** is deliberately absent — the job order prints through the browser's
+  own print stylesheet, which produces the document and nothing else.
+- **A service-warranty workflow** (claims, evidence, refunds) does not exist. The job
+  order prints a warranty line only when a per-repair warranty date is stored, and
+  claims nothing until then.

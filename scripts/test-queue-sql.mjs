@@ -178,6 +178,15 @@ await exec("supabase/migration_booking_eligibility.sql (2nd run)", read("supabas
 // Step 18 re-run: both functions are create-or-replace, the trigger is dropped before
 // it is created, and the permission block only revokes and grants.
 await exec("supabase/migration_cancel_release.sql (2nd run)", read("supabase/migration_cancel_release.sql"));
+// Step 19: the workmanship warranty columns, the platform setting and the
+// stamp_service_warranty trigger on `service_history`. Loaded once, like step 18:
+// `schema.sql` already carries the columns and the trigger (a fresh install gets
+// them from the table definition and the Step 19 section), so this run proves the
+// file is safe to apply to a project that already has them — the `if not exists`
+// column adds, the constraint drop/re-add and the trigger drop/create are all
+// exercised. A project still on the pre-step-19 schema takes the same path, minus
+// the pre-existing objects.
+await exec("supabase/migration_service_warranty.sql", read("supabase/migration_service_warranty.sql"));
 
 // Supabase grants table privileges to `authenticated` by default and relies on
 // RLS to decide which ROWS are visible; a bare Postgres grants nothing. Without

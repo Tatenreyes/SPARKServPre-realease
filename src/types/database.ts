@@ -392,6 +392,17 @@ export interface ServiceHistoryRow {
   final_cost: number | null;
   completed_at: string;
   summary: string | null;
+  /**
+   * The workmanship warranty this repair carries, in days (step 19, see
+   * `supabase/migration_service_warranty.sql`). Snapshotted at completion, so a
+   * finished job keeps the terms it was sold under.
+   */
+  warranty_days: number;
+  /**
+   * The last day the repair is covered, or null for a repair archived before step 19
+   * existed — the job order then prints no warranty line rather than claiming one.
+   */
+  warranty_until: string | null;
 }
 
 export interface ApplianceRow {

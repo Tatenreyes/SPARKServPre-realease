@@ -303,7 +303,16 @@ create table public.service_history (
   appliance_type text not null,
   final_cost numeric(10, 2),
   completed_at timestamptz not null default now(),
-  summary text
+  summary text,
+  -- The workmanship warranty this repair carries (step 19 — see
+  -- migration_service_warranty.sql). Stamped at completion by the
+  -- stamp_service_warranty trigger, which counts the period in the service
+  -- timezone. `warranty_until` stays null for a repair archived before that file
+  -- existed, and the job order then claims no warranty at all.
+  warranty_days integer not null default 30,
+  warranty_until date,
+  constraint service_history_warranty_days_check
+    check (warranty_days >= 0 and warranty_days <= 3650)
 );
 
 -- ---------- Indexes ----------
@@ -873,7 +882,11 @@ create policy "admins manage settings"
 
 insert into public.system_settings (key, value) values
   ('maintenance_mode', 'false'),
-  ('platform_announcement', '');
+  ('platform_announcement', ''),
+  -- Step 19: the workmanship warranty a completed repair carries, in days. Read by
+  -- service_warranty_days() and snapshotted onto each finished repair, so editing
+  -- this affects future completions only.
+  ('service_warranty_days', '30');
 
 -- =========================================================
 -- Added after initial release (see migration_profile_photos.sql) —
@@ -2355,4 +2368,102 @@ drop trigger if exists enforce_payment_decision_rules on public.payments;
 create trigger enforce_payment_decision_rules
   before update on public.payments
   for each row execute procedure public.enforce_payment_decision_rules();
+
+-- =========================================================
+-- Step 19 — the workmanship warranty a completed repair carries
+-- (see migration_service_warranty.sql)
+-- =========================================================
+-- The two columns and their constraint are declared on `service_history` above;
+-- this is the behaviour. A BEFORE INSERT trigger stamps every archived repair with
+-- the platform's warranty period, counted as a CALENDAR date in the service
+-- timezone, so the job order can print a date the system can actually check. It
+-- deliberately lives on the table rather than inside `confirm_payment()`, so an
+-- administrative backfill or any future completion path is covered too.
+
+create or replace function public.service_warranty_days()
+returns integer
+language plpgsql
+stable
+security definer set search_path = public
+as $$
+declare
+  v_raw text;
+  v_days integer;
+begin
+  select s.value into v_raw from public.system_settings s where s.key = 'service_warranty_days';
+
+  -- A missing row, an empty value and a value that is not a number all fall back to
+  -- 30: a misconfigured setting must never block a completion.
+  begin
+    v_days := nullif(btrim(coalesce(v_raw, '')), '')::integer;
+  exception when others then
+    v_days := null;
+  end;
+
+  if v_days is null or v_days < 0 or v_days > 3650 then
+    return 30;
+  end if;
+  return v_days;
+end;
+$$;
+
+create or replace function public.stamp_service_warranty()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_days integer;
+  v_tz text;
+  v_completed_on date;
+begin
+  -- A writer that set the date itself wins: a backfill or an imported record must
+  -- not be overwritten by the platform default.
+  if new.warranty_until is not null then
+    return new;
+  end if;
+
+  v_days := public.service_warranty_days();
+
+  -- Zero days means the shop offers no workmanship warranty: the period is recorded
+  -- as 0, the DATE is left null, and the document claims nothing.
+  if v_days <= 0 then
+    new.warranty_days := 0;
+    new.warranty_until := null;
+    return new;
+  end if;
+
+  -- Counted in the shop's own timezone, the same `queue_service_timezone` the queue
+  -- uses for a preferred window: in UTC a repair finished between midnight and 08:00
+  -- Manila time would expire a day early. A missing or malformed zone falls back to
+  -- Manila rather than failing the insert.
+  select nullif(btrim(s.value), '')
+    into v_tz
+    from public.system_settings s
+   where s.key = 'queue_service_timezone';
+  v_tz := coalesce(v_tz, 'Asia/Manila');
+
+  begin
+    v_completed_on := (new.completed_at at time zone v_tz)::date;
+  exception when others then
+    v_completed_on := (new.completed_at at time zone 'Asia/Manila')::date;
+  end;
+
+  new.warranty_days := v_days;
+  new.warranty_until := v_completed_on + v_days;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists stamp_service_warranty_before_insert on public.service_history;
+create trigger stamp_service_warranty_before_insert
+  before insert on public.service_history
+  for each row execute function public.stamp_service_warranty();
+
+-- Server-side helper, like every other predicate here: the client roles cannot call
+-- it, and service_role's grant is also what the migration-state probe reads.
+revoke all on function public.service_warranty_days() from public, anon, authenticated;
+grant execute on function public.service_warranty_days() to service_role;
+
 

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
+import { notify } from "@/lib/notifications";
 
 // POST /api/messages — send a chat message scoped to a booking
 export async function POST(request: NextRequest) {
@@ -43,6 +44,34 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    // Tell the other participant, AFTER the message is committed: a notification is
+    // a side effect of a stored message, never a substitute for one. The thread
+    // lives under each workspace's own route, so the link follows the RECIPIENT's
+    // role rather than the sender's.
+    const { data: receiver } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", receiver_id)
+      .maybeSingle();
+    const senderLabel =
+      user.name?.trim() || (user.role === "technician" ? "your technician" : "your customer");
+
+    try {
+      await notify(createServiceRoleClient(), {
+        userId: receiver_id,
+        type: "new_message",
+        title: `New message from ${senderLabel}`,
+        // The first line or so, so the notification is worth reading on its own.
+        body: content.trim().slice(0, 120),
+        link:
+          receiver?.role === "technician"
+            ? `/technician/messages/${booking_id}`
+            : `/customer/messages/${booking_id}`,
+      });
+    } catch (notifyError) {
+      console.error("Message notification failed", notifyError);
+    }
 
     return NextResponse.json({ data }, { status: 201 });
   } catch (err) {

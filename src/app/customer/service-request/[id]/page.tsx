@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getServiceTimezone } from "@/lib/service-time";
 import { applianceCoverage } from "@/lib/assignment-coverage";
+import { buildTechnicianProfile, type TechnicianProfile } from "@/lib/technician-profile";
 import RequestDetailClient from "@/components/RequestDetailClient";
 
 export default async function ServiceRequestDetailPage({
@@ -26,14 +27,31 @@ export default async function ServiceRequestDetailPage({
     .eq("service_request_id", params.id)
     .order("created_at", { ascending: true });
 
-  let assignedTechnician = null;
+  let assignedTechnician: TechnicianProfile | null = null;
   if (request.assigned_technician_id) {
-    const { data: tech } = await supabase
-      .from("users")
-      .select("id, name")
-      .eq("id", request.assigned_technician_id)
-      .single();
-    assignedTechnician = tech ?? null;
+    const technicianId = request.assigned_technician_id;
+    // The published profile only — name, photo, verification, rating, workload.
+    // The `technicians` row and the ratings are read alongside the user so the card
+    // can show real evidence instead of a bare name; each degrades to null rather
+    // than inventing a zero.
+    const [userResult, technicianResult, ratingsResult] = await Promise.all([
+      supabase
+        .from("users")
+        .select("id, name, avatar_url")
+        .eq("id", technicianId)
+        .single(),
+      supabase
+        .from("technicians")
+        .select("approved, jobs_completed, experience_years, specializations")
+        .eq("id", technicianId)
+        .maybeSingle(),
+      supabase.from("ratings").select("rating").eq("technician_id", technicianId),
+    ]);
+    assignedTechnician = buildTechnicianProfile({
+      user: userResult.data,
+      technician: technicianResult.data,
+      ratings: ratingsResult.data,
+    });
   }
 
   // The assignment card must be able to say "nobody covers this appliance yet"

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { requireRole, AuthError } from "@/lib/auth";
 import { rematchWaitingRequests } from "@/lib/assignment";
+import { notify } from "@/lib/notifications";
 
 // PATCH /api/technicians/:id/approve — admin/super_admin approves a pending technician
 export async function PATCH(
@@ -35,6 +36,24 @@ export async function PATCH(
     // for requests previously stuck "waiting" with nobody qualified.
     if (approve) {
       await rematchWaitingRequests(supabase);
+    }
+
+    // The technician is told either way. Approval is the one event that turns a
+    // signed-up account into one that can actually receive work, so it is worth a
+    // notification; a refusal is worth one too, because otherwise the technician
+    // sees an empty queue and has no idea why.
+    try {
+      await notify(supabase, {
+        userId: params.id,
+        type: approve ? "technician_approved" : "technician_not_approved",
+        title: approve ? "Your account is verified" : "Your account was not approved",
+        body: approve
+          ? "You are now in the rotation for the appliances you service, and offers will arrive here."
+          : "An administrator reviewed your application and did not approve it. Contact support if you believe this is a mistake.",
+        link: "/technician/dashboard",
+      });
+    } catch (notifyError) {
+      console.error("Technician approval notification failed", notifyError);
     }
 
     return NextResponse.json({ data });

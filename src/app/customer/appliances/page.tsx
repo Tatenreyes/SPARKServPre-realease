@@ -13,6 +13,14 @@ import {
   formatIsoDate,
   sanitiseCodeInput,
 } from "@/lib/appliance-fields";
+import {
+  APPLIANCE_TYPES,
+  BRAND_OTHER,
+  MAX_BRAND_LENGTH,
+  brandOptionsFor,
+  cleanBrand,
+  sanitiseBrandInput,
+} from "@/lib/appliance-brands";
 import { Plus, Pencil, Trash2, Refrigerator, X } from "lucide-react";
 
 type Appliance = {
@@ -31,23 +39,11 @@ type Appliance = {
   created_at: string;
 };
 
-const APPLIANCE_TYPES = [
-  "Refrigerator",
-  "Air Conditioner",
-  "Washing Machine",
-  "Television",
-  "Electric Fan",
-  "Microwave Oven",
-  "Rice Cooker",
-  "Electric Stove",
-  "Induction Cooker",
-  "Water Dispenser",
-  "Electric Kettle",
-  "Vacuum Cleaner",
-  "Clothes Dryer",
-  "Freezer",
-  "Water Heater",
-];
+/**
+ * The appliance list is shared with the request wizard and the technician's
+ * specialisation picker (`src/lib/appliance-brands.ts`), so a type can never be
+ * registerable here but missing from the wizard's brand list.
+ */
 
 export default function AppliancesPage() {
   const { profile } = useUser();
@@ -157,7 +153,7 @@ export default function AppliancesPage() {
 
     const payload = {
       ...form,
-      brand: form.brand || null,
+      brand: cleanBrand(form.brand) || null,
       // Capped on the way in as well as in the field, so a row stored before the
       // cap existed is repaired the first time it is edited.
       model_number: cleanCode(form.model_number, MAX_MODEL_NUMBER_LENGTH) || null,
@@ -223,12 +219,27 @@ export default function AppliancesPage() {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-ink/80">Brand</label>
+                {/* Free text, with the wizard's own list offered as suggestions:
+                    any brand this screen accepts must be one the wizard can show
+                    back. A `datalist` keeps that possible without forcing a
+                    choice — this field is optional here, required there. */}
                 <input
                   value={form.brand}
-                  onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                  onChange={(e) => setForm({ ...form, brand: sanitiseBrandInput(e.target.value) })}
+                  list="appliance-brand-options"
+                  maxLength={MAX_BRAND_LENGTH}
+                  autoComplete="off"
                   className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 text-sm"
                   placeholder="Samsung, LG, Panasonic..."
                 />
+                <datalist id="appliance-brand-options">
+                  {brandOptionsFor(form.appliance_type)
+                    .filter((b) => b !== BRAND_OTHER)
+                    .map((b) => (
+                      <option key={b} value={b} />
+                    ))}
+                </datalist>
+                <FieldCounter value={form.brand} max={MAX_BRAND_LENGTH} />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-ink/80">Model Number</label>

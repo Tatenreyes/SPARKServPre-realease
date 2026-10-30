@@ -4,11 +4,8 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, Loader2, CheckCircle2, Clock, TimerIcon } from "lucide-react";
 import type { AssignmentStatus } from "@/types/database";
 import { customerAssignmentCopy } from "@/lib/queue";
-
-interface AssignedTechnicianInfo {
-  id: string;
-  name: string;
-}
+import AssignedTechnicianCard from "@/components/AssignedTechnicianCard";
+import type { TechnicianProfile } from "@/lib/technician-profile";
 
 export default function AssignmentStatusCard({
   status,
@@ -20,7 +17,11 @@ export default function AssignmentStatusCard({
 }: {
   status: AssignmentStatus;
   applianceType: string;
-  technician: AssignedTechnicianInfo | null;
+  /**
+   * The published profile, or null. Only ever populated once the offer was
+   * ACCEPTED — see the `accepted` branch below.
+   */
+  technician: TechnicianProfile | null;
   offersExpiresAt?: string | null;
   /**
    * Whether ANY technician covers this appliance, when the caller knows. `false` turns
@@ -78,16 +79,18 @@ export default function AssignmentStatusCard({
     );
   }
 
-  // accepted — the only state in which a technician is disclosed, and only the
-  // profile fields we publish (`AssignedTechnicianInfo`).
+  // accepted — the only state in which a technician is disclosed, and only through
+  // the published profile (`TechnicianProfile`): name, photo, verification, rating
+  // and workload. An unaccepted offer discloses nobody, exactly as it discloses no
+  // service address.
   if (technician) {
     return (
       <div className="rounded-card border border-signal-500/20 bg-signal-soft/40 p-5">
         <p className="flex items-center gap-1.5 text-xs font-semibold text-signal-ink">
           <CheckCircle2 className="h-3.5 w-3.5" /> Technician assigned
         </p>
-        <p className="mt-2 font-display text-lg font-semibold text-ink">{technician.name}</p>
-        <p className="mt-1 text-sm text-muted">{customerAssignmentCopy("accepted").body}</p>
+        <AssignedTechnicianCard technician={technician} className="mt-3" />
+        <p className="mt-3 text-sm text-muted">{customerAssignmentCopy("accepted").body}</p>
       </div>
     );
   }

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 import type { BookingStatus } from "@/types/database";
+import { notify } from "@/lib/notifications";
 
 const VALID_STATUSES: BookingStatus[] = [
   "pending",
@@ -165,6 +166,21 @@ export async function PATCH(
       });
     }
 
+    // Tell the party who did NOT make the change. The status is the fact; this is
+    // how the other side learns about it without refreshing a page and wondering
+    // whether anything happened. Sent after the write committed, and a failure is
+    // logged rather than allowed to undo a recorded transition.
+    if (status) {
+      await notifyStatusChange(serviceRole, {
+        status,
+        bookingId: booking.id,
+        customerId: booking.customer_id,
+        technicianId: booking.technician_id,
+        actorId: user.id,
+        actorRole: user.role,
+      });
+    }
+
     return NextResponse.json({ data: updated });
   } catch (err) {
     return handleError(err);
@@ -181,6 +197,105 @@ export async function PATCH(
 // transaction that verifies the payment — so a repair can never be closed without a
 // verified payment, and a half-failed completion is impossible. See
 // `supabase/migration_rls_workflow_enforcement.sql`.
+
+/**
+ * Tell the party who did not make the change.
+ *
+ * The recipient is derived from the ACTOR, not from the status: whoever pressed the
+ * button does not need to be told what they just did, and the other side does. That
+ * single rule covers every transition below without a second list to keep in step,
+ * including a cancellation written by an administrator (the customer is told) and
+ * one written by the customer (the technician is told).
+ *
+ * The queue is deliberately untouched, and the copy says so: a cancellation
+ * releases the technician's slot through the database trigger and does NOT consume
+ * their turn. A technician who believes a cancellation cost them a turn stops
+ * accepting offers.
+ */
+async function notifyStatusChange(
+  serviceRole: ReturnType<typeof createServiceRoleClient>,
+  input: {
+    status: BookingStatus;
+    bookingId: string;
+    customerId: string;
+    technicianId: string;
+    actorId: string;
+    actorRole: string;
+  }
+) {
+  const recipientIsCustomer = input.actorRole !== "customer";
+  const recipientId = recipientIsCustomer ? input.customerId : input.technicianId;
+  if (!recipientId || recipientId === input.actorId) return;
+
+  const copy = statusNotificationCopy(
+    recipientIsCustomer ? "customer" : "technician",
+    input.status
+  );
+  if (!copy) return;
+
+  try {
+    await notify(serviceRole, {
+      userId: recipientId,
+      type: `booking_${input.status}`,
+      title: copy.title,
+      body: copy.body,
+      link: recipientIsCustomer
+        ? `/customer/bookings/${input.bookingId}`
+        : `/technician/bookings/${input.bookingId}`,
+    });
+  } catch (notifyError) {
+    console.error("Booking status notification failed", notifyError);
+  }
+}
+
+/**
+ * The words for one transition, from the recipient's side of it.
+ *
+ * `null` for a status with nothing worth saying — a notification that only reports
+ * "your status changed" is noise, and the notification list is meant to stay a list
+ * of next steps.
+ */
+function statusNotificationCopy(
+  recipient: "customer" | "technician",
+  status: BookingStatus
+): { title: string; body: string } | null {
+  if (recipient === "customer") {
+    switch (status) {
+      case "in_progress":
+        return {
+          title: "Your technician has started the repair",
+          body: "Follow the progress on the booking page.",
+        };
+      case "awaiting_inspection":
+        return {
+          title: "Inspection needed",
+          body: "The work is done. Review it and confirm what you found to continue to payment.",
+        };
+      case "cancelled":
+        return {
+          title: "Appointment cancelled",
+          body: "Your approved estimate and technician are unchanged, so you can book another time.",
+        };
+      default:
+        return null;
+    }
+  }
+
+  switch (status) {
+    case "awaiting_payment":
+      return {
+        title: "Customer confirmed the inspection",
+        body: "The repair closes once an administrator verifies the payment reference.",
+      };
+    case "cancelled":
+      return {
+        title: "Appointment cancelled",
+        body: "This appointment was cancelled and your queue turn was not consumed.",
+      };
+    default:
+      return null;
+  }
+}
 
 function handleError(err: unknown) {
   if (err instanceof AuthError) {
