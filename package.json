@@ -25,6 +25,7 @@
     "test:technician-profile": "node --test scripts/tests/technician-profile.test.mjs",
     "test:notifications": "node --test scripts/tests/notifications-coverage.test.mjs",
     "test:pwa": "node --test scripts/tests/pwa.test.mjs",
+    "icons": "node scripts/generate-icons.mjs",
     "cron:tick": "node scripts/run-assignment-tick.mjs",
     "verify:queue": "node scripts/verify-queue-fairness.mjs",
     "db:check": "node scripts/check-migration-state.mjs",

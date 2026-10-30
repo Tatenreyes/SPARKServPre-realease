@@ -20,6 +20,13 @@
 # local dev / debug output
 *.log
 
+# scratch output from local build, type-check and audit runs — never part of a
+# release, and easy to commit by accident because they sit in the project root
+/build-*.txt
+/c2.txt
+/colour-audit.txt
+/tsc-check.txt
+
 # agent tooling scratch (Cline/buddy state, trajectories, chats)
 /.refact/
 

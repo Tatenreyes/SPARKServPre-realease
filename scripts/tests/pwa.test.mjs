@@ -155,3 +155,77 @@ test("the root layout mounts it and still declares an iOS icon", () => {
     "iOS ignores the manifest: without an apple-touch-icon the home screen shows a screenshot"
   );
 });
+
+// ------------------------------------------------- 5. the icons are real files
+
+/**
+ * An independent CRC-32.
+ *
+ * The generator has its own table; this one is written out again so the test does not
+ * validate the generator with the generator's own arithmetic. A hand-rolled PNG
+ * encoder gets a chunk CRC wrong far more easily than it gets the pixels wrong, and a
+ * corrupt icon fails installability *silently*: the manifest validates, the download
+ * succeeds, and the launcher shows nothing.
+ */
+const CRC_TABLE = (() => {
+  const table = new Int32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let bit = 0; bit < 8; bit++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    table[n] = c;
+  }
+  return table;
+})();
+
+function crc32(buffer) {
+  let c = 0xffffffff;
+  for (const byte of buffer) c = CRC_TABLE[(c ^ byte) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+test("every generated icon is a valid PNG of the size the manifest claims", () => {
+  const sizes = {
+    "icon-192.png": 192,
+    "icon-512.png": 512,
+    "icon-maskable-512.png": 512,
+    "apple-touch-icon.png": 180,
+  };
+
+  for (const [file, size] of Object.entries(sizes)) {
+    const bytes = readFileSync(new URL(`public/icons/${file}`, ROOT));
+    assert.deepEqual(
+      [...bytes.subarray(0, 8)],
+      [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+      `${file} does not begin with the PNG signature`
+    );
+    assert.equal(bytes.toString("ascii", 12, 16), "IHDR", `${file}: IHDR must come first`);
+    assert.equal(bytes.readUInt32BE(16), size, `${file}: width`);
+    assert.equal(bytes.readUInt32BE(20), size, `${file}: height`);
+    assert.equal(bytes[24], 8, `${file}: 8 bits per channel`);
+    assert.equal(bytes[25], 2, `${file}: truecolour with no alpha — iOS renders alpha as black`);
+
+    let offset = 8;
+    let chunks = 0;
+    let sawIend = false;
+    while (offset < bytes.length) {
+      const length = bytes.readUInt32BE(offset);
+      const type = bytes.toString("ascii", offset + 4, offset + 8);
+      const body = bytes.subarray(offset + 4, offset + 8 + length);
+      assert.equal(crc32(body), bytes.readUInt32BE(offset + 8 + length), `${file}: ${type} CRC`);
+      if (type === "IEND") sawIend = true;
+      offset += 12 + length;
+      chunks += 1;
+    }
+    assert.ok(sawIend, `${file}: no IEND chunk`);
+    assert.equal(offset, bytes.length, `${file}: trailing bytes after IEND`);
+    assert.ok(chunks >= 3, `${file}: a PNG needs at least IHDR, IDAT and IEND`);
+  }
+});
+
+test("the icons are reproducible from the repository", () => {
+  // A binary nobody can regenerate is a binary nobody can change, so the icons are
+  // drawn by a script that ships with them.
+  const packageJson = readFileSync(new URL("package.json", ROOT), "utf8");
+  assert.match(packageJson, /"icons": "node scripts\/generate-icons\.mjs"/);
+  assert.ok(existsSync(new URL("scripts/generate-icons.mjs", ROOT)));
+});

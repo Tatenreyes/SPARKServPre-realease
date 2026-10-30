@@ -28,8 +28,8 @@ export const metadata: Metadata = {
   title: "SPARKServ — Appliance Repair Management System",
   description: "Connecting customers with trusted appliance repair technicians.",
   icons: {
-    icon: "/images/Logo.PNG",
-    apple: "/images/Logo.PNG",
+    icon: "/icons/icon.svg",
+    apple: "/icons/apple-touch-icon.png",
   },
 };
 
