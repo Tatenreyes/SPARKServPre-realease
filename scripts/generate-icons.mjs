@@ -184,3 +184,28 @@ for (const icon of ICONS) {
     `${icon.file.padEnd(26)} ${icon.size}×${icon.size}  ${(png.length / 1024).toFixed(1)} kB`
   );
 }
+
+/**
+ * `node scripts/generate-icons.mjs --preview` prints the mark as text.
+ *
+ * Two reasons it earns its place: a terminal cannot show an image, and an icon is
+ * the one asset whose correctness is visual — "the file is a valid PNG" says nothing
+ * about whether the mark looks like a spark or a blob. The grid is 2:1 because a
+ * character cell is about twice as tall as it is wide, so the bolt reads at the
+ * aspect ratio it will actually have.
+ */
+if (process.argv.includes("--preview")) {
+  const cols = 56;
+  const rows = 28;
+  const lines = [];
+  for (let row = 0; row < rows; row++) {
+    let line = "";
+    for (let col = 0; col < cols; col++) {
+      const x = ((col + 0.5) / cols) * 512;
+      const y = ((row + 0.5) / rows) * 512;
+      line += insideBolt(x, y) ? "#" : ".";
+    }
+    lines.push(line);
+  }
+  console.log(`\n${lines.join("\n")}\n`);
+}
