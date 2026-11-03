@@ -112,6 +112,7 @@ so nothing broke. Reasoning is recorded in `QUEUE-SYSTEM.md`.
 | Whole app compiles, routes resolve | `npm run build` | succeeded; `/technician/queue`, `/api/admin/queue-override`, `/api/cron/assignment-tick`, `/api/technician-availability` all present |
 | **Live DB migration state** | `npm run db:check` | exit 0 — **all 19 applied** (79 checks passed) |
 | Colour system: contrast in both themes, and the utility rules | `npm run test:design` | **11/11 passed** — every text pair clears WCAG AA in light and dark, and no forbidden colour utility remains in `src/` |
+| **Type declarations the production build needs** | `npm run test:dependency-types` | **4/4 passed** — `@types/leaflet` and `@types/web-push` are production dependencies, no lockfile entry is flagged `dev`, and every dependency imported by `src/` resolves to a declaration file |
 
 `npm run test:queue-sql` boots a real Postgres in-process (PGlite), loads
 `schema.sql` and the two `SECURITY INVOKER` harness files, and asserts the spec

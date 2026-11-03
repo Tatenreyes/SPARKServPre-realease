@@ -9,7 +9,9 @@ job order a completed repair leaves behind, one covers what a customer may know
 about their technician, one covers the notification events that used to change
 somebody's next action in silence, one covers the installable web app, and one covers
 the colour system — that the palette is legible in both themes and that no component
-can quietly reintroduce white-on-white or sub-AA text. They
+can quietly reintroduce white-on-white or sub-AA text, and one covers the type
+declarations the production build needs, so a library cannot be added without the
+`@types/*` package that makes `next build` able to read it. They
 answer different questions, and **all** are needed before the work can be called done.
 
 | Command | Runs against | Proves | Cannot prove |
@@ -44,6 +46,8 @@ The script needs no image library: a PNG is a signature, three chunks and a zlib
 | `npm run test:booking-api` | `supabase/migration_atomic_booking.sql`, `migration_booking_eligibility.sql` and `src/app/api/bookings/route.ts`, read as text | the **wiring** between the booking function and the route: every outcome `create_booking_atomic()` can return (including the three it passes through from `technician_capacity_failure()`) has a `case` in the route, the route's only `201` is the `booked` case, the `default:` branch answers `500` and never `201`, and the `technician_not_eligible` case is a `409` naming the appliance | the behaviour itself (group 26) and anything that needs a request/response runner — there is none in this repository |
 | `npm run test:cache` | `src/lib/supabase/server.ts`, `src/lib/supabase/middleware.ts`, `src/app/admin/layout.tsx` and `src/app/admin/payments/page.tsx`, read as text | **no server-side Supabase read may come out of Next.js's Data Cache**: that both server clients (anon and service-role) pass a `global.fetch` that sets `cache: "no-store"`, that the middleware client — whose role lookup decides whether a request is allowed through — does too, that the admin segment and the payments page export `fetchCache = "force-no-store"`, that the payments page still exports `dynamic = "force-dynamic"` above the component, and that no `createServerClient()` is left without the opt-out. This is the defect that made `/admin/payments` render a list frozen at 30 Oct (a payment submitted on 3 Nov missing, an older one confirmed at 23:14:36 still reading "Pending Verification"): `force-dynamic` decides how the ROUTE is rendered and does **not** stop the Data Cache, which stores a GET with `revalidate: false` (one year) unless the fetch itself asks for `no-store` | that Next.js honours `no-store` (its documented behaviour, read directly in `patch-fetch.js`), and the rendered page — the end-to-end check is the one that found the bug: load `/admin/payments`, confirm the newest payment is listed, change a row, reload |
 
+| `npm run test:dependency-types` | `package.json`, `package-lock.json` and every import under `src/`, read as text and then resolved with the compiler's own module resolver | **that the declarations `next build` needs are installed by a deployment install**: that `@types/leaflet` and `@types/web-push` — the two packages this app imports that ship plain JavaScript — are in `dependencies` rather than `devDependencies`, resolve from the lockfile's root dependency set, are NOT flagged `dev` inside the lockfile (a `dev` flag is what `--omit=dev` prunes, so a `dev`-flagged entry is dropped even when `package.json` calls it a dependency), and point at a declaration file that exists; and that no dependency imported by `src/` is left without types at all — the defect that failed the Vercel build on `src/components/LeafletLocationMap.tsx:17` when the map landed with `leaflet` but no `@types/leaflet` | that the declarations are CORRECT (only the compiler proves that, and `npm run build` is the run that does), and whether the Vercel project really installs with dev-dependencies omitted — a project setting this repository cannot read |
+
 A green PGlite run means "the SQL is sound". A green `test:issues` run means "the
 mappings behave". A green `test:estimates` run means "the total on the button is
 the total that gets stored". A green `test:auth` run means "the recovery rules and the
@@ -68,6 +72,9 @@ A green `test:pwa` run means "the app is installable, and its service worker can
 ever show a page the server has actually sent".
 A green `test:design` run means "the palette is legible in both themes, and no
 component can quietly reintroduce white-on-white or sub-AA text".
+A green `test:dependency-types` run means "the declarations the production build
+needs survive an install that omits dev-dependencies, and no dependency imported by
+`src/` is left untyped".
 
 A green live run
 means "the deployed
