@@ -17,6 +17,10 @@
 .DS_Store
 *.pem
 
+# a stale copy of this project that sits beside it on the author's machine and is
+# never part of a deploy (tsconfig.json excludes it from the type-check as well)
+/SPARKServ/
+
 # local dev / debug output
 *.log
 
