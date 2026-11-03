@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-display: "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-body: "Segoe UI", Arial, sans-serif;
+  --font-mono: "Consolas", "Courier New", monospace;
+}
 /* ---------------------------------------------------------------- theming
    Every colour that must respond to the theme is stored as an RGB *triplet*
    rather than a hex, so Tailwind's `/opacity` modifiers keep working:
