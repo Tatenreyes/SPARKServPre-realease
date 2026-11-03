@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/assignment-tick",
+      "path": "/api/cron",
       "schedule": "*/5 * * * *"
     }
   ]
