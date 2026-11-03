@@ -23,6 +23,9 @@
 # scratch output from local build, type-check and audit runs — never part of a
 # release, and easy to commit by accident because they sit in the project root
 /build-*.txt
+/*-out.txt
+/*-done.txt
+/git-status.txt
 /c2.txt
 /colour-audit.txt
 /tsc-check.txt

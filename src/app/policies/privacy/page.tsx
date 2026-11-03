@@ -3,7 +3,7 @@ import PolicyLayout, { type PolicySection } from "@/components/PolicyLayout";
 const SECTIONS: PolicySection[] = [
   {
     title: "What we collect",
-    body: "When you create an account we store your name, email address, role, and — if you add one — a profile photo. When you use the service we store the appliances you register, the repair requests you file, the messages you exchange with an assigned technician, the estimates and bookings attached to a job, and the payment reference you submit after a repair is confirmed.",
+    body: "When you create an account we store your name, email address, role, and, if you add one, a profile photo. When you use the service we store the appliances you register, the repair requests you file, the messages you exchange with an assigned technician, the estimates and bookings attached to a job, and the payment reference you submit after a repair is confirmed.",
   },
   {
     title: "Why we collect it",
@@ -11,7 +11,7 @@ const SECTIONS: PolicySection[] = [
   },
   {
     title: "Who can see it",
-    body: "Access is limited by role, and those limits are enforced in the database rather than in the interface. A customer can read only their own requests, bookings and messages. A technician sees the jobs assigned to them and the contact details needed to attend — not other customers' records, and not other technicians' account details. Administrators and super administrators can read platform-wide data in order to run the service.",
+    body: "Access is limited by role, and those limits are enforced in the database rather than in the interface. A customer can read only their own requests, bookings and messages. A technician sees the jobs assigned to them and the contact details needed to attend, not other customers' records, and not other technicians' account details. Administrators and super administrators can read platform-wide data in order to run the service.",
   },
   {
     title: "Who cannot see it",
@@ -31,7 +31,7 @@ const SECTIONS: PolicySection[] = [
   },
   {
     title: "Retention and your choices",
-    body: "Repair records are retained so service history and completed work remain auditable. You can update your name, address and profile photo at any time from your profile page, and you can ask an administrator to remove your account. Some records — a confirmed payment, a completed job — are kept after account removal because they document a transaction that already happened.",
+    body: "Repair records are retained so service history and completed work remain auditable. You can update your name, address and profile photo at any time from your profile page, and you can ask an administrator to remove your account. Some records, a confirmed payment, a completed job, are kept after account removal because they document a transaction that already happened.",
   },
   {
     title: "Status of this document",
@@ -40,7 +40,7 @@ const SECTIONS: PolicySection[] = [
 ];
 
 export const metadata = {
-  title: "Privacy Policy — SPARKServ",
+  title: "Privacy Policy, SPARKServ",
   description: "How SPARKServ collects, uses and limits access to your data.",
 };
 

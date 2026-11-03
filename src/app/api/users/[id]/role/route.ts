@@ -5,7 +5,7 @@ import type { UserRole } from "@/types/database";
 
 const VALID_ROLES: UserRole[] = ["customer", "technician", "admin", "super_admin"];
 
-// PATCH /api/users/:id/role — super_admin only, full system control over roles
+// PATCH /api/users/:id/role, super_admin only, full system control over roles
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }

@@ -6,7 +6,7 @@
  *
  * Rules this component holds itself to:
  *   * Nothing is sent anywhere until the customer presses "Confirm this
- *     location" — the confirmed point is the only value the wizard submits.
+ *     location", the confirmed point is the only value the wizard submits.
  *   * The browser's Geolocation API runs ONLY from the explicit "Use my
  *     location" button, once, with the browser's own permission prompt. There
  *     is no `watchPosition`, so the customer is never tracked.
@@ -23,12 +23,21 @@ import {
   type ServiceCoordinates,
 } from "@/lib/geo";
 
-/** One control size for the whole form (see RequestRepairWizard). */
+/**
+ * One control size and one colour recipe for the whole form (see
+ * RequestRepairWizard). `text-ink`, never `text-white`: the field is on
+ * `bg-surface`, which is white in light mode.
+ */
 const FIELD =
-  "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-base text-white placeholder:text-white/60 sm:text-sm";
+  "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-base text-ink placeholder:text-ink/50 transition-colors duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 sm:text-sm";
 
+/**
+ * A secondary action that sits ON a surface, so it is `text-ink/80` with a
+ * `hover:text-ink`, a white label here was invisible in light mode, which made
+ * "Clear pin" and "Use my location" look like empty rectangles.
+ */
 const ACTION_BUTTON =
-  "inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-xs font-semibold text-white transition duration-200 hover:bg-soft disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-xs font-semibold text-ink/80 transition duration-200 hover:bg-soft hover:text-ink disabled:cursor-not-allowed disabled:opacity-50";
 
 export interface ServiceLocationPickerProps {
   /** Address field id, so the label's `htmlFor` keeps working. */
@@ -165,7 +174,7 @@ export default function ServiceLocationPicker({
 
   return (
     <div className="sm:col-span-2">
-      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-white">
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-ink/80">
         {label}
         {required ? " *" : ""}
       </label>
@@ -194,17 +203,17 @@ export default function ServiceLocationPicker({
               );
             }
           }}
-          className="mt-2 inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-soft px-3 text-xs font-semibold text-white transition duration-200 hover:bg-brand-soft"
+          className="mt-2 inline-flex min-h-[44px] cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-soft px-3 text-xs font-semibold text-ink/80 transition duration-200 hover:bg-brand-soft hover:text-ink"
         >
           Use my last service address
         </button>
       )}
 
-      <p className="mt-1.5 text-xs leading-relaxed text-white/70">{helperText}</p>
+      <p className="mt-1.5 text-xs leading-relaxed text-muted">{helperText}</p>
 
       <div className="mt-4 rounded-xl border border-line bg-surface p-3 sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-white">
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-ink">
             <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-ink" aria-hidden="true" />
             Pin the exact service location
           </p>
@@ -215,11 +224,11 @@ export default function ServiceLocationPicker({
           )}
         </div>
 
-        <p className="mt-1 text-xs leading-relaxed text-white/70">
+        <p className="mt-1 text-xs leading-relaxed text-muted">
           Tap or click the map to drop a pin, and drag the pin to fine-tune it. Click
           the map once and the scroll wheel (or a pinch) zooms in, and the big{" "}
-          <span className="font-semibold text-white">+</span> /{" "}
-          <span className="font-semibold text-white">−</span> buttons work any time.
+          <span className="font-semibold text-ink">+</span> /{" "}
+          <span className="font-semibold text-ink">−</span> buttons work any time.
           {address ? ` Written address: ${address}` : ""}
         </p>
 
@@ -243,12 +252,12 @@ export default function ServiceLocationPicker({
           </button>
         </div>
 
-        <p className="mt-2.5 text-xs font-medium text-white" aria-live="polite">
+        <p className="mt-2.5 text-xs font-medium text-ink/80" aria-live="polite">
           {confirmed && draft
             ? `Confirmed pin: ${formatCoordinates(draft)}`
             : draft
-              ? "Pin placed but not confirmed yet — press “Confirm this location”."
-              : "No pin yet — tap the map to place one, or skip the map and use your written address."}
+              ? "Pin placed but not confirmed yet, press “Confirm this location”."
+              : "No pin yet, tap the map to place one, or skip the map and use your written address."}
         </p>
 
         {message && (
@@ -264,7 +273,7 @@ export default function ServiceLocationPicker({
           </p>
         )}
 
-        <p className="mt-2 text-[11px] leading-relaxed text-white/70">
+        <p className="mt-2 text-xs leading-relaxed text-muted">
           Your location is shared only with the technician assigned to this request
           and with SPARKServ staff handling it. We never track your device
           continuously.

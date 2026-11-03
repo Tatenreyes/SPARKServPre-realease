@@ -7,7 +7,7 @@ import type { PaymentRow } from "@/types/database";
 const STATUS_LABEL: Record<string, string> = {
   pending_verification: "Pending verification",
   confirmed: "Confirmed",
-  rejected: "Rejected — please re-submit",
+  rejected: "Rejected, please re-submit",
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -23,7 +23,7 @@ export default function PaymentForm({
 }: {
   bookingId: string;
   existingPayment: PaymentRow | null;
-  /** The exact amount the API will accept — the final cost, or the accepted estimate. */
+  /** The exact amount the API will accept, the final cost, or the accepted estimate. */
   amountDue?: number | null;
 }) {
   const router = useRouter();
@@ -59,9 +59,9 @@ export default function PaymentForm({
   }
 
   return (
-    <div className="rounded-card border border-ink/8 bg-surface p-5 shadow-card">
+    <div className="rounded-card border border-line bg-surface p-5 shadow-card">
       <h3 className="font-display text-base font-semibold text-ink">Payment</h3>
-      <p className="mt-1 text-xs text-ink/50">
+      <p className="mt-1 text-xs text-ink/80">
         Pay the technician via GCash, then submit the reference number here so admin can
         verify it. Only you (the customer) can submit this.
       </p>
@@ -76,7 +76,7 @@ export default function PaymentForm({
               {STATUS_LABEL[existingPayment.status]}
             </span>
           </div>
-          <p className="mt-1 text-xs text-ink/40">Ref: {existingPayment.gcash_reference}</p>
+          <p className="mt-1 text-xs text-ink/70">Ref: {existingPayment.gcash_reference}</p>
 
           {/* A rejected reference is shown WITH its reason, and the form below
               returns so the customer can submit a new one. The reason is
@@ -102,7 +102,7 @@ export default function PaymentForm({
             value={reference}
             onChange={(e) => setReference(e.target.value)}
             placeholder="GCash reference number"
-            className="w-full rounded-lg border border-ink/15 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-line bg-canvas px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/30"
           />
           <input
             required
@@ -113,8 +113,8 @@ export default function PaymentForm({
             onChange={(e) => setAmount(e.target.value)}
             readOnly={amountDue != null}
             placeholder="Amount paid (₱)"
-            className={`w-full rounded-lg border border-ink/15 px-3 py-2 text-sm ${
-              amountDue != null ? "bg-soft text-muted" : ""
+            className={`w-full rounded-lg border border-line bg-canvas px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/30 ${
+              amountDue != null ? "bg-soft" : ""
             }`}
           />
           {amountDue == null && (

@@ -15,11 +15,11 @@ import {
 } from "@/lib/time-of-day";
 
 /**
- * Three native selects — hour, minute, AM/PM — for the preferred service window.
+ * Three native selects, hour, minute, AM/PM, for the preferred service window.
  *
  * The same reasoning as `DateSelect`: `input type="time"` is plain `--:--` segments with
  * a small icon, has no popup at all on Firefox desktop, and cannot be styled to match
- * the rest of the form. A five-minute grid is also what a visit needs — nobody books
+ * the rest of the form. A five-minute grid is also what a visit needs, nobody books
  * 09:07.
  *
  * `after` is what makes the end of the window legal: the API drops a window whose end is
@@ -48,13 +48,13 @@ export interface TimeSelectProps {
   value: string;
   /** Called with the chosen `"HH:MM"`, and with "" on clear. */
   onChange: (value: string) => void;
-  /** Only times strictly after this are offered — a window end must follow its start. */
+  /** Only times strictly after this are offered, a window end must follow its start. */
   after?: string;
   disabled?: boolean;
   /** Minutes between choices. Five suits a visit window; fifteen suits working hours. */
   step?: number;
   /**
-   * `split` (the default) is three selects — hour, minute, AM/PM — for a window the
+   * `split` (the default) is three selects, hour, minute, AM/PM, for a window the
    * customer states precisely. `single` is one select of ready-made times, for a dense
    * row such as the availability grid, where three selects per boundary would not fit.
    */
@@ -77,7 +77,7 @@ export default function TimeSelect({
   const parsed = minutesOfDay(value);
 
   // `0` and `-1` mean "not chosen yet": a 12-hour clock never shows 0, and -1 is not a
-  // minute (0 is — on the hour).
+  // minute (0 is, on the hour).
   const [hour12, setHour12] = useState(parsed === null ? 0 : hour12Of(Math.floor(parsed / 60)));
   const [minute, setMinute] = useState(parsed === null ? -1 : parsed % 60);
   const [meridiem, setMeridiem] = useState<"AM" | "PM" | "">(
@@ -105,7 +105,7 @@ export default function TimeSelect({
   const valid = useMemo(() => timeOptions(after, step), [after, step]);
 
   /**
-   * The single-select list, plus the current value when it sits off the grid — a window
+   * The single-select list, plus the current value when it sits off the grid, a window
    * stored at 09:07 (or a shift that predates the step) must still be visible, or the
    * control would silently rewrite it.
    */
@@ -133,7 +133,7 @@ export default function TimeSelect({
    * The compact variant: one select of ready-made times.
    *
    * It exists because the availability grid puts a start and an end in one row beside a
-   * weekday select and an Add button — six selects there would not fit, and three per
+   * weekday select and an Add button, six selects there would not fit, and three per
    * boundary would wrap the row into a column.
    */
   if (variant === "single") {
@@ -157,8 +157,8 @@ export default function TimeSelect({
 
         {/* Said out loud rather than shown as an empty list, which reads as broken. */}
         {!disabled && valid.length === 0 && (
-          <p className="mt-1 text-[11px] text-ink/55">
-            No time left in the day after that start — pick an earlier one.
+          <p className="mt-1 text-[11px] text-ink/70">
+            No time left in the day after that start, pick an earlier one.
           </p>
         )}
       </div>
@@ -261,7 +261,7 @@ export default function TimeSelect({
       {/* Said out loud rather than shown as three empty lists, which read as broken. */}
       {!disabled && valid.length === 0 && (
         <p className="mt-1 text-[11px] text-muted">
-          No time left in the day after that start — pick an earlier one.
+          No time left in the day after that start, pick an earlier one.
         </p>
       )}
     </div>

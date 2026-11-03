@@ -14,31 +14,31 @@ export const staggerContainer = (stagger = 0.12, delayChildren = 0): Variants =>
   },
 });
 
-/** Fade in + slide up — used for hero lines and section headings */
+/** Fade in + slide up, used for hero lines and section headings */
 export const fadeUp: Variants = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };
 
-/** Fade in + slide up — used for service/feature cards, slightly faster */
+/** Fade in + slide up, used for service/feature cards, slightly faster */
 export const cardFadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
-/** Slide in from the left — odd-numbered "how it works" steps */
+/** Slide in from the left, odd-numbered "how it works" steps */
 export const slideInLeft: Variants = {
   hidden: { opacity: 0, x: -40 },
   show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };
 
-/** Slide in from the right — even-numbered "how it works" steps */
+/** Slide in from the right, even-numbered "how it works" steps */
 export const slideInRight: Variants = {
   hidden: { opacity: 0, x: 40 },
   show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };
 
-/** Pop in with a gentle scale — used for the "why choose us" style cards */
+/** Pop in with a gentle scale, used for the "why choose us" style cards */
 export const popScale: Variants = {
   hidden: { opacity: 0, scale: 0.85 },
   show: {

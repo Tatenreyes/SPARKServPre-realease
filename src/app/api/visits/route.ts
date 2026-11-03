@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 
-// POST /api/visits — technician (or admin) schedules a visit for one of their bookings
+// POST /api/visits, technician (or admin) schedules a visit for one of their bookings
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/visits?booking_id=... — list visits for a booking
+// GET /api/visits?booking_id=..., list visits for a booking
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();

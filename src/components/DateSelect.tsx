@@ -30,7 +30,7 @@ const MONTHS = [
 ];
 
 /**
- * Three native selects — month, day, year — rather than a calendar grid.
+ * Three native selects, month, day, year, rather than a calendar grid.
  *
  * A phone shows its own wheel for each, a desktop shows a dropdown, and Firefox
  * gets the same thing as Chrome: `input type="date"` was already here, but it
@@ -43,7 +43,7 @@ const MONTHS = [
  * `w-full`, which would make each select claim a whole row of its own.
  *
  * One control serves both date fields, and `direction` decides which side of today
- * it is for — the purchase date (1970 .. today) and the requested service date
+ * it is for, the purchase date (1970 .. today) and the requested service date
  * (today .. a year ahead). The bounds live in the lib, so the two cannot drift apart:
  * the same clamping that stops a purchase date in the future stops a service date in
  * the past.
@@ -63,7 +63,7 @@ export interface DateSelectProps {
   /**
    * Which side of today this field is for. `past` (the default) is an appliance's
    * purchase date, `future` is a requested service date, and `any` is a warranty
-   * expiry — the one date that may legitimately be either.
+   * expiry, the one date that may legitimately be either.
    */
   direction?: "past" | "future" | "any";
 }
@@ -110,7 +110,7 @@ export default function DateSelect({
   const bounds = chosen ? selectableDayRange(year, month, range) : null;
 
   /**
-   * The day list. Before a month and a year exist it is a whole month — a partial choice
+   * The day list. Before a month and a year exist it is a whole month, a partial choice
    * cannot be committed anyway, and an empty Day list would look broken. Once both are
    * known the list is exactly the selectable span, or the stored day alone when the month
    * itself is out of range, so a value from an older row still renders.
@@ -135,7 +135,7 @@ export default function DateSelect({
 
   /**
    * Clamp the day rather than clear it: 31 January followed by "February" should read 28
-   * (or 29), not silently empty the field — and in the other direction, a service date
+   * (or 29), not silently empty the field, and in the other direction, a service date
    * cannot keep a day that has already passed this month.
    */
   function clampDay(nextDay: number, nextMonth: number, nextYear: number): number {
@@ -230,10 +230,10 @@ export default function DateSelect({
       {chosen && !bounds && (
         <p className="mt-1 text-[11px] text-muted">
           {position === "before"
-            ? "That date is earlier than this field allows — pick a later month."
+            ? "That date is earlier than this field allows, pick a later month."
             : direction === "future"
-              ? "That is more than a year ahead — pick a nearer month."
-              : "That month hasn't happened yet — pick an earlier one."}
+              ? "That is more than a year ahead, pick a nearer month."
+              : "That month hasn't happened yet, pick an earlier one."}
         </p>
       )}
     </fieldset>

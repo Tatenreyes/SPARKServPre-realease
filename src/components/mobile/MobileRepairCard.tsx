@@ -55,11 +55,11 @@ export default function MobileRepairCard({
         )}
       </div>
 
-      {/* Status is a badge (dot + word), never a bare colour — see
+      {/* Status is a badge (dot + word), never a bare colour, see
           `StatusBadge`. The date sits beside it rather than in its own column. */}
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
         <StatusBadge status={status} size="sm" withDot />
-        <span className="text-[11px] text-muted">
+        <span className="text-xs text-muted">
           {Number.isNaN(date.getTime())
             ? "Date not recorded"
             : date.toLocaleDateString("en-US", {
@@ -85,7 +85,7 @@ export default function MobileRepairCard({
  * The CTA for a repair in a given state, so the list and the card agree.
  *
  * `quoted` is the only status where the next step is a decision rather than a
- * look, and the estimate is the thing being decided — so the button says so.
+ * look, and the estimate is the thing being decided, so the button says so.
  */
 export function repairCta(status: string): string {
   if (status === "quoted") return "Review estimate";

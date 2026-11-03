@@ -21,7 +21,7 @@ const config: Config = {
         /**
          * Theme-aware roles. Each is an RGB triplet in `globals.css` (light in
          * `:root`, dark in `.dark`) wrapped with <alpha-value> so Tailwind's
-         * opacity modifiers keep working — `border-ink/8` and `text-ink/65` are
+         * opacity modifiers keep working — `border-ink/20` and `text-ink/70` are
          * used in hundreds of places and must not need rewriting to go dark.
          *
          * These used to be hardcoded hex, which is exactly why the UI could not

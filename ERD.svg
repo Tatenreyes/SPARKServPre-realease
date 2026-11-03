@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1200" viewBox="0 0 1800 1200" role="img" aria-labelledby="title desc">
+  <title id="title">SPARKServ entity relationship diagram</title>
+  <desc id="desc">Core Supabase Postgres entities and foreign-key relationships for users, appliances, service requests, estimates, bookings, payments, queue operations, messaging, notifications, ratings, and service history.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7fbff"/><stop offset="1" stop-color="#eef5f3"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#17324d" flood-opacity=".13"/></filter>
+    <style>
+      .title{font:700 32px Arial,sans-serif;fill:#17324d}.subtitle{font:400 15px Arial,sans-serif;fill:#526b7f}
+      .table{fill:#fff;stroke:#47677f;stroke-width:2}.head{fill:#17324d}.name{font:700 16px Arial,sans-serif;fill:#fff}.field{font:400 13px Arial,sans-serif;fill:#405a70}.key{font-weight:700;fill:#17324d}.rel{stroke:#6a8193;stroke-width:1.7;fill:none}.label{font:400 11px Arial,sans-serif;fill:#6a8193}
+      .core{stroke:#3973c6}.ops{stroke:#4a9b61}.comm{stroke:#8056b3}.support{stroke:#c88722}
+    </style>
+  </defs>
+  <rect width="1800" height="1200" fill="url(#bg)"/>
+  <text x="60" y="58" class="title">SPARKServ entity-relationship diagram</text>
+  <text x="60" y="84" class="subtitle">Core application schema from Supabase Postgres · PK = primary key · FK = foreign key</text>
+
+  <!-- relationships behind entities -->
+  <g class="rel">
+    <path d="M260 245 L420 245"/><path d="M260 470 L420 470"/><path d="M260 695 L420 695"/>
+    <path d="M665 245 L820 245"/><path d="M665 470 L820 470"/><path d="M665 695 L820 695"/>
+    <path d="M1040 245 L1190 245"/><path d="M1040 470 L1190 470"/><path d="M1040 695 L1190 695"/>
+    <path d="M1390 245 L1540 245"/><path d="M1390 470 L1540 470"/><path d="M1390 695 L1540 695"/>
+    <path d="M500 320 C500 370 500 395 500 435"/><path d="M920 320 C920 370 920 395 920 435"/>
+    <path d="M1270 320 C1270 370 1270 395 1270 435"/><path d="M1620 320 C1620 370 1620 395 1620 435"/>
+    <path d="M500 545 C500 595 500 620 500 660"/><path d="M920 545 C920 595 920 620 920 660"/>
+    <path d="M1270 545 C1270 595 1270 620 1270 660"/><path d="M1620 545 C1620 595 1620 620 1620 660"/>
+    <path d="M500 770 C500 820 500 845 500 885"/><path d="M920 770 C920 820 920 845 920 885"/>
+    <path d="M1270 770 C1270 820 1270 845 1270 885"/><path d="M1620 770 C1620 820 1620 845 1620 885"/>
+  </g>
+
+  <!-- row 1 -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="140" width="200" height="180" rx="10" class="table core"/><rect x="60" y="140" width="200" height="38" rx="10" class="head"/><text x="78" y="165" class="name">users</text>
+    <text x="78" y="202" class="field key">PK id</text><text x="78" y="224" class="field">role</text><text x="78" y="246" class="field">name / address</text><text x="78" y="268" class="field">avatar_url</text><text x="78" y="290" class="field">created_at</text>
+    <rect x="420" y="140" width="245" height="180" rx="10" class="table ops"/><rect x="420" y="140" width="245" height="38" rx="10" class="head"/><text x="438" y="165" class="name">technicians</text>
+    <text x="438" y="202" class="field key">PK/FK id → users</text><text x="438" y="224" class="field">approved / suspended</text><text x="438" y="246" class="field">specializations</text><text x="438" y="268" class="field">capacity limits</text><text x="438" y="290" class="field">service areas</text>
+    <rect x="820" y="140" width="220" height="180" rx="10" class="table core"/><rect x="820" y="140" width="220" height="38" rx="10" class="head"/><text x="838" y="165" class="name">appliances</text>
+    <text x="838" y="202" class="field key">PK id</text><text x="838" y="224" class="field">customer_id → users</text><text x="838" y="246" class="field">type / brand</text><text x="838" y="268" class="field">model / serial</text><text x="838" y="290" class="field">warranty details</text>
+    <rect x="1190" y="140" width="200" height="180" rx="10" class="table support"/><rect x="1190" y="140" width="200" height="38" rx="10" class="head"/><text x="1208" y="165" class="name">system_settings</text>
+    <text x="1208" y="202" class="field key">PK key</text><text x="1208" y="224" class="field">value</text><text x="1208" y="246" class="field">description</text><text x="1208" y="268" class="field">updated_by → users</text>
+    <rect x="1540" y="140" width="200" height="180" rx="10" class="table comm"/><rect x="1540" y="140" width="200" height="38" rx="10" class="head"/><text x="1558" y="165" class="name">notifications</text>
+    <text x="1558" y="202" class="field key">PK id</text><text x="1558" y="224" class="field">user_id → users</text><text x="1558" y="246" class="field">type / title</text><text x="1558" y="268" class="field">read_at</text><text x="1558" y="290" class="field">created_at</text>
+  </g>
+
+  <!-- row 2 -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="435" width="200" height="180" rx="10" class="table core"/><rect x="60" y="435" width="200" height="38" rx="10" class="head"/><text x="78" y="460" class="name">service_requests</text>
+    <text x="78" y="497" class="field key">PK id</text><text x="78" y="519" class="field">customer_id → users</text><text x="78" y="541" class="field">appliance_id → appliances</text><text x="78" y="563" class="field">assigned_technician_id</text><text x="78" y="585" class="field">status / location</text>
+    <rect x="420" y="435" width="245" height="180" rx="10" class="table ops"/><rect x="420" y="435" width="245" height="38" rx="10" class="head"/><text x="438" y="460" class="name">technician_queue_state</text>
+    <text x="438" y="497" class="field key">PK technician + type</text><text x="438" y="519" class="field">technician_id → users</text><text x="438" y="541" class="field">appliance_type</text><text x="438" y="563" class="field">queue_position</text><text x="438" y="585" class="field">operational status</text>
+    <rect x="820" y="435" width="220" height="180" rx="10" class="table core"/><rect x="820" y="435" width="220" height="38" rx="10" class="head"/><text x="838" y="460" class="name">estimates</text>
+    <text x="838" y="497" class="field key">PK id</text><text x="838" y="519" class="field">service_request_id</text><text x="838" y="541" class="field">technician_id</text><text x="838" y="563" class="field">status / total</text><text x="838" y="585" class="field">supersedes / decision</text>
+    <rect x="1190" y="435" width="200" height="180" rx="10" class="table ops"/><rect x="1190" y="435" width="200" height="38" rx="10" class="head"/><text x="1208" y="460" class="name">bookings</text>
+    <text x="1208" y="497" class="field key">PK id</text><text x="1208" y="519" class="field">service_request_id</text><text x="1208" y="541" class="field">estimate_id</text><text x="1208" y="563" class="field">customer / technician</text><text x="1208" y="585" class="field">schedule / status</text>
+    <rect x="1540" y="435" width="200" height="180" rx="10" class="table comm"/><rect x="1540" y="435" width="200" height="38" rx="10" class="head"/><text x="1558" y="460" class="name">messages</text>
+    <text x="1558" y="497" class="field key">PK id</text><text x="1558" y="519" class="field">booking_id → bookings</text><text x="1558" y="541" class="field">sender_id → users</text><text x="1558" y="563" class="field">receiver_id → users</text><text x="1558" y="585" class="field">content / read_at</text>
+  </g>
+
+  <!-- row 3 -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="660" width="200" height="180" rx="10" class="table ops"/><rect x="60" y="660" width="200" height="38" rx="10" class="head"/><text x="78" y="685" class="name">offer_history</text>
+    <text x="78" y="722" class="field key">PK id</text><text x="78" y="744" class="field">request_id → requests</text><text x="78" y="766" class="field">technician_id → users</text><text x="78" y="788" class="field">accepted / declined</text><text x="78" y="810" class="field">reason / timestamps</text>
+    <rect x="420" y="660" width="245" height="180" rx="10" class="table ops"/><rect x="420" y="660" width="245" height="38" rx="10" class="head"/><text x="438" y="685" class="name">technician_availability</text>
+    <text x="438" y="722" class="field key">PK id</text><text x="438" y="744" class="field">technician_id → users</text><text x="438" y="766" class="field">weekday / hours</text><text x="438" y="788" class="field">timezone</text><text x="438" y="810" class="field">active</text>
+    <rect x="820" y="660" width="220" height="180" rx="10" class="table support"/><rect x="820" y="660" width="220" height="38" rx="10" class="head"/><text x="838" y="685" class="name">payments</text>
+    <text x="838" y="722" class="field key">PK id</text><text x="838" y="744" class="field">booking_id → bookings</text><text x="838" y="766" class="field">customer_id → users</text><text x="838" y="788" class="field">GCash reference</text><text x="838" y="810" class="field">verified / rejected by</text>
+    <rect x="1190" y="660" width="200" height="180" rx="10" class="table support"/><rect x="1190" y="660" width="200" height="38" rx="10" class="head"/><text x="1208" y="685" class="name">visits</text>
+    <text x="1208" y="722" class="field key">PK id</text><text x="1208" y="744" class="field">booking_id → bookings</text><text x="1208" y="766" class="field">technician_id → users</text><text x="1208" y="788" class="field">scheduled_at</text><text x="1208" y="810" class="field">status</text>
+    <rect x="1540" y="660" width="200" height="180" rx="10" class="table comm"/><rect x="1540" y="660" width="200" height="38" rx="10" class="head"/><text x="1558" y="685" class="name">ratings</text>
+    <text x="1558" y="722" class="field key">PK id</text><text x="1558" y="744" class="field">booking_id → bookings</text><text x="1558" y="766" class="field">customer_id → users</text><text x="1558" y="788" class="field">technician_id</text><text x="1558" y="810" class="field">score / comment</text>
+  </g>
+
+  <!-- row 4 -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="885" width="200" height="180" rx="10" class="table support"/><rect x="60" y="885" width="200" height="38" rx="10" class="head"/><text x="78" y="910" class="name">service_history</text>
+    <text x="78" y="947" class="field key">PK id</text><text x="78" y="969" class="field">booking_id → bookings</text><text x="78" y="991" class="field">customer / technician</text><text x="78" y="1013" class="field">inspection note</text><text x="78" y="1035" class="field">warranty metadata</text>
+    <rect x="420" y="885" width="245" height="180" rx="10" class="table comm"/><rect x="420" y="885" width="245" height="38" rx="10" class="head"/><text x="438" y="910" class="name">push_subscriptions</text>
+    <text x="438" y="947" class="field key">PK id</text><text x="438" y="969" class="field">user_id → users</text><text x="438" y="991" class="field">endpoint</text><text x="438" y="1013" class="field">p256dh / auth keys</text><text x="438" y="1035" class="field">created_at</text>
+    <rect x="820" y="885" width="220" height="180" rx="10" class="table support"/><rect x="820" y="885" width="220" height="38" rx="10" class="head"/><text x="838" y="910" class="name">support_tickets</text>
+    <text x="838" y="947" class="field key">PK id</text><text x="838" y="969" class="field">user_id → users</text><text x="838" y="991" class="field">type / priority</text><text x="838" y="1013" class="field">status</text><text x="838" y="1035" class="field">subject / message</text>
+    <rect x="1190" y="885" width="200" height="180" rx="10" class="table ops"/><rect x="1190" y="885" width="200" height="38" rx="10" class="head"/><text x="1208" y="910" class="name">time_off</text>
+    <text x="1208" y="947" class="field key">PK id</text><text x="1208" y="969" class="field">technician_id → users</text><text x="1208" y="991" class="field">start_at / end_at</text><text x="1208" y="1013" class="field">reason</text>
+    <rect x="1540" y="885" width="200" height="180" rx="10" class="table ops"/><rect x="1540" y="885" width="200" height="38" rx="10" class="head"/><text x="1558" y="910" class="name">service_areas</text>
+    <text x="1558" y="947" class="field key">PK id</text><text x="1558" y="969" class="field">technician_id → users</text><text x="1558" y="991" class="field">area / coordinates</text><text x="1558" y="1013" class="field">active</text>
+  </g>
+
+  <text x="60" y="1145" class="label">Relationships shown are the core foreign-key paths; RLS policies, triggers, RPCs, and derived queue snapshots enforce workflow rules around them.</text>
+</svg>

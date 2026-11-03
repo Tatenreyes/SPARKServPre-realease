@@ -5,12 +5,12 @@ import { notify } from "@/lib/notifications";
 import { formatMoney, validateEstimate } from "@/lib/estimate-costs";
 import type { EstimateSubmissionOutcome } from "@/types/database";
 
-// POST /api/estimates — the assigned technician submits an estimate.
+// POST /api/estimates, the assigned technician submits an estimate.
 //
 // Itemized (labour / parts / additional charges) and versioned: the total is
 // computed server-side from those lines (never taken from the browser), and a
 // revision is stored as a NEW version so the one the customer reviewed is never
-// overwritten. The state machine lives in submit_estimate() — see
+// overwritten. The state machine lives in submit_estimate(), see
 // supabase/migration_estimate_workflow.sql.
 //
 // body: {
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/estimates?service_request_id=... — list estimates for a request
+// GET /api/estimates?service_request_id=..., list estimates for a request
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();

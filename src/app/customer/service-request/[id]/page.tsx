@@ -30,7 +30,7 @@ export default async function ServiceRequestDetailPage({
   let assignedTechnician: TechnicianProfile | null = null;
   if (request.assigned_technician_id) {
     const technicianId = request.assigned_technician_id;
-    // The published profile only — name, photo, verification, rating, workload.
+    // The published profile only, name, photo, verification, rating, workload.
     // The `technicians` row and the ratings are read alongside the user so the card
     // can show real evidence instead of a bare name; each degrades to null rather
     // than inventing a zero.

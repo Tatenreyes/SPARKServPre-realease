@@ -40,10 +40,10 @@ export default async function TechnicianBookingDetailPage({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-xl font-semibold capitalize text-ink">
-            {request?.appliance_type.replace("_", " ") ?? "Repair"} — {customerUser?.name ?? "Customer"}
+            {request?.appliance_type.replace("_", " ") ?? "Repair"}, {customerUser?.name ?? "Customer"}
           </h1>
-          <p className="text-sm text-ink/50">{request?.problem_description}</p>
-          <p className="mt-1 text-xs text-ink/40">
+          <p className="text-sm text-ink/70">{request?.problem_description}</p>
+          <p className="mt-1 text-xs text-ink/70">
             Scheduled: {new Date(booking.scheduled_at).toLocaleString()}
           </p>
         </div>
@@ -59,7 +59,7 @@ export default async function TechnicianBookingDetailPage({
         longitude={request?.longitude ?? null}
         title="Service location"
         showDirections
-        emptyMessage="No service location was recorded on this request — message the customer to confirm the address."
+        emptyMessage="No service location was recorded on this request, message the customer to confirm the address."
       />
 
       {/* Messaging lives under Messages, not on the job page: the thread used to be
@@ -67,7 +67,7 @@ export default async function TechnicianBookingDetailPage({
           map. This is the way to it. */}
       <Link
         href={`/technician/messages/${booking.id}`}
-        className="flex items-center justify-between gap-3 rounded-card border border-ink/8 bg-surface p-4 shadow-card transition hover:border-brand-300"
+        className="flex items-center justify-between gap-3 rounded-card border border-line bg-surface p-4 shadow-card transition hover:border-brand-300"
       >
         <span className="flex min-w-0 items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-ink">
@@ -77,10 +77,10 @@ export default async function TechnicianBookingDetailPage({
             <span className="block truncate font-medium text-ink">
               Message {customerUser?.name ?? "Customer"}
             </span>
-            <span className="block text-sm text-ink/50">Open the conversation</span>
+            <span className="block text-sm text-ink/70">Open the conversation</span>
           </span>
         </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-ink/35" aria-hidden="true" />
+        <ChevronRight className="h-4 w-4 shrink-0 text-ink/70" aria-hidden="true" />
       </Link>
     </div>
   );

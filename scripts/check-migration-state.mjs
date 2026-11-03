@@ -423,6 +423,27 @@ const MIGRATIONS = [
     // migrations).
     prerequisiteOf: [],
   },
+  {
+    // Step 20, the queue's turn guard. Both functions it replaces
+    // (`technician_queue_snapshot`, `assign_technician_to_request`) exist since
+    // step 4 / step 14, so their presence in the OpenAPI document proves nothing
+    // about THIS file — a function probe here would report "applied" for a project
+    // that never ran it, which is the misreport this registry exists to prevent.
+    // The signal is therefore the marker row the file writes, the same pattern
+    // step 4 uses with `queue_model_version`.
+    order: 20,
+    file: "supabase/migration_queue_offer_guards.sql",
+    purpose:
+      "The queue view exposes whose turn was last consumed (technician_queue_snapshot().last_assigned_at) and the walk refuses a request that already has an owner (assign_technician_to_request() answers already_assigned instead of offering), so a technician's turn can never be spent on a request that cannot become a booking",
+    columns: [],
+    tables: [],
+    functions: [],
+    settings: [["queue_offer_guards_version", "20"]],
+    // It replaces functions created by step 4 (queue redesign) and step 14 (offer
+    // lifecycle), and the snapshot's drop/create needs the queue table those steps
+    // install.
+    prerequisiteOf: [],
+  },
 ];
 
 /**

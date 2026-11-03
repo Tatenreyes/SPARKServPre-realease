@@ -23,7 +23,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { customerAssignmentCopy } from "../../src/lib/queue.ts";
+import { customerAssignmentCopy, buildApplianceQueues, queueTurnNote } from "../../src/lib/queue.ts";
 
 const STATES = ["matching", "offered", "waiting", "accepted", "something-unheard-of"];
 
@@ -93,4 +93,80 @@ test("no other state's copy changes when coverage is known", () => {
       `${status} must not react to coverage`
     );
   }
+});
+
+// ------------------------------------- the number that looked like a contradiction
+//
+// A technician who had just accepted two jobs read `#3` in one queue and `#4` in the
+// other and reasonably asked why the work went to him. The engine was right: accepting
+// consumes the turn and moves the technician to the END of the rotation, so the
+// position is a snapshot taken AFTER the acceptance. The screen now says that.
+
+/** A snapshot row, as `technician_queue_snapshot()` returns it. */
+function snapshotRow(overrides = {}) {
+  return {
+    appliance_type: "aircon",
+    queue_position: 3,
+    technician_id: "tech-1",
+    technician_name: "AMPOL",
+    operational_status: "AVAILABLE",
+    is_self: true,
+    is_member_active: true,
+    is_next_in_queue: false,
+    queue_status: "IN_ROTATION",
+    next_booking_at: null,
+    current_job_until: null,
+    active_offer_request_id: null,
+    offers_expires_at: null,
+    last_assigned_at: "2026-10-29T09:49:05.999261+00:00",
+    ...overrides,
+  };
+}
+
+test("the view model carries when the turn was last consumed", () => {
+  const [queue] = buildApplianceQueues([snapshotRow()]);
+  assert.equal(queue.myEntry.lastAssignedAt, "2026-10-29T09:49:05.999261+00:00");
+});
+
+test("the note explains the position instead of leaving it to look wrong", () => {
+  const [queue] = buildApplianceQueues([snapshotRow()]);
+  const note = queueTurnNote(queue);
+
+  assert.ok(note, "a technician with a consumed turn gets the note");
+  assert.match(note, /turn was last consumed/);
+  assert.match(
+    note,
+    /end of this rotation/,
+    "it must name the rule that produced the number"
+  );
+  // It explains a POSITION, it does not promise work — the same discipline the
+  // customer-facing copy follows.
+  assert.doesNotMatch(note, /next job is yours|you will get|guaranteed/i);
+});
+
+test("no note is invented when there is nothing to explain", () => {
+  // Never accepted in this queue: a first turn cannot have been consumed.
+  const [firstTurn] = buildApplianceQueues([snapshotRow({ last_assigned_at: null })]);
+  assert.equal(queueTurnNote(firstTurn), null);
+
+  // Out of the rotation: there is no position to explain.
+  const [removed] = buildApplianceQueues([
+    snapshotRow({ is_member_active: false, queue_status: "TEMPORARILY_REMOVED" }),
+  ]);
+  assert.equal(queueTurnNote(removed), null);
+
+  // Not a member of this queue at all.
+  const [other] = buildApplianceQueues([snapshotRow({ is_self: false })]);
+  assert.equal(queueTurnNote(other), null);
+});
+
+test("a database without step 20 degrades to no note, never to a wrong one", () => {
+  // The column is absent until the migration is applied, so it must not throw and
+  // must not invent an acceptance.
+  const row = snapshotRow();
+  delete row.last_assigned_at;
+  const [queue] = buildApplianceQueues([row]);
+
+  assert.equal(queue.myEntry.lastAssignedAt, null);
+  assert.equal(queueTurnNote(queue), null);
 });

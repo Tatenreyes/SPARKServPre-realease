@@ -17,7 +17,7 @@ export default async function AdminSupportTicketsPage() {
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">Support tickets</h1>
-      <p className="mt-1 text-sm text-ink/65">Manage customer inquiries and support requests.</p>
+      <p className="mt-1 text-sm text-ink/70">Manage customer inquiries and support requests.</p>
       <AdminSupportTicketsClient
         initialTickets={tickets ?? []}
         userInfo={Object.fromEntries((users ?? []).map((u) => [u.id, u]))}

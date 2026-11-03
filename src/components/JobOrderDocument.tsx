@@ -21,7 +21,7 @@ import { parseIsoDate } from "@/lib/appliance-fields";
  * document and nothing else.
  *
  * The component is presentational and pure: it renders the object
- * `buildJobOrder()` produced and formats no money of its own — that happens once
+ * `buildJobOrder()` produced and formats no money of its own, that happens once
  * in the module, so the screen and the paper cannot disagree.
  */
 export default function JobOrderDocument({ jobOrder }: { jobOrder: JobOrder }) {
@@ -144,7 +144,7 @@ export default function JobOrderDocument({ jobOrder }: { jobOrder: JobOrder }) {
 
       <footer className="mt-8 border-t border-[#D7DEE8] pt-4 text-xs leading-relaxed text-[#5A6B82]">
         This job order records the appliance serviced, the work performed and the amount
-        charged. Keep it for your records — it is the reference for any question about this
+        charged. Keep it for your records, it is the reference for any question about this
         repair. Reference {jobOrder.reference}.
       </footer>
     </article>
@@ -181,21 +181,21 @@ function SignatureLine({ label }: { label: string }) {
 }
 
 function formatDate(value: string | null): string {
-  if (!value) return "—";
-  // A CALENDAR date — `warranty_until` and `payment_date` are `date` columns — must
+  if (!value) return "N/A";
+  // A CALENDAR date, `warranty_until` and `payment_date` are `date` columns, must
   // be read as a local calendar date. `new Date("2026-12-14")` is UTC midnight and
   // renders as the 13th anywhere west of UTC, which would print a warranty that
   // expires a day early; `parseIsoDate` exists in this project for exactly this.
   const calendar = parseIsoDate(value);
   const date = calendar ?? new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "N/A";
   return date.toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
 }
 
 function formatDateTime(value: string | null): string {
-  if (!value) return "—";
+  if (!value) return "N/A";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "N/A";
   return date.toLocaleString("en-PH", {
     year: "numeric",
     month: "long",

@@ -9,7 +9,7 @@ export default function MaintenancePage() {
       <h1 className="mt-4 font-display text-xl font-semibold text-ink">
         SPARKServ is temporarily down for maintenance
       </h1>
-      <p className="mt-2 max-w-sm text-sm text-ink/60">
+      <p className="mt-2 max-w-sm text-sm text-ink/70">
         We&apos;re making some improvements. Please check back shortly.
       </p>
     </div>

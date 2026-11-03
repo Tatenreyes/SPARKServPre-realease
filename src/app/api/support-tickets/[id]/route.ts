@@ -5,7 +5,7 @@ import type { TicketStatus } from "@/types/database";
 
 const VALID_STATUSES: TicketStatus[] = ["open", "in_progress", "resolved", "closed"];
 
-// PATCH /api/support-tickets/:id — admin updates a ticket's status.
+// PATCH /api/support-tickets/:id, admin updates a ticket's status.
 // RLS already allows this via the regular client (is_admin() check in the policy).
 export async function PATCH(
   request: NextRequest,

@@ -11,7 +11,7 @@
  * Messages, and this test keeps the wiring that way.
  *
  * It reads the files as text — there is no page runner in this repository (see
- * TESTING.md §4), and a copy of the routing in the test would be a second thing to
+ * TESTING.md §5), and a copy of the routing in the test would be a second thing to
  * drift.
  */
 import test from "node:test";

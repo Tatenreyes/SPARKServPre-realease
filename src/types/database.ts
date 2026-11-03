@@ -36,13 +36,13 @@ export type OfferStatus = "offered" | "accepted" | "rejected";
 
 /**
  * What the customer reported after trying the preliminary troubleshooting
- * checks. Their report only — never a verified repair or a diagnosis. `null`
+ * checks. Their report only, never a verified repair or a diagnosis. `null`
  * means they never reached the checks.
  */
 export type TroubleshootingOutcome = "resolved" | "unresolved" | "skipped";
 
 /**
- * A technician's OPERATIONAL state — deliberately separate from queue
+ * A technician's OPERATIONAL state, deliberately separate from queue
  * membership. A technician can be SCHEDULED (has a future appointment) and
  * still sit at position #2 in the rotation; only a real schedule conflict skips
  * them for a specific request. See QUEUE-SYSTEM.md.
@@ -142,7 +142,7 @@ export interface TechnicianRow {
   approved_at: string | null;
   approved_by: string | null;
   created_at: string;
-  // Queue model v2 — operational state and workload limits (see QUEUE-SYSTEM.md)
+  // Queue model v2, operational state and workload limits (see QUEUE-SYSTEM.md)
   operational_status: OperationalStatus;
   status_updated_at: string;
   max_daily_hours: number;
@@ -226,6 +226,15 @@ export interface TechnicianQueueSnapshotRow {
   current_job_until: string | null;
   active_offer_request_id: string | null;
   offers_expires_at: string | null;
+  /**
+   * When this technician's turn was last consumed for this appliance type (step 20,
+   * see `supabase/migration_queue_offer_guards.sql`). Accepting a request moves the
+   * technician to the END of the rotation, so `queue_position` is a snapshot taken
+   * AFTER their last acceptance: `#3` does not mean "three people were ahead of me
+   * when the last job came round". This is what lets the screen say which it is.
+   * Null when they have never accepted a request in this queue.
+   */
+  last_assigned_at: string | null;
 }
 
 export interface ServiceRequestRow {
@@ -241,8 +250,8 @@ export interface ServiceRequestRow {
   chatbot_resolved: boolean;
   /**
    * The service location the customer confirmed on the map (src/lib/geo.ts).
-   * `latitude`/`longitude` are a pair — the database rejects one without the
-   * other, and both are range-checked — so a marker can only be drawn when a
+   * `latitude`/`longitude` are a pair, the database rejects one without the
+   * other, and both are range-checked, so a marker can only be drawn when a
    * complete, valid coordinate is present. Readable by the owning customer, an
    * ASSIGNED technician and administrators; never by an unaccepted offer.
    */
@@ -252,7 +261,7 @@ export interface ServiceRequestRow {
   /**
    * The issue the customer identified: chosen from the appliance's list, or a
    * detected suggestion they explicitly confirmed. `null` when the problem could
-   * not be identified — the request is still valid and the technician diagnoses it.
+   * not be identified, the request is still valid and the technician diagnoses it.
    * `issue_category` keeps the human label, `issue_id` the stable catalogue id.
    */
   issue_id: string | null;
@@ -273,7 +282,7 @@ export interface ServiceRequestRow {
 /**
  * What technician_pending_offers() returns: an offer addressed to the calling
  * technician, with only the fields needed to decide whether to accept it.
- * Deliberately contains NO address, coordinates or customer identity — an
+ * Deliberately contains NO address, coordinates or customer identity, an
  * unaccepted offer must never expose the customer's precise service location
  * (see supabase/migration_service_location.sql).
  */
@@ -308,7 +317,7 @@ export interface EstimateRow {
   technician_id: string;
   /**
    * The authoritative TOTAL, always equal to `labor_cost + parts_cost +
-   * other_cost` — computed by `submit_estimate()` and enforced by
+   * other_cost`, computed by `submit_estimate()` and enforced by
    * `estimates_amounts_check`, never taken from the browser.
    */
   estimated_cost: number;
@@ -317,7 +326,7 @@ export interface EstimateRow {
   /** What the technician proposes to do. Required for a submitted estimate. */
   scope: string | null;
   labor_cost: number;
-  /** May legitimately be 0 — plenty of repairs need no parts. */
+  /** May legitimately be 0, plenty of repairs need no parts. */
   parts_cost: number;
   other_cost: number;
   /** Required whenever `other_cost` > 0, so an extra charge is never vague. */
@@ -400,7 +409,7 @@ export interface ServiceHistoryRow {
   warranty_days: number;
   /**
    * The last day the repair is covered, or null for a repair archived before step 19
-   * existed — the job order then prints no warranty line rather than claiming one.
+   * existed, the job order then prints no warranty line rather than claiming one.
    */
   warranty_until: string | null;
 }
@@ -688,8 +697,7 @@ export interface Database {
       };
       /**
        * The full queue for an appliance type (null = every queue the caller
-       * belongs to). Callable by a signed-in technician or admin only —
-       * customers are refused inside the function.
+       * belongs to). Callable by a signed-in technician or admin only, * customers are refused inside the function.
        */
       technician_queue_snapshot: {
         Args: { p_appliance_type?: string | null };
@@ -698,9 +706,9 @@ export interface Database {
       /**
        * Server-only: does ANY technician currently qualify for this appliance type?
        *
-       * The same predicate the queue walk and `create_booking_atomic()` use — an active
+       * The same predicate the queue walk and `create_booking_atomic()` use, an active
        * account, an approved technician, not suspended, and an ACTIVE queue membership
-       * for the appliance — so it cannot disagree with who is actually offered the work.
+       * for the appliance, so it cannot disagree with who is actually offered the work.
        * It exists so the API can tell "nobody covers this appliance" apart from
        * "everybody is busy", which are different promises to make to a customer.
        */
@@ -712,7 +720,7 @@ export interface Database {
        * Server-only: the ONE writer of a booking. Locks the request, takes the
        * technician's scheduling lock, re-checks the estimate, the working hours,
        * time off, existing appointments and capacity, then writes the booking, the
-       * request status and the job-load counter in one transaction — or none of it.
+       * request status and the job-load counter in one transaction, or none of it.
        *
        * `already_booked` (with the existing booking id) makes a retry idempotent;
        * every scheduling refusal comes back as an outcome rather than an error, so
@@ -742,8 +750,7 @@ export interface Database {
        * Server-only: the ONLY writer of a payment rejection. Locks the payment
        * row, re-reads the actor's role from the database (administrator or
        * super administrator only), requires a trimmed non-empty reason of at most
-       * 500 characters, and records the decision on its own columns —
-       * `confirmed_by`/`confirmed_at` stay null, because a rejection is not a
+       * 500 characters, and records the decision on its own columns, * `confirmed_by`/`confirmed_at` stay null, because a rejection is not a
        * verification.
        *
        * Nothing else moves: the booking, the service request, the technician's
@@ -751,7 +758,7 @@ export interface Database {
        * the payment step and the customer can submit a new reference.
        *
        * `outcome` is `rejected` (success), or `forbidden` / `invalid_input` /
-       * `not_found` / `not_pending` — every expected condition comes back as an
+       * `not_found` / `not_pending`, every expected condition comes back as an
        * outcome, so the route answers 403/400/404/409 rather than a 500.
        */
       reject_payment: {

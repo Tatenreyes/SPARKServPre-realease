@@ -20,7 +20,7 @@ import {
  * It changes exactly one thing, and only for the session that opened it:
  * `supabase.auth.updateUser({ password })`. No user id, no email and no profile
  * row travels from this component, so there is no value a caller could tamper
- * with to point the update at a different account — the auth server derives the
+ * with to point the update at a different account, the auth server derives the
  * account from the session cookie it issued.
  *
  * The old password is not asked for: possession of a valid recovery session is
@@ -83,7 +83,7 @@ export default function UpdatePasswordForm() {
         // Clear the marker cookie so the authorization leaves the jar with it.
         await fetch(RECOVERY_CLEAR_PATH, { method: "DELETE" });
       } catch {
-        // Not fatal — the marker is bound to the session id ended below, so it
+        // Not fatal, the marker is bound to the session id ended below, so it
         // is unusable even if this request never lands.
       }
 
@@ -112,7 +112,7 @@ export default function UpdatePasswordForm() {
         <h1 className="mt-5 font-display text-2xl font-bold leading-tight text-ink">
           Password updated
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-ink/60">
+        <p className="mt-2 text-sm leading-relaxed text-ink/70">
           Your new password is saved and this reset link has been closed. Log in with your new
           password to continue.
         </p>
@@ -135,7 +135,7 @@ export default function UpdatePasswordForm() {
           <h1 className="font-display text-2xl font-bold leading-tight text-ink">
             Choose a new password
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-ink/60">
+          <p className="mt-2 text-sm leading-relaxed text-ink/70">
             Your reset link has been verified. Set the password you&apos;ll use to log in from now
             on.
           </p>
@@ -221,7 +221,7 @@ export default function UpdatePasswordForm() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-ink/60">
+        <p className="mt-6 text-center text-sm text-ink/70">
           <Link
             href={LOGIN_PATH}
             className="font-semibold text-brand-ink underline-offset-2 transition-colors hover:underline"
@@ -260,7 +260,7 @@ function PasswordField({
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className="flex items-center gap-2 text-sm font-semibold text-ink/80">
-        <Lock className="h-4 w-4 text-ink/40" aria-hidden="true" />
+        <Lock className="h-4 w-4 text-ink/70" aria-hidden="true" />
         {label}
       </label>
       <div className="relative">
@@ -273,19 +273,19 @@ function PasswordField({
           maxLength={MAX_PASSWORD_LENGTH}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 pr-10 text-sm text-ink placeholder:text-ink/30 transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
+          className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 pr-10 text-sm text-ink placeholder:text-ink/50 transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
           placeholder={placeholder}
         />
         <button
           type="button"
           onClick={onToggleVisible}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/30 transition-colors hover:text-ink/60"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/70 transition-colors hover:text-ink"
           aria-label={visible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
         >
           {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
       </div>
-      {hint && <p className="text-xs text-ink/40">{hint}</p>}
+      {hint && <p className="text-xs text-ink/70">{hint}</p>}
     </div>
   );
 }

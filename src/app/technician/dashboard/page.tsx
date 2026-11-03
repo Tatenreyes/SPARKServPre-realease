@@ -25,7 +25,7 @@ export default async function TechnicianDashboard() {
   const user = await getCurrentUser();
   const supabase = createClient();
 
-  // Pending offers are counted through `technician_pending_offers()` — the one
+  // Pending offers are counted through `technician_pending_offers()`, the one
   // read path that returns an unaccepted offer without its address or
   // coordinates (supabase/migration_service_location.sql). Selecting the rows
   // directly would either leak the service location or return nothing at all
@@ -82,7 +82,7 @@ export default async function TechnicianDashboard() {
 
   // QUEUE MODEL v2 (see QUEUE-SYSTEM.md). The rotation is read from
   // technician_queue_snapshot(), which returns the WHOLE queue for every
-  // appliance the signed-in technician belongs to — the other technicians
+  // appliance the signed-in technician belongs to, the other technicians
   // included, because a technician is entitled to see their real standing.
   //
   // Nothing below is re-sorted or re-derived in React any more. The old code
@@ -154,7 +154,7 @@ export default async function TechnicianDashboard() {
 
       {/* Figures before the rotation list. The queue panel below renders every
           technician in the rotation, which on a phone is a long scroll before
-          anything else on the page — so the four counts come first, as a 2x2
+          anything else on the page, so the four counts come first, as a 2x2
           tile grid, and the detail follows. On desktop the same order reads as a
           scoreboard above the detail. */}
       <DashboardStatGroup
@@ -197,7 +197,7 @@ export default async function TechnicianDashboard() {
       <DashboardPanel
         title="Assignment queue"
         icon={ListOrdered}
-        description="Your standing in the rotation for each appliance you cover — a fair turn order, never rating or experience."
+        description="Your standing in the rotation for each appliance you cover, a fair turn order, never rating or experience."
         bodyClassName="px-5 pb-5"
         action={
           <Link
@@ -238,7 +238,7 @@ export default async function TechnicianDashboard() {
         >
           {!todayBookings?.length ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-soft text-muted/80">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-soft text-muted">
                 <CalendarClock className="h-5 w-5" />
               </span>
               <p className="mt-3 text-sm font-medium text-ink">Nothing scheduled yet</p>
@@ -303,7 +303,7 @@ export default async function TechnicianDashboard() {
           <DashboardPanel title="Recent requests" icon={Wrench} bodyClassName="px-5 pb-5">
             {!recentRequests?.length ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-soft text-muted/80">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-soft text-muted">
                   <Wrench className="h-5 w-5" />
                 </span>
                 <p className="mt-3 text-sm font-medium text-ink">No requests assigned yet</p>
@@ -330,10 +330,10 @@ export default async function TechnicianDashboard() {
                         </td>
                         <td className="py-3.5 pr-4 align-top">
                           <p className="font-medium capitalize text-ink">
-                            {request.appliance_type?.replace(/_/g, " ") ?? "—"}
+                            {request.appliance_type?.replace(/_/g, " ") ?? "N/A"}
                           </p>
                           <p className="mt-0.5 line-clamp-1 text-xs text-muted">
-                            {request.location ?? request.problem_description ?? "—"}
+                            {request.location ?? request.problem_description ?? "N/A"}
                           </p>
                         </td>
                         <td className="py-3.5 pr-4 align-top">

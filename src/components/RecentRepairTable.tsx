@@ -5,7 +5,7 @@ import RemoveRequestControl from "@/components/RemoveRequestControl";
 import MobileRepairCard, { repairCta } from "@/components/mobile/MobileRepairCard";
 import type { ServiceRequestRow } from "@/types/database";
 
-/** Micro header label — shared so every table in the app scans the same way. */
+/** Micro header label, shared so every table in the app scans the same way. */
 const TH =
   "pb-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted whitespace-nowrap";
 
@@ -13,7 +13,7 @@ const TH =
  * Recent repairs, in whichever shape the viewport can actually hold.
  *
  * Below `md` this is a stack of cards; from `md` up it is the table it always
- * was. Both render from the same rows, so the two can never disagree — the
+ * was. Both render from the same rows, so the two can never disagree, the
  * alternative (a horizontally scrolling table) technically "works" on a phone
  * and is unusable: it hides the status column behind a swipe, and a swipe inside
  * a vertically scrolling page is a gesture users do by accident.
@@ -33,7 +33,7 @@ export function RecentRepairTable({
   if (!requests?.length) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-soft text-muted/80">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-soft text-muted">
           <ClipboardList className="h-5 w-5" />
         </span>
         <p className="mt-3 text-sm font-medium text-ink">No repairs yet</p>
@@ -97,10 +97,10 @@ export function RecentRepairTable({
                   {/* Appliance + issue stacked, so the row carries the useful
                       context instead of truncating the description mid-word. */}
                   <p className="font-medium capitalize text-ink">
-                    {request.appliance_type?.replace(/_/g, " ") ?? "—"}
+                    {request.appliance_type?.replace(/_/g, " ") ?? "N/A"}
                   </p>
                   <p className="mt-0.5 line-clamp-1 text-xs text-muted">
-                    {request.issue_category ?? request.problem_description ?? "—"}
+                    {request.issue_category ?? request.problem_description ?? "N/A"}
                   </p>
                 </td>
                 <td className="py-3.5 pr-4 align-top">
@@ -126,7 +126,7 @@ export function RecentRepairTable({
                     <Link
                       href={`/customer/service-request/${request.id}`}
                       aria-label={`Open request ${request.id.slice(0, 8)}`}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted/80 transition duration-200 hover:bg-brand-soft hover:text-brand-ink"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted transition duration-200 hover:bg-brand-soft hover:text-brand-ink"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Link>

@@ -3,13 +3,13 @@ import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { requireRole, AuthError } from "@/lib/auth";
 
 /**
- * POST /api/admin/queue-override — the documented administrative override.
+ * POST /api/admin/queue-override, the documented administrative override.
  *
  * Use `admin_queue_override` when the rotation has to be corrected by hand
  * (a technician's account was suspended mid-shift, an appointment was cancelled
  * at the last minute, and so on). Three properties make this safe to expose:
  *
- *   1. it is administrator-only — the RPC re-checks `is_admin()` server-side, so
+ *   1. it is administrator-only, the RPC re-checks `is_admin()` server-side, so
  *      a forged request from a technician or customer is refused;
  *   2. a written reason is MANDATORY (the RPC raises without one);
  *   3. every override is written to `technician_queue_events` with the acting
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
     if (!reason) {
       return NextResponse.json(
-        { error: "A reason is required — every override is audited." },
+        { error: "A reason is required, every override is audited." },
         { status: 400 }
       );
     }

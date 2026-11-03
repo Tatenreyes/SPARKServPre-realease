@@ -23,7 +23,7 @@ function applianceLabel(applianceType: string) {
 }
 
 /**
- * QUEUE MODEL v2 — see QUEUE-SYSTEM.md.
+ * QUEUE MODEL v2, see QUEUE-SYSTEM.md.
  *
  * The whole decision lives server-side in Postgres (transactional, race-safe),
  * and everything in here is a thin, typed wrapper around it:
@@ -40,7 +40,7 @@ function applianceLabel(applianceType: string) {
  * technician from the rotation because they hold a *future* booking, or because
  * they are busy right now, or keep queue order in React at all.
  *
- * These calls need the service-role client — they are revoked from anon /
+ * These calls need the service-role client, they are revoked from anon /
  * authenticated precisely so a client can never move itself in the queue.
  */
 
@@ -64,7 +64,7 @@ export async function assignTechnician(
       userId: outcome.assigned_technician_id,
       type: "job_offered",
       title: "New job offer",
-      body: `A ${applianceLabel(serviceRequest.appliance_type)} repair is available — respond within ${OFFER_TTL_MINUTES} minutes to claim it.`,
+      body: `A ${applianceLabel(serviceRequest.appliance_type)} repair is available, respond within ${OFFER_TTL_MINUTES} minutes to claim it.`,
       link: "/technician/estimate-requests",
     });
   }
@@ -81,7 +81,7 @@ export async function assignTechnician(
  * Accept or decline the offer currently held by a technician.
  *
  * Accepting consumes that technician's queue turn for the appliance type
- * (they move to the end of the rotation) — once, at acceptance, not when the
+ * (they move to the end of the rotation), once, at acceptance, not when the
  * job completes. Declining records the reason and immediately re-offers the
  * request to the next eligible technician; whether a decline also costs the
  * turn is governed by the `queue_decline_consumes_turn` setting (off by
@@ -122,7 +122,7 @@ export async function declineConsumesTurn(supabase: SupabaseClient<Database>): P
 
 /**
  * Consumes a technician's queue turn without going through an offer. Only for
- * administrative/manual assignment paths — the normal path consumes the turn
+ * administrative/manual assignment paths, the normal path consumes the turn
  * inside respond_to_offer() when the technician accepts.
  */
 export async function markQueuePosition(
@@ -156,7 +156,7 @@ export async function refreshOperationalStatus(
 /**
  * The full queue for one appliance type (or every queue the caller belongs to
  * when `applianceType` is null). Must be called with a client that carries the
- * technician's/admin's JWT — the function refuses customers and anonymous
+ * technician's/admin's JWT, the function refuses customers and anonymous
  * callers, and returns only non-sensitive fields.
  */
 export async function getTechnicianQueue(
@@ -171,7 +171,7 @@ export async function getTechnicianQueue(
 }
 
 /**
- * Re-runs assignment for every request currently stuck "waiting" — call this
+ * Re-runs assignment for every request currently stuck "waiting", call this
  * after a technician is newly approved or their specializations change, since a
  * previously-unmatchable request might now have a fit.
  */
@@ -198,7 +198,7 @@ export async function getTechnicianPendingOffers(
   // Deployment-ahead-of-database (the same drift the request API already
   // handles): the function does not exist until the migration is applied, and a
   // technician must not be shown an empty offer list in the meantime. The
-  // fallback reads the SAME fields directly — its column list deliberately
+  // fallback reads the SAME fields directly, its column list deliberately
   // excludes location/latitude/longitude, so the customer's precise service
   // location stays out of the payload whether or not the migration has run.
   if (!technicianId) throw error;
@@ -214,7 +214,7 @@ export async function getTechnicianPendingOffers(
   return (rows ?? []) as unknown as TechnicianPendingOfferRow[];
 }
 
-/** Columns the offer screens may read — never the address or the coordinates. */
+/** Columns the offer screens may read, never the address or the coordinates. */
 const PENDING_OFFER_COLUMNS = [
   "id",
   "appliance_type",
@@ -248,7 +248,7 @@ export async function rematchWaitingRequests(supabase: SupabaseClient<Database>)
  * from being stranded in "offered" forever when a technician ignores the
  * notification, and it leaves the ignoring technician's queue position alone.
  *
- * Driven by /api/cron/assignment-tick (see vercel.json — every 5 minutes).
+ * Driven by /api/cron/assignment-tick (see vercel.json, every 5 minutes).
  */
 export async function expireStaleOffers(
   supabase: SupabaseClient<Database>

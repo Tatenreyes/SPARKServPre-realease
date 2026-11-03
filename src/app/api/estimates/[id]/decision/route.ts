@@ -8,7 +8,7 @@ import type { EstimateDecision, EstimateDecisionOutcome } from "@/types/database
 const DECISIONS: EstimateDecision[] = ["approve", "decline", "request_revision"];
 
 /**
- * POST /api/estimates/:id/decision — the customer decides on ONE estimate version.
+ * POST /api/estimates/:id/decision, the customer decides on ONE estimate version.
  *
  * body: { decision: "approve" | "decline" | "request_revision", reason?: string }
  *
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const outcome = data as unknown as EstimateDecisionOutcome;
 
     // The version was already decided (or replaced) by the time this call
-    // landed. Nothing changed, so nothing is notified — this is what keeps a
+    // landed. Nothing changed, so nothing is notified, this is what keeps a
     // retried handler from sending a duplicate notification.
     if (outcome.outcome === "not_pending") {
       return NextResponse.json(

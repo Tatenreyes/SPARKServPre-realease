@@ -28,6 +28,7 @@ import {
   isCompletedRequestStatus,
   isOpenEstimateStatus,
   parseMoneyInput,
+  requestNeedsQuote,
   roundMoney,
   validateEstimate,
 } from "../../src/lib/estimate-costs.ts";
@@ -225,6 +226,93 @@ test("an approved estimate on a finished repair is never offered a booking step"
   assert.equal(canBookFromRequest("completed"), false, "but the repair is over");
   assert.equal(canBookFromRequest("booked"), false, "and a live appointment already exists");
   assert.equal(canBookFromRequest("in_progress"), false, "and the work is under way");
+});
+
+// ------------------------------------------- does the technician still owe a quote
+
+test("a completed repair is never listed as needing an estimate", () => {
+  // The regression the technician reported: a COMPLETED repair sat under "Accepted,
+  // send an estimate" with a live estimate form on it. `submit_estimate()` refuses a
+  // closed request with `request_closed` (HTTP 409), so the form could only fail —
+  // the screen was offering an action the server had already decided against.
+  for (const status of ["completed", "cancelled"]) {
+    assert.equal(
+      requestNeedsQuote({ requestStatus: status, liveEstimateStatus: null, hasApprovedEstimate: true }),
+      false,
+      `${status}: the repair is over and the archive holds the record`
+    );
+    assert.equal(
+      requestNeedsQuote({ requestStatus: status, liveEstimateStatus: "draft", hasApprovedEstimate: false }),
+      false,
+      `${status}: not even a draft reopens a closed request`
+    );
+  }
+});
+
+test("an APPROVED estimate is not a request for another quote", () => {
+  // The second half of the same defect. `isOpenEstimateStatus` is only
+  // `draft | pending | revision_requested`, so an accepted version is NOT live — and
+  // the old inline filter read that missing live version as "nothing sent yet". That
+  // put booked and in-progress repairs on the screen too, not only completed ones.
+  assert.equal(isOpenEstimateStatus("accepted"), false, "an approval is not an open version");
+
+  for (const status of ["quoted", "booked", "in_progress"]) {
+    assert.equal(
+      requestNeedsQuote({ requestStatus: status, liveEstimateStatus: null, hasApprovedEstimate: true }),
+      false,
+      `${status}: the price is agreed, there is nothing left to send`
+    );
+  }
+});
+
+test("a request with nothing sent yet does need a quote", () => {
+  assert.equal(
+    requestNeedsQuote({ requestStatus: "quoted", liveEstimateStatus: null, hasApprovedEstimate: false }),
+    true
+  );
+  assert.equal(
+    requestNeedsQuote({ requestStatus: "open", liveEstimateStatus: null, hasApprovedEstimate: false }),
+    true
+  );
+});
+
+test("a draft or a revision request needs action, a pending version does not", () => {
+  assert.equal(
+    requestNeedsQuote({ requestStatus: "quoted", liveEstimateStatus: "draft", hasApprovedEstimate: false }),
+    true,
+    "an unsent draft is the technician's own to-do"
+  );
+  assert.equal(
+    requestNeedsQuote({
+      requestStatus: "quoted",
+      liveEstimateStatus: "revision_requested",
+      hasApprovedEstimate: false,
+    }),
+    true,
+    "the customer asked for a change"
+  );
+  assert.equal(
+    requestNeedsQuote({ requestStatus: "quoted", liveEstimateStatus: "pending", hasApprovedEstimate: false }),
+    false,
+    "awaiting the customer's decision is not the technician's task"
+  );
+});
+
+test("a DECLINED version is a re-quote, an approved one is not", () => {
+  // The asymmetry the whole screen exists for. A declined version is not "live", so
+  // the request comes back for a new version — the same absence of a live estimate
+  // that an approval also produces, which is exactly why the two cannot be told apart
+  // by looking for a live row alone.
+  assert.equal(
+    requestNeedsQuote({ requestStatus: "quoted", liveEstimateStatus: null, hasApprovedEstimate: false }),
+    true,
+    "declined (or superseded) with nothing approved: quote again"
+  );
+  assert.equal(
+    requestNeedsQuote({ requestStatus: "quoted", liveEstimateStatus: null, hasApprovedEstimate: true }),
+    false,
+    "approved: do not"
+  );
 });
 
 // ------------------------------------------------- the wiring, not just the rule

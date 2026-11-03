@@ -8,7 +8,7 @@ import { RECOVERY_COOKIE_NAME, recoveryCookieOptions } from "@/lib/auth/recovery
  * the marker leaves the cookie jar instead of lingering for the rest of its 15
  * minutes. It clears one fixed cookie and returns a constant body:
  *
- *   - it cannot grant anything — deleting an authorization cannot authorize;
+ *   - it cannot grant anything, deleting an authorization cannot authorize;
  *   - it takes no parameters, so there is no value to point at another account;
  *   - it needs no session, because a request without one has nothing to clear,
  *     and requiring a session would only make the call fail in the exact case it

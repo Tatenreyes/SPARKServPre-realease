@@ -21,7 +21,7 @@ type State =
  *
  * Talks to `POST /api/admin/sms-test`, which enforces the admin role server-side
  * and sends a fixed test message to the administrator's own phone number. This
- * component never sees the Semaphore API key — it is read from the server env.
+ * component never sees the Semaphore API key, it is read from the server env.
  */
 export default function AdminSmsTest({ phone }: { phone: string | null }) {
   const [phoneInput, setPhoneInput] = useState(phone ?? "");
@@ -62,7 +62,7 @@ export default function AdminSmsTest({ phone }: { phone: string | null }) {
       </label>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted/80">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
             <Phone className="h-4 w-4" />
           </span>
           <input
@@ -72,7 +72,7 @@ export default function AdminSmsTest({ phone }: { phone: string | null }) {
             value={phoneInput}
             onChange={(event) => setPhoneInput(event.target.value)}
             placeholder="e.g. 09171234567"
-            className="w-full rounded-lg border border-line bg-soft py-2.5 pl-10 pr-3 text-sm outline-none focus:border-brand-500 focus:bg-surface focus:ring-4 focus:ring-line"
+            className="w-full rounded-lg border border-line bg-soft py-2.5 pl-10 pr-3 text-sm outline-none focus:border-brand-500 focus:bg-surface focus:ring-4 focus:ring-brand-500/20"
           />
         </div>
         <button
@@ -91,7 +91,7 @@ export default function AdminSmsTest({ phone }: { phone: string | null }) {
       {state.kind === "success" && (
         <p className="mt-3 text-xs leading-relaxed text-signal-ink" role="status">
           Sent to <span className="font-semibold">{state.recipient}</span>
-          {state.network ? ` (${state.network})` : ""} — Semaphore status:{" "}
+          {state.network ? ` (${state.network})` : ""}, Semaphore status:{" "}
           <span className="font-semibold">{state.status}</span>
           {state.messageId ? ` · message ${state.messageId}` : ""}. {state.note}
         </p>

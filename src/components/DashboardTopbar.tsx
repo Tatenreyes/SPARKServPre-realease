@@ -15,7 +15,7 @@ import { ROLE_HOME, ROLE_LABEL, ROLE_PROFILE_HREF, ROLE_SETTINGS_HREF } from "@/
 
 /**
  * Brand, notifications and the signed-in user, in one sticky bar above the
- * workspace — plus the platform announcement, when there is one, as a scrolling
+ * workspace, plus the platform announcement, when there is one, as a scrolling
  * strip along its bottom edge.
  *
  * The announcement lives here rather than in a page because it is platform-wide:
@@ -52,7 +52,7 @@ export default function DashboardTopbar({
   const [signingOut, setSigningOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Dismiss the user menu on outside click or Escape — a dropdown that can only
+  // Dismiss the user menu on outside click or Escape, a dropdown that can only
   // be closed by re-clicking its trigger is a common a11y annoyance.
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -182,7 +182,7 @@ export default function DashboardTopbar({
                         onClick={() => setUserMenuOpen(false)}
                         className="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-ink/80 transition hover:bg-brand-soft hover:text-brand-ink"
                       >
-                        <UserRound className="h-4 w-4 text-muted/80" />
+                        <UserRound className="h-4 w-4 text-muted" />
                         Profile
                       </Link>
                     )}
@@ -194,7 +194,7 @@ export default function DashboardTopbar({
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-ink/80 transition hover:bg-brand-soft hover:text-brand-ink"
                       >
-                        <Settings className="h-4 w-4 text-muted/80" />
+                        <Settings className="h-4 w-4 text-muted" />
                         Settings
                       </Link>
                     )}
@@ -205,7 +205,7 @@ export default function DashboardTopbar({
                       onClick={handleSignOut}
                       className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-ink/80 transition hover:bg-alert-soft hover:text-alert-ink"
                     >
-                      <LogOut className="h-4 w-4 text-muted/80" />
+                      <LogOut className="h-4 w-4 text-muted" />
                       Log out
                     </button>
                   </div>
@@ -218,7 +218,7 @@ export default function DashboardTopbar({
         {/* The platform announcement, when one is published and not dismissed.
             Inside the sticky header rather than below it: a strip rendered as a
             sibling would scroll away from the bar it belongs to. `h-8` is
-            deliberate — the sidebar's sticky offset and the request wizard's
+            deliberate, the sidebar's sticky offset and the request wizard's
             `top-24` are both written against a 64px + 32px header. */}
         {announcement && (
           <PlatformAnnouncementTicker message={announcement} onDismiss={onDismissAnnouncement} />

@@ -1,11 +1,11 @@
 /**
- * Password recovery — the paths, the recovery-cookie contract, and every
+ * Password recovery, the paths, the recovery-cookie contract, and every
  * decision the callback route and the two forms make.
  *
  * The module is deliberately dependency-free (no React, no Next, no Supabase):
  * the callback route and the components are thin wrappers around it, so the
- * whole decision table — which link is exchangeable, which is expired, which
- * error text is safe to show, which redirect target is allowed — is exercised
+ * whole decision table, which link is exchangeable, which is expired, which
+ * error text is safe to show, which redirect target is allowed, is exercised
  * directly by `scripts/tests/password-recovery.test.mjs`, the same way
  * `src/lib/estimate-costs.ts` is tested.
  *
@@ -35,7 +35,7 @@ export const RECOVERY_CALLBACK_PATH = "/auth/callback";
 
 /**
  * Shown after any validly submitted request. It is deliberately true whether or
- * not the address has an account — that is the whole point of the wording.
+ * not the address has an account, that is the whole point of the wording.
  */
 export const RESET_REQUEST_SUCCESS_MESSAGE =
   "If an account exists for that email, we've sent a link to reset the password. Check your inbox and your spam folder.";
@@ -140,7 +140,7 @@ export interface RecoveryCallbackParams {
  *    at the app (`{{ .TokenHash }}`). Only `type=recovery` is accepted, so a
  *    signup or email-change token can never be spent on a password reset.
  *  - An `error` / `error_code` means Supabase already refused the token
- *    (expired, already used, revoked). It is not retried — the visitor is sent
+ *    (expired, already used, revoked). It is not retried, the visitor is sent
  *    back to request a fresh link.
  */
 export function planRecoveryCallback(params: RecoveryCallbackParams): RecoveryCallbackPlan {
@@ -189,8 +189,7 @@ export function recoveryLinkNotice(code: string | null | undefined): string | nu
  * The `redirectTo` handed to `resetPasswordForEmail`.
  *
  * Built from the origin the request was made on (not a hard-coded host) so one
- * build works on localhost, on the production domain and on a Vercel preview —
- * each of which must be listed under Authentication → URL Configuration →
+ * build works on localhost, on the production domain and on a Vercel preview, * each of which must be listed under Authentication → URL Configuration →
  * Redirect URLs, because Supabase refuses an unlisted target.
  *
  * The emailed link never points straight at /update-password: it goes through
@@ -236,8 +235,8 @@ function isNetworkFailure(error: AuthFailureShape): boolean {
 /**
  * Turns a `resetPasswordForEmail` failure into copy for the form.
  *
- * Only three failures are ever named — bad format, rate limit, unreachable
- * service — and none of them depends on whether the address exists. Everything
+ * Only three failures are ever named, bad format, rate limit, unreachable
+ * service, and none of them depends on whether the address exists. Everything
  * else collapses into one generic sentence, which is what keeps the form from
  * becoming an account-enumeration oracle.
  */

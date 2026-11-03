@@ -38,11 +38,11 @@ export default function SystemSettingsClient({
 
   return (
     <div className="mt-6 max-w-lg space-y-6">
-      <div className="rounded-card border border-ink/8 bg-surface p-5 shadow-card">
+      <div className="rounded-card border border-line bg-surface p-5 shadow-card">
         <div className="flex items-center justify-between">
           <div>
             <p className="font-medium text-ink">Maintenance mode</p>
-            <p className="text-xs text-ink/50">
+            <p className="text-xs text-ink/70">
               Customers and technicians are redirected to a maintenance page. Admins are
               unaffected.
             </p>
@@ -62,17 +62,17 @@ export default function SystemSettingsClient({
         </div>
       </div>
 
-      <div className="rounded-card border border-ink/8 bg-surface p-5 shadow-card">
+      <div className="rounded-card border border-line bg-surface p-5 shadow-card">
         <p className="font-medium text-ink">Platform announcement</p>
-        <p className="text-xs text-ink/50">
+        <p className="text-xs text-ink/70">
           Scrolled across the top bar of every dashboard. Leave blank to hide it.
         </p>
         <textarea
           rows={2}
           value={announcement}
           onChange={(e) => setAnnouncement(e.target.value)}
-          placeholder="e.g. Scheduled maintenance this Sunday, 12AM–2AM"
-          className="mt-2 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm"
+          placeholder="e.g. Scheduled maintenance this Sunday, 12AM 2AM"
+          className="mt-2 w-full rounded-lg border border-line px-3 py-2 text-sm"
         />
       </div>
 

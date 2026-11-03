@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { WifiOff } from "lucide-react";
 
-export const metadata = { title: "Offline — SPARKServ" };
+export const metadata = { title: "Offline, SPARKServ" };
 
 /**
  * The page the service worker serves when a navigation cannot reach the network.

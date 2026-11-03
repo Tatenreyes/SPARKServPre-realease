@@ -14,7 +14,7 @@ import {
 } from "@/lib/auth/recovery";
 
 /**
- * "Forgot password?" — asks Supabase to email a reset link.
+ * "Forgot password?", asks Supabase to email a reset link.
  *
  * Two behaviours are load-bearing, and both are enforced here rather than left
  * to the server:
@@ -31,7 +31,7 @@ import {
  *
  * The redirect target is built from `window.location.origin`, so the link comes
  * back to whichever host the request was made on (localhost, production, or a
- * preview deployment) — each of which must be listed in the Supabase dashboard
+ * preview deployment), each of which must be listed in the Supabase dashboard
  * under Authentication → URL Configuration.
  */
 export default function ForgotPasswordForm({ notice = null }: { notice?: string | null }) {
@@ -82,8 +82,8 @@ export default function ForgotPasswordForm({ notice = null }: { notice?: string 
         <h1 className="mt-5 font-display text-2xl font-bold leading-tight text-ink">
           Check your email
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-ink/60">{RESET_REQUEST_SUCCESS_MESSAGE}</p>
-        <p className="mt-3 text-xs leading-relaxed text-ink/50">
+        <p className="mt-2 text-sm leading-relaxed text-ink/70">{RESET_REQUEST_SUCCESS_MESSAGE}</p>
+        <p className="mt-3 text-xs leading-relaxed text-ink/70">
           The link can only be used once and it expires after a short while. If it has not arrived
           in a few minutes, check your spam folder.
         </p>
@@ -94,12 +94,12 @@ export default function ForgotPasswordForm({ notice = null }: { notice?: string 
             setSent(false);
             setError(null);
           }}
-          className="mt-6 w-full rounded-xl border border-ink/10 bg-surface px-4 py-3 text-sm font-semibold text-ink/80 transition-all duration-200 hover:border-ink/20 hover:text-ink"
+          className="mt-6 w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-ink/80 transition-all duration-200 hover:border-ink/20 hover:text-ink"
         >
           Use a different email
         </button>
 
-        <p className="mt-6 text-center text-sm text-ink/60">
+        <p className="mt-6 text-center text-sm text-ink/70">
           <Link
             href={LOGIN_PATH}
             className="inline-flex items-center gap-1.5 font-semibold text-brand-ink underline-offset-2 transition-colors hover:underline"
@@ -118,7 +118,7 @@ export default function ForgotPasswordForm({ notice = null }: { notice?: string 
         <h1 className="font-display text-2xl font-bold leading-tight text-ink">
           Reset your password
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-ink/60">
+        <p className="mt-2 text-sm leading-relaxed text-ink/70">
           Enter the email address on your account and we&apos;ll send you a link to choose a new
           password.
         </p>
@@ -153,7 +153,7 @@ export default function ForgotPasswordForm({ notice = null }: { notice?: string 
             htmlFor={emailId}
             className="flex items-center gap-2 text-sm font-semibold text-ink/80"
           >
-            <Mail className="h-4 w-4 text-ink/40" aria-hidden="true" />
+            <Mail className="h-4 w-4 text-ink/70" aria-hidden="true" />
             Email address
           </label>
           <input
@@ -164,7 +164,7 @@ export default function ForgotPasswordForm({ notice = null }: { notice?: string 
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/30 transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
+            className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/50 transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
             placeholder="Enter your email"
           />
         </div>
@@ -227,7 +227,7 @@ export default function ForgotPasswordForm({ notice = null }: { notice?: string 
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-ink/60">
+      <p className="mt-6 text-center text-sm text-ink/70">
         <Link
           href={LOGIN_PATH}
           className="inline-flex items-center gap-1.5 font-semibold text-brand-ink underline-offset-2 transition-colors hover:underline"

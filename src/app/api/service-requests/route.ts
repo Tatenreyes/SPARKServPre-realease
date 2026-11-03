@@ -12,9 +12,9 @@ import {
   toServiceCoordinates,
 } from "@/lib/geo";
 
-// POST /api/service-requests — customer submits a new appliance issue.
+// POST /api/service-requests, customer submits a new appliance issue.
 // Immediately triggers the fair ROTATION-based assignment engine (see
-// lib/assignment.ts) — the customer never browses or picks a technician.
+// lib/assignment.ts), the customer never browses or picks a technician.
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -183,13 +183,13 @@ export async function POST(request: NextRequest) {
     // ---- Can ANYBODY take this appliance at all? -------------------------------
     // `appliance_has_qualified_technician()` is the database's own answer to "does an
     // approved, unsuspended technician hold an ACTIVE queue membership for this
-    // appliance type?" — the same predicate the queue walk and `create_booking_atomic()`
+    // appliance type?", the same predicate the queue walk and `create_booking_atomic()`
     // use, so it cannot disagree with who is actually offered the work.
     //
     // It matters because `waiting` means two different things. "Every qualified
     // technician is busy" is worth waiting for; "nobody services this appliance" is
     // not, and a customer left waiting for a technician who does not exist is how a
-    // request sits in the queue for ever. A failure here is never fatal — the request
+    // request sits in the queue for ever. A failure here is never fatal, the request
     // is already saved, and `null` means the client keeps its neutral wording.
     let qualifiedTechnicianAvailable: boolean | null = null;
     if (serviceRoleClient) {
@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
     }
 
     // The published profile, not the raw rows. Assembled on the server so the
-    // customer never receives a technician's contact columns — the profile shape
+    // customer never receives a technician's contact columns, the profile shape
     // has none. Read with the service-role client because an assigned technician's
     // `technicians` row is not readable by the customer role.
     let assignedTechnician: TechnicianProfile | null = null;
@@ -248,7 +248,7 @@ export async function POST(request: NextRequest) {
 }
 
 
-// GET /api/service-requests — list requests scoped to the caller's role
+// GET /api/service-requests, list requests scoped to the caller's role
 export async function GET() {
   try {
     const user = await getCurrentUser();
@@ -263,11 +263,11 @@ export async function GET() {
     if (user.role === "customer") {
       query = query.eq("customer_id", user.id);
     } else if (user.role === "technician") {
-      // Technicians no longer browse open requests — they only see what
+      // Technicians no longer browse open requests, they only see what
       // the queue has specifically offered/assigned to them.
       query = query.eq("assigned_technician_id", user.id);
     }
-    // admin / super_admin see everything — RLS + no extra filter
+    // admin / super_admin see everything, RLS + no extra filter
 
     const { data, error } = await query;
     if (error) throw error;
@@ -288,8 +288,8 @@ function handleError(err: unknown) {
   // Tell the customer service is unavailable without exposing table/column names.
   const databaseCode = (err as { code?: string })?.code;
   if (["42703", "42P01", "PGRST204", "PGRST205"].includes(databaseCode ?? "")) {
-    // Development gets the database's own wording — "Could not find the 'issue_id'
-    // column of 'service_requests' in the schema cache" — plus the command that
+    // Development gets the database's own wording, "Could not find the 'issue_id'
+    // column of 'service_requests' in the schema cache", plus the command that
     // lists what is missing. The person who can fix this is the one running the
     // app, and "the system is being updated" is unactionable from the browser,
     // which is why the real message used to be trapped in the server log alone.
@@ -322,7 +322,7 @@ function handleError(err: unknown) {
  * keep the generic response in production so internals are never leaked.
  *
  * PostgREST errors are plain objects, not `Error` instances, so `err.message` is
- * read directly — `String(err)` would report the useless "[object Object]" for
+ * read directly, `String(err)` would report the useless "[object Object]" for
  * exactly the errors this is meant to explain.
  */
 function databaseDetail(err: unknown) {

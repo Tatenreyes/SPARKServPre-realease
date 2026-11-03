@@ -11,7 +11,7 @@ import { isImmersiveRoute, navForRole } from "@/lib/navConfig";
 import type { UserRole } from "@/types/database";
 
 /**
- * Alias for "the role that owns a dashboard". It is exactly `UserRole` — the
+ * Alias for "the role that owns a dashboard". It is exactly `UserRole`, the
  * app has one role vocabulary, declared in `@/types/database`.
  */
 export type DashboardRole = UserRole;
@@ -21,7 +21,7 @@ const SIDEBAR_COLLAPSE_KEY = "sparkserv:sidebar-collapsed";
 
 /**
  * The chrome that wraps every authenticated dashboard: a sticky topbar, the
- * role's sidebar, the content column, and — below `lg` only — the bottom tab
+ * role's sidebar, the content column, and, below `lg` only, the bottom tab
  * bar.
  *
  * Takes only a `role` (a string) plus `children`, so the route layouts stay thin
@@ -30,7 +30,7 @@ const SIDEBAR_COLLAPSE_KEY = "sparkserv:sidebar-collapsed";
  *
  * This is a client component because the mobile sidebar is a slide-over drawer
  * that needs shared open/closed state between the topbar's hamburger and the
- * sidebar itself — state the (server) route layouts can't hold — and because the
+ * sidebar itself, state the (server) route layouts can't hold, and because the
  * mobile shell has to know the current path to decide whether the tab bar steps
  * aside for a sticky form action. The desktop rail's collapsed state lives here
  * for the same reason: it is shared between the topbar's toggle and the sidebar,
@@ -63,7 +63,7 @@ export default function DashboardShell({
     try {
       setCollapsed(window.localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "1");
     } catch {
-      // Storage can be unavailable (private mode, blocked cookies) — the rail
+      // Storage can be unavailable (private mode, blocked cookies), the rail
       // simply stays expanded, which is the safe default.
     }
   }, []);
@@ -116,8 +116,7 @@ export default function DashboardShell({
    * actually exists, so on desktop the column keeps its plain padding
    * utilities:
    *
-   *   * a route with a sticky primary action reserves room for the button —
-   *     but only below `md`, because the button itself is a phone-only control;
+   *   * a route with a sticky primary action reserves room for the button, *     but only below `md`, because the button itself is a phone-only control;
    *   * every other route reserves room for the bottom navigation all the way
    *     up to `lg`, where the sidebar takes over and the bar disappears.
    *

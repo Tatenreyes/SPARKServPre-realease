@@ -12,13 +12,13 @@
  *      so a later submission was in the database but never in the page. That is
  *      fixed by `dynamic = "force-dynamic"` on the page itself.
  *   2. ERROR HANDLING. Every query discarded its `error`, so a failed SELECT became
- *      `data: null`, became `data ?? []`, became "No transactions yet." — an
+ *      `data: null`, became `data ?? []`, became "No transactions yet.", an
  *      administrator reading that cannot tell a broken query from an empty queue.
  *      `requireRows()` raises instead, and the route's own `error.tsx` renders the
  *      safe state.
  *
  * WHAT IS LOGGED, AND WHAT IS NOT. The query's name plus PostgREST's `code` and
- * `message` — the two fields that identify a failure. `details` and `hint` are
+ * `message`, the two fields that identify a failure. `details` and `hint` are
  * deliberately NOT logged: they are derived from the statement and can echo
  * predicate values and row contents back (a unique-violation `details` names the
  * key *and its value*), and this page handles GCash references and customer ids.
@@ -54,7 +54,7 @@ export class PaymentsQueueUnavailableError extends Error {
   }
 }
 
-/** Heading for the safe error state. Fixed text — never an echoed error body. */
+/** Heading for the safe error state. Fixed text, never an echoed error body. */
 export const PAYMENTS_QUEUE_UNAVAILABLE_TITLE = "Payments queue could not be loaded";
 
 /**
@@ -66,14 +66,14 @@ export const PAYMENTS_QUEUE_UNAVAILABLE_TITLE = "Payments queue could not be loa
  * `AdminPaymentsClient` may only ever follow a SUCCESSFUL query.
  */
 export const PAYMENTS_QUEUE_UNAVAILABLE_BODY =
-  "Nothing is shown and no payment has been changed. This is a loading failure, not an empty queue — there may still be references waiting to be verified. Try again, and if it keeps failing check the server logs.";
+  "Nothing is shown and no payment has been changed. This is a loading failure, not an empty queue, there may still be references waiting to be verified. Try again, and if it keeps failing check the server logs.";
 
 /**
  * Turn one query result into rows, or fail loudly.
  *
  * `data ?? []` is only safe when the query SUCCEEDED. PostgREST returns `null` data
  * alongside a non-null `error` for every failure, so collapsing the two into `[]` is
- * exactly how a broken query comes to look like an empty queue — and on this page
+ * exactly how a broken query comes to look like an empty queue, and on this page
  * that mistake means an unverified payment nobody looks at.
  */
 export function requireRows<T>(

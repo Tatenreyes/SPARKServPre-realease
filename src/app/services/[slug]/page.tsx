@@ -14,7 +14,7 @@ export default function ServiceDetailPage({ params }: { params: { slug: string }
   return (
     <main className="min-h-[calc(100vh-4.5rem)] bg-canvas px-4 py-10 md:py-16">
       <div className="mx-auto max-w-5xl">
-        <Link href="/#services" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-ink transition hover:text-brand-ink">
+        <Link href="/#services" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-ink transition hover:underline">
           <ArrowLeft className="h-4 w-4" /> Back to services
         </Link>
 

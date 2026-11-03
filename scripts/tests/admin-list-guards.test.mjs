@@ -19,7 +19,7 @@
  * The modules are the REAL ones, imported under Node's type stripping, so there
  * is no second copy of the rule to drift. The page assertions are source-level
  * because the alternative would be a component runner this repository does not
- * have (see TESTING.md §4).
+ * have (see TESTING.md §5).
  */
 import test from "node:test";
 import assert from "node:assert/strict";

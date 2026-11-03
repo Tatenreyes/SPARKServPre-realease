@@ -34,7 +34,7 @@ export function DashboardStatCard({
           <Icon className="h-5 w-5" />
         </span>
       </div>
-      {/* Hover feedback is a transform on the arrow only — the card itself never
+      {/* Hover feedback is a transform on the arrow only, the card itself never
           translates, because a hover that moves the card shifts the grid. */}
       <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-brand-ink">
         {hint ?? "View details"}
@@ -60,7 +60,7 @@ export type DashboardStat = {
  * Below `sm` that is a 2x2 grid of compact tiles (`MobileStatTile`); from `sm`
  * up it is the card grid it always was, two columns wide until `xl` spreads it
  * to the full row. This replaced a swipeable rail of 66%-wide cards, which on a
- * phone showed one figure and a sliver of the next — so reading four numbers
+ * phone showed one figure and a sliver of the next, so reading four numbers
  * meant four swipes, and a horizontal swipe inside a vertically scrolling page
  * is a gesture people trigger by accident.
  *
@@ -72,7 +72,7 @@ export type DashboardStat = {
  *
  * Keys come from `label` because a dashboard's tiles are labelled uniquely by
  * construction ("Active jobs" and "Active bookings" are the same dashboard's two
- * different counts, and the numbers are not unique — two tiles legitimately both
+ * different counts, and the numbers are not unique, two tiles legitimately both
  * show `0`). A stale-locale duplicate label is a copy bug to fix, not a case to
  * design around.
  */
@@ -133,7 +133,7 @@ export function DashboardPanel({
    *
    * It used to default to none "so existing call sites keep their current flush
    * layout", which meant any panel that forgot to opt in rendered its content
-   * hard against the card edge — the admin dashboard did exactly that on all of
+   * hard against the card edge, the admin dashboard did exactly that on all of
    * its panels, so booking rows and activity items sat flush with the border
    * while the header above them was inset by 20px. The three dashboards that did
    * remember were each passing this same string by hand.
@@ -168,7 +168,7 @@ export function DashboardPanel({
  * Sparkline for a real series of counts, oldest first.
  *
  * `color` / `fill` used to default to hardcoded hexes (`#1264D6`), which is the
- * one thing MASTER.md forbids outright — and it meant the line stayed mid-blue
+ * one thing MASTER.md forbids outright, and it meant the line stayed mid-blue
  * on the dark canvas. The line now draws with `currentColor`, so the wrapper's
  * `accentClassName` decides the colour and it follows the theme like every
  * other surface.
@@ -186,7 +186,7 @@ export function DashboardTrend({
 }: {
   /** One point per bucket, oldest first. */
   values: number[];
-  /** What the series measures — read by screen readers, shown under the chart. */
+  /** What the series measures, read by screen readers, shown under the chart. */
   caption?: string;
   accentClassName?: string;
   /** Height of the plotted area, useful when the chart has its own dashboard panel. */

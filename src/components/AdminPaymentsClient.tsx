@@ -119,9 +119,9 @@ export default function AdminPaymentsClient({
       const outcome = json.outcome as { outcome?: string; completed_now?: boolean } | undefined;
       const text =
         body.status === "rejected"
-          ? "Rejected — the customer has been told why and can submit a new reference."
+          ? "Rejected, the customer has been told why and can submit a new reference."
           : outcome?.completed_now
-            ? "Payment verified — the repair is now Completed."
+            ? "Payment verified, the repair is now Completed."
             : "Payment verified. The repair was already completed, so nothing else changed.";
       setResults((prev) => ({ ...prev, [id]: { ok: true, text } }));
 
@@ -153,19 +153,19 @@ export default function AdminPaymentsClient({
 
   return (
     <div className="mt-6">
-      <div className="mb-3 flex items-center gap-2 rounded-lg border border-ink/15 bg-surface px-3 py-2">
-        <Search className="h-4 w-4 text-white/70" />
+      <div className="mb-3 flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2">
+        <Search className="h-4 w-4 text-muted" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by reference or customer..."
-          className="w-full bg-transparent text-sm text-white placeholder:text-white/60 outline-none"
+          className="w-full bg-transparent text-sm text-ink placeholder:text-ink/50 outline-none"
         />
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-ink/8 bg-surface shadow-card">
+      <div className="overflow-x-auto rounded-card border border-line bg-surface shadow-card">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-ink/8 bg-canvas text-xs uppercase tracking-wide text-ink/40">
+          <thead className="border-b border-line bg-canvas text-xs uppercase tracking-wide text-ink/70">
             <tr>
               <th className="px-4 py-3 font-medium">Customer</th>
               <th className="px-4 py-3 font-medium">Repair</th>
@@ -178,7 +178,7 @@ export default function AdminPaymentsClient({
           <tbody>
             {!filtered.length ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-sm text-ink/40">
+                <td colSpan={6} className="px-4 py-6 text-center text-sm text-ink/70">
                   No transactions yet.
                 </td>
               </tr>
@@ -188,22 +188,22 @@ export default function AdminPaymentsClient({
                 const result = results[p.id];
                 return (
                   <tr key={p.id} className="border-b border-ink/5 last:border-0">
-                    <td className="px-4 py-3 text-ink/70">{customerNames[p.customer_id] ?? "—"}</td>
+                    <td className="px-4 py-3 text-ink/70">{customerNames[p.customer_id] ?? "N/A"}</td>
                     <td className="px-4 py-3">
                       <p className="text-ink/70 capitalize">
-                        {repair?.applianceType?.replace(/_/g, " ") ?? "—"}
+                        {repair?.applianceType?.replace(/_/g, " ") ?? "N/A"}
                       </p>
                       {repair && (
                         <span className="mt-1 inline-flex items-center gap-1.5">
                           <StatusBadge status={repair.status} size="sm" />
-                          <span className="text-[11px] text-ink/40">
+                          <span className="text-[11px] text-ink/70">
                             {new Date(repair.scheduledAt).toLocaleDateString()}
                           </span>
                         </span>
                       )}
                     </td>
                     <td className="px-4 py-3 font-medium text-ink">₱{p.amount.toFixed(2)}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-ink/60">{p.gcash_reference}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-ink/70">{p.gcash_reference}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLOR[p.status]}`}
@@ -242,8 +242,8 @@ export default function AdminPaymentsClient({
                                   setReviewing(false);
                                 }}
                                 maxLength={500}
-                                placeholder="Reason (required — the customer sees this)"
-                                className="w-full rounded-lg border border-ink/15 px-3 py-1.5 text-xs"
+                                placeholder="Reason (required, the customer sees this)"
+                                className="w-full rounded-lg border border-line px-3 py-1.5 text-xs"
                               />
                               {!reviewing ? (
                                 <button
@@ -273,7 +273,7 @@ export default function AdminPaymentsClient({
                                     </button>
                                     <button
                                       onClick={() => setReviewing(false)}
-                                      className="rounded-full border border-ink/15 px-3 py-1.5 text-xs font-medium text-ink/70 hover:bg-surface"
+                                      className="rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink/70 hover:bg-surface"
                                     >
                                       Back
                                     </button>
@@ -284,7 +284,7 @@ export default function AdminPaymentsClient({
                           )}
                         </div>
                       ) : (
-                        <span className="text-xs text-ink/35">—</span>
+                        <span className="text-xs text-ink/70"> </span>
                       )}
 
                       {result && (

@@ -3,7 +3,7 @@
  *
  * Given the appliance the customer picked and the description they typed, this
  * module suggests **one of the issues already in the catalogue**
- * (`src/lib/appliance-issues.ts`). It is a reviewed keyword/synonym lookup — not
+ * (`src/lib/appliance-issues.ts`). It is a reviewed keyword/synonym lookup, not
  * an AI model, not a translation API, and not a diagnosis:
  *
  *   * nothing is matched that is not in the catalogue for the selected appliance;
@@ -26,14 +26,14 @@
  *
  * Rules the tests enforce:
  *   * every `issueId` must exist in the catalogue;
- *   * phrases are normalised (case, accents, apostrophes, spacing) — write them
+ *   * phrases are normalised (case, accents, apostrophes, spacing), write them
  *     naturally, e.g. "won't drain", and the matcher normalises both sides;
  *   * a phrase must be at least two words, unless it is listed in
  *     `DISTINCTIVE_SINGLE_WORDS` (single generic words are never matched);
  *   * phrases match on word boundaries, so "cooling" cannot match inside another
  *     word, and a negated occurrence ("hindi tumutulo") is rejected.
  *
- * Coverage is exactly the reviewed phrases below — it is deliberately not a claim
+ * Coverage is exactly the reviewed phrases below, it is deliberately not a claim
  * to understand every English, Tagalog or Bisaya phrasing.
  */
 
@@ -45,7 +45,7 @@ export type PhraseLanguage = "english" | "tagalog" | "bisaya" | "mixed";
 export type TroubleshootingOutcome = "resolved" | "unresolved" | "skipped";
 
 export interface IssuePhraseMapping {
-  /** Canonical issue id — must exist in `APPLIANCE_ISSUES`. */
+  /** Canonical issue id, must exist in `APPLIANCE_ISSUES`. */
   issueId: string;
   english: string[];
   tagalog: string[];
@@ -66,7 +66,7 @@ export type IssueMatchResult =
     }
   | {
       kind: "ambiguous";
-      /** Equally specific matches — the customer chooses, nothing is guessed. */
+      /** Equally specific matches, the customer chooses, nothing is guessed. */
       candidates: {
         issueId: string;
         matchedPhrase: string;
@@ -163,7 +163,7 @@ const SPELLING_VARIANTS: { pattern: RegExp; replacement: string }[] = [
 /**
  * Normalises a description or an approved phrase: lower case, accents and
  * apostrophes removed ("won't" → "wont"), punctuation to spaces, whitespace
- * collapsed, then the reviewed spelling variants applied. Pure — it never touches
+ * collapsed, then the reviewed spelling variants applied. Pure, it never touches
  * the customer's original text, which is stored and displayed unchanged.
  */
 export function normalizeDescription(text: string): string {
@@ -218,7 +218,7 @@ function isNegatedBefore(tokens: string[], startIndex: number): boolean {
  * may safely serve several appliances (e.g. "dili mogawas ang tubig" is *not
  * draining* for a washing machine and *not dispensing* for a water dispenser).
  *
- * Written naturally — normalisation handles case, accents and apostrophes.
+ * Written naturally, normalisation handles case, accents and apostrophes.
  */
 export const ISSUE_PHRASE_MAPPINGS: IssuePhraseMapping[] = [
   {
@@ -694,12 +694,12 @@ export const MAX_AMBIGUOUS_CANDIDATES = 3;
  * Matches a description against **the issues of the selected appliance only**.
  *
  * Returns:
- *   * `match`     — exactly one issue has the most specific approved phrase in
+ *   * `match`, exactly one issue has the most specific approved phrase in
  *                   the text. This is a SUGGESTION: the customer must confirm it
  *                   before any troubleshooting step is shown.
- *   * `ambiguous` — two or more issues are equally specific. Nothing is chosen
+ *   * `ambiguous`, two or more issues are equally specific. Nothing is chosen
  *                   for the customer; the caller shows the list.
- *   * `none`      — nothing recognisable. The description is kept as written and
+ *   * `none`, nothing recognisable. The description is kept as written and
  *                   the customer can pick an issue manually or continue without
  *                   troubleshooting.
  *
@@ -719,7 +719,7 @@ export function matchIssue(params: {
   if (!normalized) return { kind: "none" };
 
   // Appliance scoping: only issues this appliance actually has can be matched.
-  // "Other" is never matched — it is not a fault, so it cannot be inferred.
+  // "Other" is never matched, it is not a fault, so it cannot be inferred.
   const candidateIds = new Set(
     issues.filter((issue) => issue.id !== "other").map((issue) => issue.id)
   );
@@ -739,7 +739,7 @@ export function matchIssue(params: {
 
     while ((match = entry.regex.exec(normalized)) !== null) {
       // Token position of the match, used by the negation guard. The prefix is
-      // trimmed first: `"but "` must count as ONE token, not two — otherwise the
+      // trimmed first: `"but "` must count as ONE token, not two, otherwise the
       // index lands on the phrase's own first word and a phrase that legitimately
       // starts with a negator ("not cooling") negates itself.
       const prefix = normalized.slice(0, match.index).trim();

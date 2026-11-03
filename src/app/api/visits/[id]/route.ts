@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 
-// PATCH /api/visits/:id — technician updates status/notes/photos; customer can only add signed_by
+// PATCH /api/visits/:id, technician updates status/notes/photos; customer can only add signed_by
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -37,7 +37,7 @@ export async function PATCH(
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
     if (isOwningCustomer && !isOwningTechnician && !isStaff) {
-      // customers may only sign off on a visit — nothing else
+      // customers may only sign off on a visit, nothing else
       if (body.signed_by) updates.signed_by = body.signed_by;
     } else {
       if (body.status) updates.status = body.status;

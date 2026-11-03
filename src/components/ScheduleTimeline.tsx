@@ -37,7 +37,7 @@ export default function ScheduleTimeline({
             className={`flex min-w-0 flex-col gap-2 rounded-xl border px-4 py-3 transition duration-200 sm:flex-row sm:items-center sm:justify-between ${
               isNext
                 ? "border-brand-300 bg-brand-soft/60"
-                : "border-line bg-surface hover:border-line hover:bg-soft"
+                : "border-line bg-surface hover:border-brand-300 hover:bg-soft"
             }`}
           >
             <div className="flex min-w-0 items-center gap-3">
@@ -46,7 +46,7 @@ export default function ScheduleTimeline({
                   isNext ? "bg-brand-500 text-white" : "bg-soft text-muted"
                 }`}
               >
-                {Number.isNaN(date.getTime()) ? "—" : index + 1}
+                {Number.isNaN(date.getTime()) ? "N/A" : index + 1}
               </span>
               <div className="min-w-0">
                 <p className="truncate font-display text-sm font-semibold capitalize text-ink">
@@ -57,7 +57,7 @@ export default function ScheduleTimeline({
             </div>
             <div className="flex shrink-0 items-center gap-2 pl-12 sm:pl-0">
               {isNext && (
-                <span className="hidden text-[10px] font-semibold uppercase tracking-[0.12em] text-brand-ink sm:inline">
+                <span className="hidden text-[11px] font-semibold uppercase tracking-[0.12em] text-brand-ink sm:inline">
                   Next up
                 </span>
               )}
@@ -71,10 +71,10 @@ export default function ScheduleTimeline({
             <div className="w-14 shrink-0 pt-3.5 text-right">
               <p className="text-xs font-semibold leading-tight text-ink">
                 {Number.isNaN(date.getTime())
-                  ? "—"
+                  ? "N/A"
                   : date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
               </p>
-              <p className="mt-0.5 text-[10px] uppercase tracking-[0.08em] text-muted/80">
+              <p className="mt-0.5 text-[11px] uppercase tracking-[0.08em] text-muted">
                 {Number.isNaN(date.getTime())
                   ? ""
                   : date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}

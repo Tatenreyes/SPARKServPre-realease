@@ -7,8 +7,8 @@
  *
  * ## How a guide is found
  * `getTroubleshootingGuide(applianceType, issueId)` looks up
- *   1. `${applianceSlug}/${issueId}` — an appliance-specific override, then
- *   2. `issueId`                    — the shared guide for that issue.
+ *   1. `${applianceSlug}/${issueId}`, an appliance-specific override, then
+ *   2. `issueId`, the shared guide for that issue.
  * It returns `null` when the issue has no guide (or does not belong to the
  * appliance), and the form then says so instead of inventing instructions.
  *
@@ -54,13 +54,13 @@ const POWER_OUTLET: TroubleshootingStep = {
 const POWER_SWITCH: TroubleshootingStep = {
   title: "Check the unit's own switch",
   detail:
-    "Some units have a power switch or child lock of their own — make sure it is on, then wait a few seconds for the display.",
+    "Some units have a power switch or child lock of their own, make sure it is on, then wait a few seconds for the display.",
 };
 
 const NO_OPEN: TroubleshootingStep = {
   title: "Keep to the outside",
   detail:
-    "Everything below is done from outside the unit. Anything inside it — motors, wiring or gas lines — is a job for a qualified technician.",
+    "Everything below is done from outside the unit. Anything inside it, motors, wiring or gas lines, is a job for a qualified technician.",
 };
 
 const WATER_SHUTOFF: TroubleshootingStep = {
@@ -78,7 +78,7 @@ const HOSE_CHECK: TroubleshootingStep = {
 const CAPTURE_CODE: TroubleshootingStep = {
   title: "Write down the error code",
   detail:
-    "Note the exact code or flashing pattern on the display — it narrows the fault down quickly for the technician.",
+    "Note the exact code or flashing pattern on the display, it narrows the fault down quickly for the technician.",
 };
 
 const POWER_CYCLE: TroubleshootingStep = {
@@ -90,7 +90,7 @@ const POWER_CYCLE: TroubleshootingStep = {
 const NOTE_NOISE: TroubleshootingStep = {
   title: "Note when the noise happens",
   detail:
-    "Write down whether it starts on power-up, spinning, draining or cooling, and whether it is a rattle, grind or hum — it helps the technician a lot.",
+    "Write down whether it starts on power-up, spinning, draining or cooling, and whether it is a rattle, grind or hum, it helps the technician a lot.",
 };
 
 const CLEAR_OBSTRUCTION: TroubleshootingStep = {
@@ -178,7 +178,7 @@ const GUIDES: Record<string, TroubleshootingStep[]> = {
     LOAD_LID,
     {
       title: "Check it stands level",
-      detail: "A machine that rocks or leans can refuse to spin — check the feet and the floor.",
+      detail: "A machine that rocks or leans can refuse to spin, check the feet and the floor.",
     },
     NO_OPEN,
     STOP_AND_BOOK,
@@ -320,7 +320,7 @@ const GUIDES: Record<string, TroubleshootingStep[]> = {
 /**
  * The guide for an identified issue, or `null` when there is none.
  *
- * The issue must belong to the appliance — an issue id from another appliance's
+ * The issue must belong to the appliance, an issue id from another appliance's
  * catalogue returns `null`, so instructions can never appear under the wrong
  * appliance. There is deliberately NO appliance-only lookup: knowing the
  * appliance tells us nothing about what is wrong with it, which is exactly why

@@ -5,7 +5,7 @@
  * imports) so the SAME validation runs in the customer wizard, in the route
  * handler that persists the request and in the technician/admin views that
  * build a Google Maps link. A coordinate is never trusted just because it
- * arrived in a request body — see `toServiceCoordinates()`.
+ * arrived in a request body, see `toServiceCoordinates()`.
  */
 
 /** Roughly the Cagayan de Oro city centre. Used ONLY as the initial map view. */
@@ -14,7 +14,7 @@ export const DEFAULT_MAP_CENTER = { latitude: 8.4822, longitude: 124.6472 } as c
 /**
  * Zoom for the default (empty) view and for a selected point.
  *
- * The empty view used to open at 12 — the whole city — so finding your own street
+ * The empty view used to open at 12, the whole city, so finding your own street
  * meant several zoom steps before anything useful was on screen. 14 is
  * neighbourhood level: recognisable barangay and main roads, still wide enough to
  * orient yourself, and one or two steps from a house.
@@ -62,7 +62,7 @@ export function toServiceCoordinates(
 
   if (!isValidLatitude(lat) || !isValidLongitude(lng)) return null;
 
-  // 6 decimal places is ~11 cm of precision — far more than a street address
+  // 6 decimal places is ~11 cm of precision, far more than a street address
   // needs, and it keeps the stored value stable across a round trip.
   return { latitude: round6(lat), longitude: round6(lng) };
 }
@@ -94,7 +94,7 @@ export function sanitizeAddress(value: unknown): string | null {
  *
  * Coordinates win when they are present and valid; otherwise the (encoded)
  * service address is used. Google does the routing and turn-by-turn
- * navigation — SPARKServ never calculates a route itself, and no API key is
+ * navigation, SPARKServ never calculates a route itself, and no API key is
  * involved, so this URL is safe to render on the client.
  */
 export function googleMapsDirectionsUrl(location: {

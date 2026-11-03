@@ -8,16 +8,16 @@ import PrintButton from "@/components/PrintButton";
 import { loadJobOrder } from "@/lib/job-order";
 
 /**
- * The job order for one completed repair — the customer's copy of the record.
+ * The job order for one completed repair, the customer's copy of the record.
  *
  * Three guards, in this order:
  *
- *   1. **Authentication** — no session, no page.
- *   2. **Ownership** — `loadJobOrder()` filters on `customer_id = the caller`, so
+ *   1. **Authentication**, no session, no page.
+ *   2. **Ownership**, `loadJobOrder()` filters on `customer_id = the caller`, so
  *      another customer's booking id resolves to `null` and this page answers
  *      404. RLS refuses the same read a second time; the query is defence in
  *      depth, not the boundary.
- *   3. **Completion** — a job order is issued only once the repair is closed
+ *   3. **Completion**, a job order is issued only once the repair is closed
  *      (which `confirm_payment()` does in one transaction, after an administrator
  *      verified the payment). Before that the customer gets an explanation and a
  *      way back, never an empty document.

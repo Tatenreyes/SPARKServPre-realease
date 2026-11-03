@@ -18,7 +18,7 @@ import type { NotificationRow } from "@/types/database";
  *   * **Unread is never colour-only.** An unread card carries a dot *and* a bold
  *     "New" chip, so it survives a greyscale screen and a colour-blind reader.
  *
- * Marking read hits the same `/api/notifications` PATCH the bell uses — the
+ * Marking read hits the same `/api/notifications` PATCH the bell uses, the
  * badge on the bottom navigation is refreshed on the next page transition, so
  * both stay consistent without a second realtime subscription.
  */
@@ -55,7 +55,7 @@ export default function MobileNotificationsList({
   if (!notifications.length) {
     return (
       <div className="flex flex-col items-center rounded-card border border-dashed border-line px-5 py-12 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-soft text-muted/80">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-soft text-muted">
           <BellOff className="h-5 w-5" aria-hidden="true" />
         </span>
         <p className="mt-3 text-sm font-semibold text-ink">You&apos;re all caught up</p>
@@ -77,7 +77,7 @@ export default function MobileNotificationsList({
           <button
             type="button"
             onClick={markAllRead}
-            className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-line px-3 text-xs font-semibold text-brand-ink transition duration-200 hover:bg-brand-soft"
+            className="inline-flex min-h-[44px] cursor-pointer items-center gap-1.5 rounded-lg border border-line px-3 text-xs font-semibold text-brand-ink transition duration-200 hover:bg-brand-soft"
           >
             <Check className="h-3.5 w-3.5" aria-hidden="true" />
             Mark all read
@@ -96,7 +96,7 @@ export default function MobileNotificationsList({
             <div className="flex items-start justify-between gap-3">
               <p className="text-sm font-semibold text-ink">{n.title}</p>
               {!n.read && (
-                <span className="shrink-0 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white">
+                <span className="shrink-0 rounded-full bg-brand-500 px-2 py-0.5 text-xs font-bold uppercase tracking-[0.08em] text-white">
                   New
                 </span>
               )}
@@ -105,7 +105,7 @@ export default function MobileNotificationsList({
             {n.body && (
               <p className="mt-1 text-xs leading-relaxed text-muted">{n.body}</p>
             )}
-            <p className="mt-2 text-[11px] text-muted/80">
+            <p className="mt-2 text-xs text-muted">
               {new Date(n.created_at).toLocaleString("en-US", {
                 month: "long",
                 day: "numeric",

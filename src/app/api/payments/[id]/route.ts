@@ -20,7 +20,7 @@ interface RejectionOutcome {
   max_length?: number;
 }
 
-// PATCH /api/payments/:id — admin confirms or rejects a submitted payment reference.
+// PATCH /api/payments/:id, admin confirms or rejects a submitted payment reference.
 //
 // Confirmation runs through `confirm_payment()`: ONE transaction that verifies the
 // payment AND closes the repair (booking → completed, service_history archived,
@@ -28,7 +28,7 @@ interface RejectionOutcome {
 //
 // Rejection runs through `reject_payment()` (Batch 3): ONE transaction that records
 // the decision on its own columns and touches nothing else. The repair stays where
-// it is — normally the payment step — so the customer can submit a new reference.
+// it is, normally the payment step, so the customer can submit a new reference.
 // Before Batch 3 this branch was a raw service-role `update` that wrote
 // `confirmed_by`/`confirmed_at`, so a rejection was recorded as a verification and
 // nothing in the database enforced that only an administrator may reject.
@@ -36,7 +36,7 @@ interface RejectionOutcome {
 // Neither decision is enforced by this route alone: the database re-reads the
 // actor's role, holds the row lock, and owns the transition. The service-role
 // client is used because there is no RLS update policy for payments (customers can
-// only insert, never edit after submitting — that is intentional, and the insert
+// only insert, never edit after submitting, that is intentional, and the insert
 // policy pins the row to 'pending_verification' with no decision metadata).
 export async function PATCH(
   request: NextRequest,
@@ -81,7 +81,7 @@ export async function PATCH(
       if (error) {
         // Deployment ahead of database: confirm_payment() arrives with
         // migration_rls_workflow_enforcement.sql. Say which file is missing instead
-        // of a bare 500 — and never fall back to confirming the payment alone, which
+        // of a bare 500, and never fall back to confirming the payment alone, which
         // would record a verified payment against a repair that can no longer be
         // completed.
         const code = (error as { code?: string }).code;
@@ -153,12 +153,12 @@ export async function PATCH(
 
     // ---- Rejection ------------------------------------------------------------
     // The reason is customer-facing text, so it is required and bounded. Validated
-    // here for a fast, readable error, and again inside the function — the database
+    // here for a fast, readable error, and again inside the function, the database
     // is the boundary, not this check.
     const reason = typeof body.reason === "string" ? body.reason.trim() : "";
     if (!reason) {
       return NextResponse.json(
-        { error: "A rejection reason is required — the customer is told why." },
+        { error: "A rejection reason is required, the customer is told why." },
         { status: 400 }
       );
     }
@@ -178,7 +178,7 @@ export async function PATCH(
     if (error) {
       // Deployment ahead of database: reject_payment() arrives with
       // migration_reject_payment.sql. Say which file is missing instead of a bare
-      // 500 — and never fall back to writing the decision by hand, which is exactly
+      // 500, and never fall back to writing the decision by hand, which is exactly
       // what recorded a rejection as a verification.
       const code = (error as { code?: string }).code;
       const message = (error as { message?: string }).message ?? "";
@@ -261,7 +261,7 @@ async function mapRejectionOutcome(
           error:
             outcome.reason === "reason_too_long"
               ? `The rejection reason must be ${outcome.max_length ?? 500} characters or fewer.`
-              : "A rejection reason is required — the customer is told why.",
+              : "A rejection reason is required, the customer is told why.",
           outcome,
         },
         { status: 400 }

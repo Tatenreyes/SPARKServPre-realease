@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(authUrl);
   }
 
-  // Logged in — check their role against the section they're trying to reach
+  // Logged in, check their role against the section they're trying to reach
   const { data: profile } = await supabase
     .from("users")
     .select("role")
@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/unauthorized", request.url));
   }
 
-  // Maintenance mode gates customers/technicians only — admins still need access
+  // Maintenance mode gates customers/technicians only, admins still need access
   if (profile.role === "customer" || profile.role === "technician") {
     const { data: setting } = await supabase
       .from("system_settings")

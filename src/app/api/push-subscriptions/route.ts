@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 
-// POST /api/push-subscriptions — save a browser's push subscription
+// POST /api/push-subscriptions, save a browser's push subscription
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE /api/push-subscriptions — remove a subscription (e.g. user disables notifications)
+// DELETE /api/push-subscriptions, remove a subscription (e.g. user disables notifications)
 export async function DELETE(request: NextRequest) {
   try {
     const user = await getCurrentUser();

@@ -1,5 +1,5 @@
 /**
- * Compact relative time for dashboard lists — "Just now", "12m ago", "3h ago".
+ * Compact relative time for dashboard lists, "Just now", "12m ago", "3h ago".
  *
  * Extracted from the super-admin dashboard page so the formatter is one
  * implementation rather than a private helper each dashboard re-invents.
@@ -12,7 +12,7 @@
  *    says so.
  *  - **A future timestamp clamps to "Just now".** The database clock and the
  *    server clock are not the same clock, so a row written moments ago can
- *    arrive with a timestamp a few seconds ahead — which used to render as a
+ *    arrive with a timestamp a few seconds ahead, which used to render as a
  *    negative age.
  *
  * `reference` is injectable so the result is deterministic under test instead of

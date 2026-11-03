@@ -9,8 +9,8 @@ import StatusBadge from "@/components/StatusBadge";
 /**
  * One conversation, under Messages.
  *
- * The technician's Messages list used to open the JOB page — address, map pin,
- * directions and the thread — so reading a message meant leaving Messages for the
+ * The technician's Messages list used to open the JOB page, address, map pin,
+ * directions and the thread, so reading a message meant leaving Messages for the
  * schedule. The conversation keeps its own page; the job stays one click away, which
  * is where the address and directions belong.
  */
@@ -60,7 +60,7 @@ export default async function TechnicianConversationPage({
           <h1 className="font-display text-xl font-semibold text-ink">
             {customer?.name ?? "Customer"}
           </h1>
-          <p className="mt-0.5 text-sm capitalize text-ink/50">
+          <p className="mt-0.5 text-sm capitalize text-ink/70">
             {request?.appliance_type?.replace(/_/g, " ") ?? "Job"} ·{" "}
             {new Date(booking.scheduled_at).toLocaleString()}
           </p>

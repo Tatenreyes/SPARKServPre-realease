@@ -32,7 +32,7 @@ export default function TechnicianJobsClient({
       <section>
         <h2 className="mb-3 font-display text-base font-semibold text-ink">Active jobs</h2>
         {!active.length ? (
-          <p className="text-sm text-ink/50">No active jobs right now.</p>
+          <p className="text-sm text-ink/70">No active jobs right now.</p>
         ) : (
           <div className="space-y-4">
             {active.map((b) => (
@@ -49,22 +49,36 @@ export default function TechnicianJobsClient({
 
       {completed.length > 0 && (
         <section>
-          <h2 className="mb-3 font-display text-base font-semibold text-ink">Completed jobs</h2>
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-base font-semibold text-ink">Recently completed</h2>
+            {/* The full record, with the warranty and the customer's rating on it,
+                lives on Past jobs. This list is a pointer, not the archive. */}
+            <Link
+              href="/technician/past-jobs"
+              className="shrink-0 text-xs font-semibold text-brand-ink hover:underline"
+            >
+              View all past jobs →
+            </Link>
+          </div>
           <div className="space-y-2">
-            {completed.map((b) => {
+            {completed.slice(0, 5).map((b) => {
               const r = requestMap.get(b.service_request_id);
               return (
-                <div key={b.id} className="rounded-card border border-ink/8 bg-surface p-4 shadow-card">
-                  <div className="flex items-center justify-between">
+                <Link
+                  key={b.id}
+                  href={`/technician/bookings/${b.id}`}
+                  className="flex items-center justify-between rounded-card border border-line bg-surface p-4 shadow-card transition duration-200 hover:border-brand-ink/30"
+                >
+                  <div className="min-w-0">
                     <p className="font-medium capitalize text-ink">
-                      {r?.appliance_type.replace("_", " ") ?? "Job"}
+                      {r?.appliance_type.replace(/_/g, " ") ?? "Job"}
                     </p>
-                    <StatusBadge status={b.status} />
+                    <p className="mt-1 text-xs text-ink/70">
+                      {new Date(b.scheduled_at).toLocaleDateString()}
+                    </p>
                   </div>
-                  <p className="mt-1 text-xs text-ink/40">
-                    {new Date(b.scheduled_at).toLocaleDateString()}
-                  </p>
-                </div>
+                  <StatusBadge status={b.status} />
+                </Link>
               );
             })}
           </div>
@@ -114,14 +128,14 @@ function JobCard({
   }
 
   return (
-    <div className="rounded-card border border-ink/8 bg-surface p-4 shadow-card">
+    <div className="rounded-card border border-line bg-surface p-4 shadow-card">
       <div className="flex items-start justify-between">
         <div>
           <p className="font-medium capitalize text-ink">
             {request?.appliance_type.replace("_", " ") ?? "Job"}
           </p>
-          <p className="text-sm text-ink/60">{request?.problem_description}</p>
-          <p className="mt-1 text-xs text-ink/50">
+          <p className="text-sm text-ink/70">{request?.problem_description}</p>
+          <p className="mt-1 text-xs text-ink/70">
             Scheduled: {new Date(booking.scheduled_at).toLocaleString()}
           </p>
         </div>
@@ -138,14 +152,14 @@ function JobCard({
           longitude={request?.longitude ?? null}
           title="Service location"
           showDirections
-          emptyMessage="This request has no recorded service location — message the customer for the address."
+          emptyMessage="This request has no recorded service location, message the customer for the address."
         />
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Link
           href={`/technician/bookings/${booking.id}`}
-          className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs font-semibold text-ink/70 hover:bg-canvas"
+          className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-ink/70 hover:bg-canvas"
         >
           <MessageSquare className="h-3.5 w-3.5" /> Message customer
         </Link>
@@ -154,14 +168,14 @@ function JobCard({
       <BookingStatusControl bookingId={booking.id} currentStatus={booking.status} />
 
       {/* Visits */}
-      <div className="mt-4 border-t border-ink/8 pt-3">
+      <div className="mt-4 border-t border-line pt-3">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink/40">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink/70">
             Visits ({visits.filter((v) => v.status === "completed").length}/{visits.length})
           </p>
           <button
             onClick={() => setShowAddVisit((s) => !s)}
-            className="flex items-center gap-1 text-xs font-semibold text-brand-ink hover:text-brand-ink"
+            className="flex items-center gap-1 text-xs font-semibold text-brand-ink hover:underline"
           >
             <Plus className="h-3.5 w-3.5" /> Add visit
           </button>
@@ -174,13 +188,13 @@ function JobCard({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Inspection & Diagnosis"
-              className="w-full rounded-lg border border-ink/15 px-3 py-1.5 text-sm"
+              className="w-full rounded-lg border border-line px-3 py-1.5 text-sm"
             />
             <input
               type="datetime-local"
               value={scheduledAt}
               onChange={(e) => setScheduledAt(e.target.value)}
-              className="w-full rounded-lg border border-ink/15 px-3 py-1.5 text-sm"
+              className="w-full rounded-lg border border-line px-3 py-1.5 text-sm"
             />
             <button
               type="submit"
@@ -219,8 +233,8 @@ function VisitRowControl({ visit }: { visit: VisitRow }) {
         body: JSON.stringify(body),
       });
       const json = await res.json().catch(() => ({}));
-      // The response has to be READ. Without this, a refused write — a status
-      // the API does not accept, a lost privilege — refreshed the page and
+      // The response has to be READ. Without this, a refused write, a status
+      // the API does not accept, a lost privilege, refreshed the page and
       // looked exactly like a save.
       if (!res.ok) throw new Error(json.error ?? "That change was not saved.");
       router.refresh();
@@ -232,7 +246,7 @@ function VisitRowControl({ visit }: { visit: VisitRow }) {
   }
 
   return (
-    <div className="rounded-lg border border-ink/8 p-3">
+    <div className="rounded-lg border border-line p-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-ink">
           Visit {visit.visit_number}: {visit.title}
@@ -243,7 +257,7 @@ function VisitRowControl({ visit }: { visit: VisitRow }) {
               ? "bg-signal-500 text-white"
               : visit.status === "in_progress"
                 ? "bg-spark-400 text-white"
-                : "bg-ink/10 text-ink/60"
+                : "bg-ink/10 text-ink/70"
           }`}
         >
           {visit.status.replace("_", " ")}
@@ -256,7 +270,7 @@ function VisitRowControl({ visit }: { visit: VisitRow }) {
         onBlur={() => notes !== (visit.notes ?? "") && patch({ notes })}
         placeholder="Notes for this visit..."
         rows={2}
-        className="mt-2 w-full rounded-lg border border-ink/15 px-2 py-1.5 text-xs"
+        className="mt-2 w-full rounded-lg border border-line px-2 py-1.5 text-xs"
       />
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -264,7 +278,7 @@ function VisitRowControl({ visit }: { visit: VisitRow }) {
           value={photoUrl}
           onChange={(e) => setPhotoUrl(e.target.value)}
           placeholder="Paste a photo URL"
-          className="min-w-0 flex-1 rounded-lg border border-ink/15 px-2 py-1.5 text-xs"
+          className="min-w-0 flex-1 rounded-lg border border-line px-2 py-1.5 text-xs"
         />
         <button
           disabled={!photoUrl || busy}
@@ -272,7 +286,7 @@ function VisitRowControl({ visit }: { visit: VisitRow }) {
             patch({ photo_urls: [...visit.photo_urls, photoUrl] });
             setPhotoUrl("");
           }}
-          className="flex items-center gap-1 rounded-full border border-ink/15 px-2.5 py-1.5 text-xs font-medium text-ink/70 disabled:opacity-40"
+          className="flex items-center gap-1 rounded-full border border-line px-2.5 py-1.5 text-xs font-medium text-ink/70 disabled:opacity-40"
         >
           <ImageIcon className="h-3.5 w-3.5" /> Add
         </button>
@@ -283,7 +297,7 @@ function VisitRowControl({ visit }: { visit: VisitRow }) {
             onClick={() =>
               patch({ status: visit.status === "upcoming" ? "in_progress" : "completed" })
             }
-            className="rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-white hover:bg-ink/80 disabled:opacity-50"
+            className="rounded-full bg-signal-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-signal-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {visit.status === "upcoming" ? "Start visit" : "Mark completed"}
           </button>
@@ -293,7 +307,7 @@ function VisitRowControl({ visit }: { visit: VisitRow }) {
       {error && <p className="mt-1.5 text-[11px] text-alert-ink">{error}</p>}
 
       {visit.photo_urls.length > 0 && (
-        <p className="mt-1.5 text-[11px] text-ink/40">{visit.photo_urls.length} photo(s) attached</p>
+        <p className="mt-1.5 text-[11px] text-ink/70">{visit.photo_urls.length} photo(s) attached</p>
       )}
     </div>
   );

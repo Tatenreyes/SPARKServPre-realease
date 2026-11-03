@@ -3,7 +3,7 @@
  * date they bought the unit.
  *
  * Kept free of React, Next and icon imports so the test suite can import this
- * module directly — `scripts/tests/appliance-fields.test.mjs` runs the REAL code
+ * module directly, `scripts/tests/appliance-fields.test.mjs` runs the REAL code
  * (Node strips the types, so there is no build step and no second copy of these
  * rules to drift).
  *
@@ -14,7 +14,7 @@
  * the keyboard and the row bounded them: a paste of a whole document was stored,
  * and every screen that renders the appliance had to cope with it. A check
  * constraint is the only real enforcement, but that needs a migration while the
- * columns stay free text for anything writing around this module — so these are
+ * columns stay free text for anything writing around this module, so these are
  * applied in the field (`maxLength`) and again on the way into the payload
  * (`cleanCode`).
  */
@@ -92,8 +92,8 @@ export function toIsoDate(year: number, month: number, day: number): string {
  * Parse `YYYY-MM-DD` as a LOCAL calendar date, or null if it is not one.
  *
  * `new Date("2019-03-12")` is parsed as UTC midnight, so anywhere west of UTC it
- * renders as 11 March. A purchase date has no time and no zone — it is the
- * calendar date the customer picked — so it must be read the same way everywhere.
+ * renders as 11 March. A purchase date has no time and no zone, it is the
+ * calendar date the customer picked, so it must be read the same way everywhere.
  */
 export function parseIsoDate(value: string | null | undefined): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec((value ?? "").trim());
@@ -164,7 +164,7 @@ export const MAX_WARRANTY_YEARS = 10;
 /**
  * A warranty expiry: 1970 up to ten years ahead.
  *
- * The one field that legitimately sits on both sides of today — a warranty may already
+ * The one field that legitimately sits on both sides of today, a warranty may already
  * have run out, which is exactly why the customer is being asked. The ceiling is only
  * there to stop a typo like 2206.
  */
@@ -210,7 +210,7 @@ export function selectableDayRange(
 }
 
 /**
- * The years a range spans, newest first, plus a stored value that falls outside it — a
+ * The years a range spans, newest first, plus a stored value that falls outside it, a
  * clock that moved, or a row written before this rule existed. Dropping that year would
  * silently rewrite the date the next time the row was edited.
  */

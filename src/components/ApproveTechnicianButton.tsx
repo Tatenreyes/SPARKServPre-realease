@@ -33,7 +33,7 @@ export default function ApproveTechnicianButton({
       disabled={loading}
       className={`rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-50 ${
         approved
-          ? "border border-ink/15 text-ink/80 hover:bg-canvas"
+          ? "border border-line text-ink/80 hover:bg-canvas"
           : "bg-brand-500 text-white hover:bg-brand-600"
       }`}
     >

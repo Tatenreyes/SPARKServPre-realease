@@ -11,7 +11,7 @@ interface NotifyOptions {
 }
 
 /**
- * Single entry point for notifying a user — inserts the in-app notification
+ * Single entry point for notifying a user, inserts the in-app notification
  * row (shows in the bell icon, real-time) and fires a browser push in
  * parallel. Call this with a service-role client; notifications are always
  * system-generated, never a direct user action.

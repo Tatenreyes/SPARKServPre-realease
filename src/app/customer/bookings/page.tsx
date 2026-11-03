@@ -46,7 +46,7 @@ export default async function CustomerBookingsPage() {
                   <p className="mt-1 truncate text-sm text-muted">{new Date(b.scheduled_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</p>
                 </div>
               </div>
-              <div className="flex shrink-0 items-center gap-3"><StatusBadge status={b.status} /><ChevronRight className="h-4 w-4 text-muted/60 transition group-hover:translate-x-0.5 group-hover:text-brand-ink" /></div>
+              <div className="flex shrink-0 items-center gap-3"><StatusBadge status={b.status} /><ChevronRight className="h-4 w-4 text-muted transition group-hover:translate-x-0.5 group-hover:text-brand-ink" /></div>
             </Link>
           ))}
         </div>

@@ -30,7 +30,7 @@ function Stars({ value }: { value: number }) {
 }
 
 /**
- * Customer feedback for a completed repair. One rating per booking — the API
+ * Customer feedback for a completed repair. One rating per booking, the API
  * and the unique `ratings.booking_id` constraint both enforce that. Uses radio
  * semantics so the stars are reachable by keyboard and announced as one choice.
  */
@@ -167,8 +167,8 @@ export default function RatingForm({
           maxLength={1000}
           value={comment}
           onChange={(event) => setComment(event.target.value)}
-          placeholder="Tell us about the service — punctuality, workmanship, anything helpful."
-          className="mt-1.5 w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-line"
+          placeholder="Tell us about the service, punctuality, workmanship, anything helpful."
+          className="mt-1.5 w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/50 outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20"
         />
         <p className="mt-1 text-right text-[11px] text-muted">
           {comment.length}/1000

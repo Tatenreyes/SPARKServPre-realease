@@ -3,7 +3,7 @@ import AuthForm, { AuthFormSkeleton } from "@/components/AuthForm";
 import AuthShell from "@/components/AuthShell";
 
 export const metadata = {
-  title: "Log in — SPARKServ",
+  title: "Log in, SPARKServ",
   description: "Log in to track a repair, review an estimate, or manage your bookings.",
 };
 
@@ -12,6 +12,8 @@ export default function LoginPage() {
     <AuthShell
       headline="Good to see you again."
       subhead="Log back in to track a repair, review an estimate, or pick up where you left off."
+      backgroundImage="/images/TECH2.jpg"
+      backgroundImageAlt="SPARKServ technician holding repair tools"
     >
       {/* `AuthForm` reads `?redirectTo=` with `useSearchParams()`, which requires
           a Suspense boundary on a statically-rendered route. The root layout's

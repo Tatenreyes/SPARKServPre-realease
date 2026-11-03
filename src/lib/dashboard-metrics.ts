@@ -1,5 +1,5 @@
 export interface DailyBucket {
-  /** Local calendar date as `YYYY-MM-DD` — the bucket key. */
+  /** Local calendar date as `YYYY-MM-DD`, the bucket key. */
   date: string;
   /** Short axis label, e.g. "12 Sep". */
   label: string;
@@ -19,14 +19,14 @@ function localDateKey(date: Date): string {
  *
  * This exists because the super-admin dashboard's trend chart was a hardcoded
  * `values={[30, 44, 39, 56, 48, 63, 72]}` with invented "May 1 … May 28" axis
- * labels — a fabricated chart, placed on the one screen an administrator reads
+ * labels, a fabricated chart, placed on the one screen an administrator reads
  * as platform metrics, that no deployment could ever make true. It directly
  * contradicted the rule `design-system/sparkserv/pages/dashboard.md` sets out
  * ("approximation vs. truth is visible in the copy, not hidden in a tooltip").
  *
  * Buckets are built from the *local* calendar so "today" matches what the
  * dashboard's own timestamps say, and every day in the range is emitted even
- * when its count is zero — a gap in the series has to read as "no requests",
+ * when its count is zero, a gap in the series has to read as "no requests",
  * not as a missing data point.
  *
  * Timestamps that fall outside the range are ignored rather than clamped, so a

@@ -10,7 +10,7 @@
  *
  *   * every action is confirmed before it is sent, and the buttons lock while a
  *     request is in flight, so a double click cannot send two decisions;
- *   * the decision is about THIS version — the version number and total sit next
+ *   * the decision is about THIS version, the version number and total sit next
  *     to the buttons, and the server re-checks that the version is still the one
  *     awaiting a decision;
  *   * approving does NOT book anything. Scheduling is a separate step that only
@@ -18,7 +18,7 @@
  *     accepted it, and a scheduling conflict leaves the approval intact so the
  *     customer can pick another time. When no technician has accepted yet, the step
  *     is replaced by the shared assignment wording rather than a form that cannot
- *     succeed — the same copy the request page shows.
+ *     succeed, the same copy the request page shows.
  */
 
 import { useState } from "react";
@@ -58,7 +58,7 @@ export interface EstimateReviewCardProps {
      * The request's assignment state. Optional so an existing caller keeps working:
      * `undefined` means "not supplied" and leaves the booking form in place, while a
      * known status that is not `accepted` means the form cannot succeed and is
-     * replaced by an explanation. The database is still the authority — this only
+     * replaced by an explanation. The database is still the authority, this only
      * stops the UI from offering a button that can only fail.
      */
     assignment_status?: string;
@@ -66,7 +66,7 @@ export interface EstimateReviewCardProps {
      * The REQUEST's lifecycle state. An approved estimate is not on its own a licence
      * to book: the repair may already have an appointment, be under way, be finished
      * or be cancelled, and a booking form on any of those can only fail. Optional so
-     * an existing caller keeps working — `undefined` leaves the form in place and the
+     * an existing caller keeps working, `undefined` leaves the form in place and the
      * server stays the authority, exactly like `assignment_status`.
      */
     status?: string;
@@ -101,7 +101,7 @@ export default function EstimateReviewCard({
 
   // An approval is not the only precondition: the REPAIR has a lifecycle too. Once
   // the appointment exists, the work is under way, or the request is finished or
-  // cancelled, there is nothing left to book — the database refuses a second live
+  // cancelled, there is nothing left to book, the database refuses a second live
   // booking and a closed request is final. Without this the customer was shown
   // "Choose an appointment time / Confirm booking" on repairs that were already
   // completed: a form that can only fail.
@@ -117,7 +117,7 @@ export default function EstimateReviewCard({
    * Why the booking step is absent, when the estimate itself is approved.
    *
    * The wording differs per state on purpose: "we are still finding you a
-   * technician" is simply wrong — and alarming — on a repair that was completed
+   * technician" is simply wrong, and alarming, on a repair that was completed
    * last week, and it invites the customer to wait for something that will never
    * happen.
    */
@@ -207,7 +207,7 @@ export default function EstimateReviewCard({
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        // A retry — a double click, or a response that arrived late — already created
+        // A retry, a double click, or a response that arrived late, already created
         // the appointment. The route answers `already_booked` with the booking id, so
         // show the customer the booking they have instead of an error.
         if (res.status === 409 && json.code === "already_booked" && json.booking_id) {
@@ -227,7 +227,7 @@ export default function EstimateReviewCard({
 
 
   return (
-    <section className="rounded-card border border-ink/8 bg-surface p-5 shadow-card">
+    <section className="rounded-card border border-line bg-surface p-5 shadow-card">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-medium capitalize text-muted">
@@ -250,7 +250,7 @@ export default function EstimateReviewCard({
       <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-brand-soft/50 px-3 py-2 text-[11px] leading-relaxed text-brand-ink">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         This is a preliminary quotation based on what the technician knows so far. An
-        inspection may reveal more work — any additional chargeable work needs a revised
+        inspection may reveal more work, any additional chargeable work needs a revised
         estimate that you approve before it is carried out.
       </p>
 
@@ -296,7 +296,7 @@ export default function EstimateReviewCard({
       {estimate.notes && (
         <div className="mt-3">
           <p className="text-xs font-semibold text-ink">Notes and assumptions</p>
-          <p className="mt-1 whitespace-pre-line rounded-lg bg-canvas px-3 py-2 text-sm text-ink/65">
+          <p className="mt-1 whitespace-pre-line rounded-lg bg-canvas px-3 py-2 text-sm text-ink/70">
             {estimate.notes}
           </p>
         </div>
@@ -324,7 +324,7 @@ export default function EstimateReviewCard({
           <History className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           A newer version replaced this one
           {estimate.approved_at
-            ? " — it had been approved before the revision, and that approval does not cover the new scope or price."
+            ? ", it had been approved before the revision, and that approval does not cover the new scope or price."
             : "."}
         </p>
       )}
@@ -351,7 +351,7 @@ export default function EstimateReviewCard({
                   {formatMoney(estimate.estimated_cost)}
                 </span>{" "}
                 for version {estimate.version}. You choose the appointment time in the next
-                step — approving does not book anything yet.
+                step, approving does not book anything yet.
               </p>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <button
@@ -418,7 +418,7 @@ export default function EstimateReviewCard({
                 onChange={(e) => setReason(e.target.value)}
                 rows={2}
                 placeholder="Reason (optional)"
-                className="mt-2 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-line px-3 py-2 text-sm"
               />
             </ConfirmPanel>
           )}
@@ -426,7 +426,7 @@ export default function EstimateReviewCard({
           {pending === "revision" && (
             <ConfirmPanel
               title="Ask for a revised estimate?"
-              body="Tell the technician what should change — a different scope, cheaper parts, a clearer breakdown. They will send a new version for you to approve."
+              body="Tell the technician what should change, a different scope, cheaper parts, a clearer breakdown. They will send a new version for you to approve."
               confirmLabel="Send request"
               confirmTone="brand"
               busy={busy}
@@ -438,7 +438,7 @@ export default function EstimateReviewCard({
                 onChange={(e) => setReason(e.target.value)}
                 rows={3}
                 placeholder="What should change? (optional, but it helps the technician)"
-                className="mt-2 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-line px-3 py-2 text-sm"
               />
             </ConfirmPanel>
           )}
@@ -449,7 +449,7 @@ export default function EstimateReviewCard({
       {/* ---- Approved, and the repair is already booked or over ---- */}
       {/* An approval is not a licence to book. Once an appointment exists, the work
           is under way, or the request is finished or cancelled, the booking step is
-          gone — and it must say WHICH of those it is, because the "waiting for a
+          gone, and it must say WHICH of those it is, because the "waiting for a
           technician" wording below would be wrong for every one of them. */}
       {bookable && !canSchedule && (repairClosed || repairBooked) && (
         <div className="mt-4 border-t border-line pt-4">
@@ -502,14 +502,14 @@ export default function EstimateReviewCard({
           </p>
           <p className="mt-1 text-xs leading-relaxed text-muted">
             The slot is checked against the technician&apos;s schedule and capacity when you
-            confirm. If it clashes you will be asked for another time — your approval stands.
+            confirm. If it clashes you will be asked for another time, your approval stands.
           </p>
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
             <input
               type="datetime-local"
               value={scheduledAt}
               onChange={(e) => setScheduledAt(e.target.value)}
-              className="rounded-lg border border-ink/15 px-3 py-2 text-sm text-white"
+              className="rounded-lg border border-line px-3 py-2 text-sm text-white"
             />
             <button
               type="button"

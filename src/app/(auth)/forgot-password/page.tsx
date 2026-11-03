@@ -3,7 +3,7 @@ import ForgotPasswordForm from "@/components/ForgotPasswordForm";
 import { recoveryLinkNotice } from "@/lib/auth/recovery";
 
 export const metadata = {
-  title: "Reset your password — SPARKServ",
+  title: "Reset your password, SPARKServ",
   description: "Request a password reset link for your SPARKServ account.",
 };
 

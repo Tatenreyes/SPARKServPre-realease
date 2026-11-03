@@ -48,7 +48,7 @@ export async function sendPushToUser(
       } catch (err: unknown) {
         const statusCode = (err as { statusCode?: number })?.statusCode;
         if (statusCode === 404 || statusCode === 410) {
-          // Subscription no longer valid — remove it.
+          // Subscription no longer valid, remove it.
           await supabase.from("push_subscriptions").delete().eq("id", sub.id);
         } else {
           console.error("Push send failed:", err);

@@ -1,4 +1,4 @@
-﻿import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 import { applianceLabel } from "@/lib/queue";
@@ -27,7 +27,7 @@ interface BookingOutcome {
   /**
    * Only on `technician_not_eligible`: does ANY technician currently qualify for
    * this appliance type? It decides which of the two honest explanations the
-   * customer gets — "nobody covers this appliance" or "the technician assigned to
+   * customer gets, "nobody covers this appliance" or "the technician assigned to
    * you is no longer qualified".
    */
   qualified_technician_available?: boolean;
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     const outcome = (data ?? {}) as BookingOutcome;
     // Announced only for a booking that actually committed, and only after the
-    // transaction returned — see `notifyBookedAppointment`.
+    // transaction returned, see `notifyBookedAppointment`.
     if (outcome.outcome === "booked") {
       await notifyBookedAppointment(serviceRole, outcome, user.id);
     }
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
  *
  * Sent only for a `booked` outcome and only after the transaction committed: the
  * booking is the fact, the notification is the announcement. A failure here must
- * never turn a booked repair into an error, so it is logged and swallowed — the
+ * never turn a booked repair into an error, so it is logged and swallowed, the
  * same rule the payment decision follows.
  *
  * The technician is told about the appointment too: their own acceptance already
@@ -233,7 +233,7 @@ function mapBookingOutcome(outcome: BookingOutcome) {
       // but under the platform's own rules that technician may no longer take this
       // appliance type (they dropped the specialization, the account was suspended or
       // deactivated, or an administrator took them out of the rotation). Nothing was
-      // written — the request keeps its state — so the customer is told the truth and
+      // written, the request keeps its state, so the customer is told the truth and
       // pointed at a human, rather than being shown a booking that does not exist.
       const appliance = outcome.appliance_type
         ? applianceLabel(outcome.appliance_type)
@@ -242,7 +242,7 @@ function mapBookingOutcome(outcome: BookingOutcome) {
         outcome.reason === "not_in_queue" && outcome.qualified_technician_available === false;
 
       const error = nobodyCoversIt
-        ? `No technician currently supports ${appliance} repairs, so this appointment cannot be confirmed. Your request stays open and in line — we will match you with a qualified technician as soon as one is available.`
+        ? `No technician currently supports ${appliance} repairs, so this appointment cannot be confirmed. Your request stays open and in line, we will match you with a qualified technician as soon as one is available.`
         : outcome.reason === "not_in_queue"
           ? `The technician assigned to this request is no longer qualified to service ${appliance}, so this appointment cannot be confirmed. Please contact support so a different technician can be assigned.`
           : `The technician assigned to this request is no longer available to take the job, so this appointment cannot be confirmed. Please contact support so a different technician can be assigned.`;
@@ -251,8 +251,8 @@ function mapBookingOutcome(outcome: BookingOutcome) {
     }
 
     case "invalid_input":
-      // Unreachable through this route — it validates the four parameters before
-      // calling — but named deliberately, so the contract between the function and
+      // Unreachable through this route, it validates the four parameters before
+      // calling, but named deliberately, so the contract between the function and
       // this mapping stays TOTAL: an outcome the function can return is never
       // answered by the catch-all below, which exists only for outcomes that did
       // not exist when this route was written.

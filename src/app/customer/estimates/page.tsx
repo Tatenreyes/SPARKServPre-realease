@@ -26,7 +26,7 @@ export default async function MyEstimatesPage() {
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">My estimates</h1>
-      <p className="mt-1 text-sm text-ink/65">
+      <p className="mt-1 text-sm text-ink/70">
         Every cost estimate a technician has sent you, across all your requests. Once a
         repair is complete its estimate moves to{" "}
         <Link href="/customer/repair-history" className="font-semibold text-brand-ink hover:underline">

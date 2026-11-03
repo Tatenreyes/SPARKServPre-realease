@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 /**
- * Booking review was a read-only list of every booking — and so was
+ * Booking review was a read-only list of every booking, and so was
  * `/admin/job-monitoring`: the same query (`bookings`, newest first, limit 50)
  * with a subset of the same columns. Two sidebar entries and two pages for one
  * list meant an administrator could not tell which was authoritative, and the

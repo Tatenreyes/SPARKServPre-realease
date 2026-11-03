@@ -3,7 +3,7 @@
  *
  * WHY THIS EXISTS. `data ?? []` is only safe when the query SUCCEEDED. PostgREST
  * returns `null` data alongside a non-null `error` for every failure, so
- * collapsing the two into `[]` turns a broken read into an empty list — an
+ * collapsing the two into `[]` turns a broken read into an empty list, an
  * administrator cannot tell "nothing is wrong" from "we could not read it".
  * `/admin/payments` was fixed for exactly this (`src/lib/payments-queue.ts`, which
  * keeps its own copy of the guard because its error copy and log prefix are
@@ -11,7 +11,7 @@
  * `/admin/progress` still discarded their errors and rendered "No bookings yet."
  *
  * WHAT IS LOGGED, AND WHAT IS NOT. The query's name plus PostgREST's `code` and
- * `message` — the two fields that identify a failure. `details` and `hint` are
+ * `message`, the two fields that identify a failure. `details` and `hint` are
  * deliberately NOT logged: they are derived from the statement and can echo
  * predicate values and row contents back.
  */
@@ -47,7 +47,7 @@ export class QueryUnavailableError extends Error {
  * Turn one query result into rows, or fail loudly.
  *
  * Pass `data` for a row query, or `null` when only the `error` and a separate
- * `count` are of interest — the guard's job is to refuse a failure either way.
+ * `count` are of interest, the guard's job is to refuse a failure either way.
  */
 export function requireRows<T>(
   query: string,

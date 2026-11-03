@@ -7,7 +7,7 @@ import {
 } from "@/lib/technician-profile";
 
 /**
- * Who is coming — the ONE technician the fairness queue assigned to this request.
+ * Who is coming, the ONE technician the fairness queue assigned to this request.
  *
  * ## This is not the deleted ranking card
  *
@@ -17,7 +17,7 @@ import {
  * it ranked for them. None of that exists here, and the name is deliberately
  * different so nobody grepping for the removed component finds this one:
  *
- *   * there is no rank, no score and no ordering — there is one assigned
+ *   * there is no rank, no score and no ordering, there is one assigned
  *     technician, chosen by the rotation, and the card cannot compare or select;
  *   * nothing on it is a customer decision, so it has no `onSelect`;
  *   * the rating it shows is evidence about a person already assigned, never a
@@ -25,7 +25,7 @@ import {
  *
  * ## What it shows, and what it deliberately does not
  *
- * The assignment card used to print a name and nothing else — the one moment a
+ * The assignment card used to print a name and nothing else, the one moment a
  * customer decides whether to trust the visit. This shows the photo (or initials),
  * the verification badge the queue itself applies, the average of real ratings,
  * how many repairs the technician has completed, and their appliance list.
@@ -35,8 +35,7 @@ import {
  * would refuse them. Every avatar in this app is drawn this way (see
  * `ProfileForm`).
  *
- * There are **no contact details** — they are not in `TechnicianProfile` at all —
- * and the footnote says so, so a customer knows the booking thread is the way to
+ * There are **no contact details**, they are not in `TechnicianProfile` at all, * and the footnote says so, so a customer knows the booking thread is the way to
  * reach their technician and the conversation stays on the record.
  */
 export default function AssignedTechnicianCard({
@@ -125,7 +124,7 @@ export default function AssignedTechnicianCard({
           </ul>
         )}
 
-        <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-muted/90">
+        <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-muted">
           <Wrench className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
           Contact stays in your booking thread, so the conversation is on the record.
         </p>

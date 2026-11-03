@@ -7,13 +7,12 @@
  * moment a customer decides whether to trust the visit. Every commercial service
  * in this market shows a photo and a verification badge before the technician
  * arrives; a name alone makes SPARKServ look less accountable than a Facebook
- * referral — and the whole argument of this project is accountability.
+ * referral, and the whole argument of this project is accountability.
  *
  * ## What is published, and what is deliberately not
  *
  * The shape below IS the disclosure list. There is no phone number, no email, no
- * address and no customer data in it, so no caller can accidentally widen it —
- * and `scripts/tests/technician-profile.test.mjs` asserts that the module never
+ * address and no customer data in it, so no caller can accidentally widen it, * and `scripts/tests/technician-profile.test.mjs` asserts that the module never
  * reads a contact column. A customer reaches their technician through the booking
  * thread, which keeps the conversation on the record.
  *
@@ -25,7 +24,7 @@
  *   * **A technician with no reviews has no rating**, never `0.0`. Zero is a
  *     score; no reviews is not a score.
  *
- * `verified` is `technicians.approved` — the same flag the queue uses to let
+ * `verified` is `technicians.approved`, the same flag the queue uses to let
  * somebody take work at all, so the badge cannot claim more than the engine does.
  *
  * Pure: no React, no Supabase, no server-only imports, so the test suite runs the
@@ -37,7 +36,7 @@ export interface TechnicianProfile {
   id: string;
   name: string;
   avatarUrl: string | null;
-  /** `technicians.approved` — the same gate the queue applies. */
+  /** `technicians.approved`, the same gate the queue applies. */
   verified: boolean;
   /** Average of real ratings, or null when there are none. */
   rating: number | null;
@@ -79,7 +78,7 @@ export function averageRating(ratings: { rating: number }[] | null | undefined):
 /**
  * The rating as the card prints it, or null when there is nothing honest to say.
  *
- * Returns the number only — the star and the review count are laid out by the
+ * Returns the number only, the star and the review count are laid out by the
  * component, which is why this is a string rather than JSX.
  */
 export function formatRating(average: number | null, count: number): string | null {
@@ -112,7 +111,7 @@ export function specializationSummary(
  *
  * A photo is optional, so the circle must never be empty: two initials when the
  * name has two words ("Juan Dela Cruz" → "JD"), one when it has one, and a plain
- * "T" when there is no name at all — generic and honest beats a blank disc.
+ * "T" when there is no name at all, generic and honest beats a blank disc.
  */
 export function initials(name: string | null | undefined): string {
   const words = (name ?? "")

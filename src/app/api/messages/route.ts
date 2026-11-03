@@ -3,7 +3,7 @@ import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 import { notify } from "@/lib/notifications";
 
-// POST /api/messages — send a chat message scoped to a booking
+// POST /api/messages, send a chat message scoped to a booking
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/messages?booking_id=... — fetch full thread for a booking
+// GET /api/messages?booking_id=..., fetch full thread for a booking
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();

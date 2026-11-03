@@ -25,7 +25,7 @@ export async function GET(
   }
 }
 
-// PATCH /api/service-requests/:id — update status (e.g. customer cancels, system marks booked)
+// PATCH /api/service-requests/:id, update status (e.g. customer cancels, system marks booked)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -64,12 +64,12 @@ export async function PATCH(
 }
 
 /**
- * DELETE /api/service-requests/:id — the customer removes a request that never
+ * DELETE /api/service-requests/:id, the customer removes a request that never
  * went anywhere.
  *
  * WHY THIS IS NOT A CLIENT DELETE. There is no DELETE policy on
- * `service_requests` — every workflow table in this schema is written by a
- * trusted path — so a customer cannot remove their own row through PostgREST.
+ * `service_requests`, every workflow table in this schema is written by a
+ * trusted path, so a customer cannot remove their own row through PostgREST.
  * This route runs on the service-role client and re-does the authorization
  * itself, and it owns the refusal list, because a hard delete CASCADES:
  * `estimates`, `bookings` and `technician_offer_history` all reference the
@@ -78,14 +78,14 @@ export async function PATCH(
  *
  * So removal is allowed only while nothing real depends on the request:
  *
- *   * no booking — an appointment holds a technician's slot and can carry a
+ *   * no booking, an appointment holds a technician's slot and can carry a
  *     payment, and a customer action never deletes a money record;
- *   * no accepted assignment — that is somebody's job, already accepted;
- *   * no estimate of any status — a technician has already done that work;
- *   * not completed — a finished repair is the customer's service history.
+ *   * no accepted assignment, that is somebody's job, already accepted;
+ *   * no estimate of any status, a technician has already done that work;
+ *   * not completed, a finished repair is the customer's service history.
  *
  * Anything further along is withdrawn through support, not deleted. (Releasing an
- * in-flight request — freeing the assignment and cancelling its appointment — is a
+ * in-flight request, freeing the assignment and cancelling its appointment, is a
  * workflow decision that belongs in its own migration; see the follow-up noted at
  * the end of supabase/migration_booking_eligibility.sql.)
  *

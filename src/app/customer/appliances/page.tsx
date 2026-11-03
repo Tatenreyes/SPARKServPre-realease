@@ -95,8 +95,7 @@ export default function AppliancesPage() {
 
   /**
    * Removal goes through `DELETE /api/appliances/:id`, not the browser client.
-   * The route re-checks the session and scopes the delete to the caller, and —
-   * unlike a raw client call — it reports a refusal, so a delete that did not
+   * The route re-checks the session and scopes the delete to the caller, and, * unlike a raw client call, it reports a refusal, so a delete that did not
    * happen cannot look like one that did.
    */
   async function handleDelete(appliance: Appliance) {
@@ -199,7 +198,7 @@ export default function AppliancesPage() {
         <div className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold text-ink">{editingId ? "Edit Appliance" : "Register Appliance"}</h2>
-            <button onClick={() => setShowForm(false)} className="text-muted/80 hover:text-muted">
+            <button onClick={() => setShowForm(false)} className="text-muted transition-colors hover:text-ink">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -210,7 +209,7 @@ export default function AppliancesPage() {
                 <select
                   value={form.appliance_type}
                   onChange={(e) => setForm({ ...form, appliance_type: e.target.value })}
-                  className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 text-sm"
+                  className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm"
                 >
                   {APPLIANCE_TYPES.map((type) => (
                     <option key={type} value={type}>{type}</option>
@@ -222,14 +221,14 @@ export default function AppliancesPage() {
                 {/* Free text, with the wizard's own list offered as suggestions:
                     any brand this screen accepts must be one the wizard can show
                     back. A `datalist` keeps that possible without forcing a
-                    choice — this field is optional here, required there. */}
+                    choice, this field is optional here, required there. */}
                 <input
                   value={form.brand}
                   onChange={(e) => setForm({ ...form, brand: sanitiseBrandInput(e.target.value) })}
                   list="appliance-brand-options"
                   maxLength={MAX_BRAND_LENGTH}
                   autoComplete="off"
-                  className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 text-sm"
+                  className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm"
                   placeholder="Samsung, LG, Panasonic..."
                 />
                 <datalist id="appliance-brand-options">
@@ -247,7 +246,7 @@ export default function AppliancesPage() {
                   value={form.model_number}
                   onChange={(e) => setForm({ ...form, model_number: sanitiseCodeInput(e.target.value, MAX_MODEL_NUMBER_LENGTH) })}
                   maxLength={MAX_MODEL_NUMBER_LENGTH}
-                  className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 text-sm"
+                  className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm"
                   placeholder="Model number"
                 />
                 <FieldCounter value={form.model_number} max={MAX_MODEL_NUMBER_LENGTH} />
@@ -258,7 +257,7 @@ export default function AppliancesPage() {
                   value={form.serial_number}
                   onChange={(e) => setForm({ ...form, serial_number: sanitiseCodeInput(e.target.value, MAX_SERIAL_NUMBER_LENGTH) })}
                   maxLength={MAX_SERIAL_NUMBER_LENGTH}
-                  className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 text-sm"
+                  className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm"
                   placeholder="Serial number"
                 />
                 <FieldCounter value={form.serial_number} max={MAX_SERIAL_NUMBER_LENGTH} />
@@ -277,7 +276,7 @@ export default function AppliancesPage() {
                 <select
                   value={form.warranty_status}
                   onChange={(e) => setForm({ ...form, warranty_status: e.target.value })}
-                  className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 text-sm"
+                  className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm"
                 >
                   <option value="unknown">Not Sure</option>
                   <option value="yes">Yes</option>
@@ -291,7 +290,7 @@ export default function AppliancesPage() {
                     <select
                       value={form.warranty_type}
                       onChange={(e) => setForm({ ...form, warranty_type: e.target.value })}
-                      className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 text-sm"
+                      className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm"
                     >
                       <option value="">Select type</option>
                       <option value="Manufacturer Warranty">Manufacturer Warranty</option>
@@ -318,7 +317,7 @@ export default function AppliancesPage() {
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 rows={3}
-                className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 text-sm"
+                className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm"
                 placeholder="Additional notes about this appliance..."
               />
             </div>
@@ -333,7 +332,7 @@ export default function AppliancesPage() {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="rounded-full border border-ink/15 px-5 py-2.5 text-sm font-medium text-ink/70"
+                className="rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink/70"
               >
                 Cancel
               </button>
@@ -356,7 +355,7 @@ export default function AppliancesPage() {
         <div className="py-12 text-center text-sm text-muted">Loading appliances...</div>
       ) : appliances.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-ink/20 bg-soft/50 p-12 text-center">
-          <Refrigerator className="mx-auto h-12 w-12 text-muted/60" />
+          <Refrigerator className="mx-auto h-12 w-12 text-muted" />
           <h3 className="mt-4 text-lg font-semibold text-ink">No appliances registered yet</h3>
           <p className="mt-2 text-sm text-muted">Add your first appliance to speed up future service requests.</p>
           <button
@@ -371,7 +370,7 @@ export default function AppliancesPage() {
           {appliances.map((appliance) => (
             <div
               key={appliance.id}
-              className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5 transition hover:border-line hover:shadow-md"
+              className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5 transition hover:border-brand-300 hover:shadow-md"
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-ink">{appliance.appliance_type}</span>
@@ -388,7 +387,7 @@ export default function AppliancesPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => openEdit(appliance)}
-                  className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-line hover:text-brand-ink"
+                  className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-brand-300 hover:text-brand-ink"
                 >
                   <Pencil className="h-3.5 w-3.5" /> Edit
                 </button>
@@ -397,7 +396,7 @@ export default function AppliancesPage() {
                     setDeleteError(null);
                     setDeleteTarget(appliance);
                   }}
-                  className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-alert-ink transition hover:border-line hover:text-alert-ink"
+                  className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-alert-ink transition hover:border-alert-500"
                 >
                   <Trash2 className="h-3.5 w-3.5" /> Delete
                 </button>
@@ -429,7 +428,7 @@ export default function AppliancesPage() {
                         setDeleteError(null);
                       }}
                       disabled={deleting}
-                      className="rounded-full border border-ink/15 px-3.5 py-1.5 text-xs font-medium text-ink/70 disabled:opacity-50"
+                      className="rounded-full border border-line px-3.5 py-1.5 text-xs font-medium text-ink/70 disabled:opacity-50"
                     >
                       Keep it
                     </button>

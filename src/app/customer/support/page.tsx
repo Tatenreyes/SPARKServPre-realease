@@ -9,8 +9,8 @@ import { Headset, MessageSquareText, ShieldQuestion, Sparkles } from "lucide-rea
  *
  * The tickets list is the substance of the page and is unchanged; what is added
  * is the small hub above it, because on a phone the Support tab has to answer
- * "where do I talk to a person?" — messages, a ticket, a warranty question, or
- * feedback about the app — before it answers "what have I already raised?".
+ * "where do I talk to a person?", messages, a ticket, a warranty question, or
+ * feedback about the app, before it answers "what have I already raised?".
  *
  * `?topic=warranty|feedback` opens the ticket form with the type and opening
  * line already chosen, so the two most specific entry points do not make the
@@ -43,7 +43,7 @@ export default async function SupportTicketsPage({
           Support
         </h1>
         <p className="mt-1.5 text-sm leading-relaxed text-muted">
-          For account or platform issues — not appliance repairs. For a repair, use{" "}
+          For account or platform issues, not appliance repairs. For a repair, use{" "}
           <span className="font-medium text-ink">Request a repair</span> instead.
         </p>
       </div>

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 
 /**
- * /api/technician-availability — a technician's own weekly availability windows
+ * /api/technician-availability, a technician's own weekly availability windows
  * and time off.
  *
  * These are the "is this technician able to work at the requested time?" inputs:
@@ -11,7 +11,7 @@ import { getCurrentUser, AuthError } from "@/lib/auth";
  * An empty window list means "no restriction" (see QUEUE-SYSTEM.md).
  *
  * Everything runs on the user-scoped client, so RLS restricts every read and
- * write to the caller's own rows — a technician cannot edit another's schedule.
+ * write to the caller's own rows, a technician cannot edit another's schedule.
  */
 
 const TIME_PATTERN = /^\d{2}:\d{2}(:\d{2})?$/;
@@ -195,7 +195,7 @@ function handleError(err: unknown) {
     return NextResponse.json(
       {
         error:
-          "Availability storage is not installed yet — apply supabase/migration_queue_redesign.sql, then reload the schema cache.",
+          "Availability storage is not installed yet, apply supabase/migration_queue_redesign.sql, then reload the schema cache.",
       },
       { status: 503 }
     );

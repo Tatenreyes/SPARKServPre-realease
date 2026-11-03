@@ -20,7 +20,7 @@ const NEXT_LABEL: Record<string, string> = {
   // The technician finishes the physical repair; the customer's inspection and the
   // administrator's payment verification are what close the transaction, so this
   // button must not claim to complete anything.
-  in_progress: "Finish repair — send for inspection",
+  in_progress: "Finish repair, send for inspection",
 };
 
 export default function BookingStatusControl({
@@ -86,7 +86,7 @@ export default function BookingStatusControl({
             value={finalCost}
             onChange={(event) => setFinalCost(event.target.value)}
             placeholder="e.g. 1500.00"
-            className="w-full rounded-lg border border-ink/15 bg-surface px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm"
           />
           <span className="mt-1 block text-[11px] text-muted">
             The customer pays this amount after they approve the repair.
@@ -96,7 +96,7 @@ export default function BookingStatusControl({
       <button
         onClick={handleAdvance}
         disabled={updating}
-        className="rounded-lg bg-ink px-3 py-1.5 text-xs font-medium text-white hover:bg-ink/80 disabled:opacity-50"
+        className="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {updating ? "Updating..." : NEXT_LABEL[currentStatus]}
       </button>

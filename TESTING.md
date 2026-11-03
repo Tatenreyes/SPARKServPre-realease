@@ -7,7 +7,9 @@ covers the customer-facing assignment state, one covers request removal, one cov
 inquiry's resolved-fault rule, one covers the appliance brand lists, one covers the
 job order a completed repair leaves behind, one covers what a customer may know
 about their technician, one covers the notification events that used to change
-somebody's next action in silence, and one covers the installable web app. They
+somebody's next action in silence, one covers the installable web app, and one covers
+the colour system — that the palette is legible in both themes and that no component
+can quietly reintroduce white-on-white or sub-AA text. They
 answer different questions, and **all** are needed before the work can be called done.
 
 | Command | Runs against | Proves | Cannot prove |
@@ -15,7 +17,7 @@ answer different questions, and **all** are needed before the work can be called
 | `npm run test:queue-sql` | an in-process WASM Postgres (PGlite) loaded with this repo's real SQL files | the **logic**: rotation, skip rules, capacity, expiry, race guards, audit rows, the estimate state machine (totals, versions, single-shot approval, booking gate), and atomic booking (one live booking per request, no overlapping appointment, counter moves exactly once) | that the migration was applied to the live project, real JWT claims, PostgREST exposure, UI rendering, and anything requiring two genuinely concurrent transactions |
 | `npm run test:issues` | the real `src/lib/*.ts` modules, run directly by Node 24 (type stripping, no build step) | the **matching**: normalisation, the English/Tagalog/Bisaya/mixed mappings, appliance scoping, negation, ambiguity, and the safety of every published guide | the React form itself, and anything needing the database |
 | `npm run test:estimates` | the real `src/lib/estimate-costs.ts`, run directly by Node 24 | the **money and status rules** the form and the API route share: rounding, invalid amounts, the itemized total, the required scope/description, the status vocabulary, and which version is bookable | the database constraints (group 19 covers those) and the React components |
-| `npm run test:auth` | the real `src/lib/auth/recovery.ts`, `src/lib/auth/recovery-marker.ts` and `src/lib/password.ts`, run directly by Node 24 | the **password-recovery rules**: the minimum/maximum length and the mismatch rule, the duplicate-submission guards, the callback decision table (exchange a PKCE code, verify a `token_hash`, refuse an expired or wrong-type link), the open-redirect guard on `next`, the error-to-copy mapping that keeps the request form from disclosing whether an account exists, and the **recovery authorization binding** — that the marker is signed and names one user and one session, so it is refused for a visitor with no recovery session, for the same account after an ordinary sign-in, for a different account in the same browser, after a completed reset, and when it is expired, forged, unsigned or tampered — plus source guardrails (no token logging, no service-role client, no identifier sent to `updateUser`) | the rendered React components, a real recovery email, the live project's redirect allow-list, and the browser's cookie handling — §4 has the manual pass |
+| `npm run test:auth` | the real `src/lib/auth/recovery.ts`, `src/lib/auth/recovery-marker.ts` and `src/lib/password.ts`, run directly by Node 24 | the **password-recovery rules**: the minimum/maximum length and the mismatch rule, the duplicate-submission guards, the callback decision table (exchange a PKCE code, verify a `token_hash`, refuse an expired or wrong-type link), the open-redirect guard on `next`, the error-to-copy mapping that keeps the request form from disclosing whether an account exists, and the **recovery authorization binding** — that the marker is signed and names one user and one session, so it is refused for a visitor with no recovery session, for the same account after an ordinary sign-in, for a different account in the same browser, after a completed reset, and when it is expired, forged, unsigned or tampered — plus source guardrails (no token logging, no service-role client, no identifier sent to `updateUser`) | the rendered React components, a real recovery email, the live project's redirect allow-list, and the browser's cookie handling — §5 has the manual pass |
 | `npm run verify:queue` | the **live Supabase project** from `.env.local` | the **deployed system**: real RLS, real GRANTs, real `auth.uid()`, RPC exposure through PostgREST | anything about the browser UI |
 | `npm run test:admin-lists` | the real `src/lib/booking-status.ts` and `src/lib/query-rows.ts`, plus the two admin listing pages and `TechnicianJobsClient`, read as text | the **shared guards**: that "active" is one four-status list consumed by both booking monitors and the technician job list (never re-listed inline, which is how the two pages drifted apart), that every listing query goes through `requireRows()` and no page reads a query result unguarded, that the guard throws with the query name and the database code while never logging `details`/`hint`, that `/admin/bookings` is a redirect into the merged list and the merged list kept that page's one unique column, and that a refused visit write is surfaced instead of looking saved | the rendered React tree, a real PostgREST failure, and the numbers the pages actually display |
 | `npm run test:inquiry-flow` | `src/components/RequestRepairWizard.tsx` and `src/components/TroubleshootingPanel.tsx`, read as text | **what the inquiry does when troubleshooting solves the fault**: that only a `resolved` outcome skips the booking half of the form; that Photos, Service details and Summary are each *rendered* behind that rule (not merely collapsed, because a collapsed section can still hold a `required` control) while Appliance and Problem description always render; that the resolved screen calls no API, inserts no appliance row, says plainly that nothing was submitted, and offers a one-tap way back for an intermittent fault; that the copy never claims the appliance was repaired; that the submit handler refuses before the appliance insert and the request POST; that `chatbot_resolved` stays derived rather than hardcoded; and that changing the appliance, issue or description clears the outcome. It also covers the assistant in panel 2: the reply arrives as a bubble that already contains every check (a single pass over the guide, each tickable, with progress that resets when the identified issue changes), the safety disclaimer is never dropped, there is one question with two answers and Skip stays the single header control, no note is carried for a state that can no longer render, nothing is rendered at all before the customer has said anything, and — for the step as a whole — that the fault is chosen in exactly one place (issue chips in the wizard, no `<select>`, and no second copy of the catalogue inside the panel) with all four assistant states speaking through one `AssistantBubble` | the rendered React tree, and the round trip a real submit makes |
@@ -25,6 +27,7 @@ answer different questions, and **all** are needed before the work can be called
 | `npm run test:technician-profile` | the real `src/lib/technician-profile.ts`, run directly by Node 24, plus `TechnicianCard.tsx`, `AssignmentStatusCard.tsx`, the request-submission API route, the customer request page and the booking page, read as text | **what a customer is allowed to know about the person coming to their home** — the disclosure list, which is the profile shape itself: that the published fields are *exactly* the nine that belong on a card (name, photo, verification, rating, review count, jobs completed, years of experience, specialisations, id), so a contact column cannot be added without failing the suite; that the module never queries anything (no `.select()`, no client), because it takes already-fetched rows and therefore cannot widen what is published; that the average is computed from real `ratings` rows rather than the cached `technicians.rating` column, which has no trigger maintaining it and would show every customer a permanent zero; that **no reviews means no rating** — never `0.0`, because zero is a score and no reviews is not one, and a corrupt row cannot drag the average down; that `verified` is `technicians.approved`, the same gate the queue applies to let somebody take work at all, so an unapproved technician is never badged; that a missing technician record degrades to *less* detail (nulls the card simply omits) rather than invented zeros; that the avatar circle is never empty (photo, else two initials, else `T`) and that the photo is a background image rather than `next/image`, because the storage host is not in the image allow-list; and that the three surfaces which name a technician all publish through this one shape and read the photo, the technician record and the real ratings — while the waiting states still return *before* any technician is disclosed, so an unaccepted offer reveals nobody | the rendered card, RLS, and whether the storage host actually serves the avatar URL — all of which need a browser and the live project |
 **Note on the card's name.** The row above names this file by its old name, `TechnicianCard.tsx` — that is the component deleted with the ranking model (`QUEUE-SYSTEM.md`, `PROGRESS.md`). The replacement is deliberately called `src/components/AssignedTechnicianCard.tsx`: it renders the one technician the rotation assigned, it has no selection handler, no score and no rank, and the suite asserts all three, so nothing grepping for the removed ranking UI finds a component that looks like it.
 | `npm run test:pwa` | `src/app/manifest.ts`, `public/sw.js`, `src/app/offline/page.tsx`, `src/components/InstallPrompt.tsx`, `src/app/layout.tsx` and `tailwind.config.ts`, read as text — plus a real `existsSync` on every icon the manifest declares | **that the app can be installed, and that its worker cannot do harm**: that the manifest carries what an install needs (name, short name, `start_url`, `display: standalone`, theme and background colours) and that they are the app's OWN colours (`#0E429F` = `brand-600`, cross-checked against `tailwind.config.ts`, and `#0E172A` = navy-900, so the splash screen matches the product rather than flashing white); that **every icon the manifest declares exists on disk**, because a manifest referencing a missing file fails Chrome's validation with errors and leaves the app *less* installable than one that declares nothing; that the worker still does both of its jobs (push, and the offline fallback) and that it **caches only `/offline`** — a worker that precaches HTML serves yesterday's page, and where a technician accepts jobs a stale page is a wrong answer rather than a slow one; that it **never intercepts a write** (only a top-level GET navigation is handled, so an API call or a POST goes straight to the network); that the offline page needs no data to render and states the consequence instead of soothing it (a submission that never reached the server is not a queued job, and the copy is asserted not to claim otherwise); and that the install offer is registered on an ordinary page load (not only when push is enabled), never prompts by itself, and remembers a dismissal so it cannot nag | whether Chrome actually offers the prompt, how a maskable icon renders once the launcher crops it, and whether the offline fallback looks right — all of which need a browser |
+| `npm run test:design` | `src/app/globals.css` and every `.ts`/`.tsx` under `src/`, read as text | **that the palette is legible, and stays that way**: the WCAG 2.1 contrast ratio of every text pair the app renders, computed from the theme's own RGB triplets in both themes (a 4.5:1 floor, with alpha composited so a faded colour is measured as the browser actually draws it), a 1.3:1 floor for the `border-line` hairline, and source guardrails against the patterns that caused the audit — white text on a surface fill, a white placeholder, a focus ring drawn in the colour of the border it highlights (`focus:ring-line`), any `text-ink` opacity below the `/70` floor, a faded `text-muted`, 10px type, and the fixed near-white `-50` tints that render as white boxes on a dark canvas | how any of it looks: per-pair contrast cannot see a clash between two neighbours, a panel edge lost against the fill beside it, or an element the install banner covers — §5 has the manual pass |
 **The icons are generated, not exported.** `npm run icons` (`scripts/generate-icons.mjs`) draws all four from the same geometry as `public/icons/icon.svg`: a solid `#0E429F` field with the white spark, no baked-in corners (the launcher masks them) and no alpha (iOS renders alpha as black). 192 and 512 are Chrome's install criteria, 180 is iOS's own `apple-touch-icon`, and the maskable one is drawn at **46% of the height** because Android may crop to a circle of 80% of the canvas.
 
 The script needs no image library: a PNG is a signature, three chunks and a zlib stream, and Node already has zlib. Edges are supersampled 4× and box-filtered, so the bolt's diagonals are not stairs at 192px. Change the mark in `icon.svg` and `BOLT` together, then re-run it. `test:pwa` parses every generated file — signature, IHDR dimensions, bit depth, colour type and **every chunk CRC** — because a corrupt icon fails installability silently: the manifest validates, the download succeeds, and the launcher shows nothing.
@@ -39,6 +42,7 @@ The script needs no image library: a PNG is a signature, three chunks and a zlib
 | `npm run test:removal` | `src/app/api/service-requests/[id]/route.ts`, `src/components/RemoveRequestControl.tsx`, `src/components/RequestDetailClient.tsx`, `src/components/RecentRepairTable.tsx` and `src/lib/navConfig.ts`, read as text | **removing a repair request**: that the delete runs on the service-role client (there is no DELETE policy, so a browser cannot do it), that a completed repair, an accepted assignment, an appointment and a prepared estimate each have their own refusal code, that every one of those checks runs BEFORE the delete statement (the delete cascades into estimates, bookings, their messages/visits/ratings/payments and the offer history), that another customer's request answers as a 404, and that both surfaces offer the control while hiding it for the states the server would refuse | the cascade itself and the refusals against a live database — both need the live project |
 | `npm run test:tracking` | `src/app/customer/dashboard/page.tsx`, `src/components/ServiceTracking.tsx`, `src/app/customer/service-request/[id]/page.tsx`, `src/components/RequestDetailClient.tsx` and `src/lib/assignment-coverage.ts`, read as text | the **customer-facing assignment state**: that the "Active repairs" tile opens the customer's own request list instead of the legacy alias that redirects to the new-request wizard; that the tracking strip takes a coverage answer and, when the database has confirmed that nobody covers the appliance, replaces "next: technician assigned" with the shared dead-end wording plus a support link; that coverage is re-read on the server for unassigned requests only; that the check degrades to `null` (neutral wording) when it cannot run; and that the dashboard's tracking rail is drawn ONLY when the repair has actually started moving (never for a finished or cancelled request, and never for one still waiting for a technician), with the coverage dead end shown as a notice in place of the rail | the rendered React tree, and the live answer (`appliance_has_qualified_technician()` needs the live project) |
 | `npm run test:booking-api` | `supabase/migration_atomic_booking.sql`, `migration_booking_eligibility.sql` and `src/app/api/bookings/route.ts`, read as text | the **wiring** between the booking function and the route: every outcome `create_booking_atomic()` can return (including the three it passes through from `technician_capacity_failure()`) has a `case` in the route, the route's only `201` is the `booked` case, the `default:` branch answers `500` and never `201`, and the `technician_not_eligible` case is a `409` naming the appliance | the behaviour itself (group 26) and anything that needs a request/response runner — there is none in this repository |
+| `npm run test:cache` | `src/lib/supabase/server.ts`, `src/lib/supabase/middleware.ts`, `src/app/admin/layout.tsx` and `src/app/admin/payments/page.tsx`, read as text | **no server-side Supabase read may come out of Next.js's Data Cache**: that both server clients (anon and service-role) pass a `global.fetch` that sets `cache: "no-store"`, that the middleware client — whose role lookup decides whether a request is allowed through — does too, that the admin segment and the payments page export `fetchCache = "force-no-store"`, that the payments page still exports `dynamic = "force-dynamic"` above the component, and that no `createServerClient()` is left without the opt-out. This is the defect that made `/admin/payments` render a list frozen at 30 Oct (a payment submitted on 3 Nov missing, an older one confirmed at 23:14:36 still reading "Pending Verification"): `force-dynamic` decides how the ROUTE is rendered and does **not** stop the Data Cache, which stores a GET with `revalidate: false` (one year) unless the fetch itself asks for `no-store` | that Next.js honours `no-store` (its documented behaviour, read directly in `patch-fetch.js`), and the rendered page — the end-to-end check is the one that found the bug: load `/admin/payments`, confirm the newest payment is listed, change a row, reload |
 
 A green PGlite run means "the SQL is sound". A green `test:issues` run means "the
 mappings behave". A green `test:estimates` run means "the total on the button is
@@ -62,6 +66,8 @@ A green `test:notifications` run means "no event changes somebody's next action
 without telling them, and a bell that fails to ring never undoes a repair".
 A green `test:pwa` run means "the app is installable, and its service worker can only
 ever show a page the server has actually sent".
+A green `test:design` run means "the palette is legible in both themes, and no
+component can quietly reintroduce white-on-white or sub-AA text".
 
 A green live run
 means "the deployed
@@ -312,7 +318,7 @@ Three things it cannot prove:
   admin screens. Those paths are covered by inspection, not by this group.
 * **It cannot prove the customer's browser behaves.** The API mapping and the estimate
   card's gate are TypeScript; the suite exercises the database, and the UI needs the
-  manual pass in section 4. (`npm run test:booking-api` covers the *wiring* — that every
+  manual pass in section 5. (`npm run test:booking-api` covers the *wiring* — that every
   outcome the function can return has a case in the route, and that the only 201 is the
   `booked` case.)
 * **It cannot prove a writer actually waits.** One connection cannot block on another,
@@ -415,6 +421,16 @@ cancelling a real customer's appointment would be worse than leaving it. That re
 state is the stale-assignment follow-up in section 6 of the migration, and
 `npm run audit:bookings` lists exactly those rows for a human decision (finish it, or
 cancel through the normal UI). Do not delete the row to make a sweep come back clean.
+
+**The same rule for the rotation: `npm run audit:queue-turns`.** Step 20 stops the walk
+from offering a request that already has an owner, but accepting a request consumes a
+technician's turn *before* any estimate exists, so a request that is accepted and then
+abandoned still costs somebody their place in the rotation. The audit lists every
+`TURN_CONSUMED` in the window whose request has no estimate and no booking (exit code 1
+when there is one), plus every request still sitting in `matching`/`waiting` with a
+technician attached — the state the walk used to reach. Review them with the technician
+and remove a dead request through the normal UI; do not delete rows to make it come back
+clean.
 
 Either test must leave the invariant intact:
 
@@ -619,7 +635,49 @@ genuinely exercised.
 
 ---
 
-## 4. Manual verification (UI)
+## 4. `npm run test:design` — the colour system
+
+```
+node --test scripts/tests/design-tokens.test.mjs
+```
+
+* **It computes contrast rather than asserting taste.** The script reads the two theme
+  blocks out of `src/app/globals.css`, turns the RGB triplets into a lookup, and runs
+  the WCAG 2.1 relative-luminance formula over every pair the app actually renders:
+  ink on surface and on canvas, muted on surface, canvas and soft, the faint floor at
+  `text-ink/70` (alpha composited, because a faded colour is a different colour), and
+  each read-as-text tone on its tonal fill (`brand-ink` on `brand-soft`, and so on).
+  Both themes are checked. The floors are 4.5:1 for text and a 1.3:1 hairline for
+  `border-line`.
+* **Why arithmetic and not a screenshot.** Both defects this file exists to stop were
+  invisible in the theme the author happened to be using. `text-white` on `bg-surface`
+  is #FFFFFF on #FFFFFF in light mode, and every one of `text-ink/30` through `/60`
+  measured between 1.9:1 and 4.2:1 — all under AA — while looking perfectly acceptable
+  on a dark canvas. Maths catches both; a person clicking around in the theme they
+  prefer does not.
+* **Then it greps the source** for the patterns that produced them: white text on a
+  surface fill, a white placeholder, a focus ring drawn in the colour of the border it
+  is meant to highlight (`focus:ring-line`), any `text-ink` opacity under the floor, a
+  faded `text-muted`, `text-[10px]`, and a fixed near-white `-50` tint (`bg-brand-50`),
+  which renders as a white box on the dark canvas. Comments are stripped and only
+  string literals are read, so a comment explaining a ban cannot fail the ban.
+* **What it cannot prove:** how any of it looks. Contrast is measured pair by pair, in
+  isolation — it cannot see a colour that clashes with its neighbour, a panel edge that
+  disappears against the fill beside it, or an element the install banner covers. Those
+  are in §5.
+
+**Manual colour pass** — once per theme, and again after any change to a token: set the
+theme to **light** and walk the screens a person actually uses (`/login`,
+`/customer/request-repair` including every step of the map, a request detail page, a
+booking detail page and its printed job order, `/technician/jobs`, `/admin/payments`).
+Confirm that typed text and placeholders are readable inside every input, that no panel
+is a glaring white block, that table headers and timestamps are legible without leaning
+in, and that focusing a field changes something you can see. Then repeat in **dark** —
+white-on-white is impossible there, which is exactly why it survived so long.
+
+---
+
+## 5. Manual verification (UI)
 
 The scripts prove data behaviour; these confirm the screens match.
 
@@ -946,7 +1004,7 @@ Type and build checks: `npx tsc --noEmit`, `npm run lint`, `npm run build`.
 
 ---
 
-## 5. Regression watchlist
+## 6. Regression watchlist
 
 The behaviours that break first if someone edits the queue:
 

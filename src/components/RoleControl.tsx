@@ -37,7 +37,7 @@ export default function RoleControl({
       value={role}
       disabled={saving}
       onChange={(e) => handleChange(e.target.value as UserRole)}
-      className="rounded-lg border border-ink/15 px-2 py-1.5 text-sm"
+      className="rounded-lg border border-line px-2 py-1.5 text-sm"
     >
       {ROLES.map((r) => (
         <option key={r} value={r}>

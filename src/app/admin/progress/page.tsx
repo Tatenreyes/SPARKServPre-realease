@@ -8,7 +8,7 @@ export default async function AdminProgressManagementPage() {
 
   // Every read below goes through `requireRows()`, which raises on a query error
   // instead of returning `[]`: a failed SELECT must never render as "No active
-  // jobs right now." — see src/lib/query-rows.ts for why.
+  // jobs right now.", see src/lib/query-rows.ts for why.
   //
   // "Active" is the shared definition (src/lib/booking-status.ts), not a local
   // list. It used to be `pending` + `in_progress` here while /admin/job-monitoring
@@ -57,7 +57,7 @@ export default async function AdminProgressManagementPage() {
   const activeJobs = activeJobsResult.count;
 
   // "Visits Today" is a DAY, so the bound needs both ends. With only
-  // `.gte(...)` the tile counted every visit scheduled today OR LATER — a
+  // `.gte(...)` the tile counted every visit scheduled today OR LATER, a
   // next-month appointment inflated today's number.
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -94,7 +94,7 @@ export default async function AdminProgressManagementPage() {
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">Progress management</h1>
-      <p className="mt-1 text-sm text-ink/65">Monitor and manage all repair jobs and visits.</p>
+      <p className="mt-1 text-sm text-ink/70">Monitor and manage all repair jobs and visits.</p>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Active Jobs" value={activeJobs ?? 0} />
@@ -104,7 +104,7 @@ export default async function AdminProgressManagementPage() {
           value={
             bookings.length
               ? (visits.length / bookings.length).toFixed(1)
-              : "—"
+              : "N/A"
           }
         />
         <StatCard
@@ -113,9 +113,9 @@ export default async function AdminProgressManagementPage() {
         />
       </div>
 
-      <div className="mt-8 overflow-x-auto rounded-card border border-ink/8 bg-surface shadow-card">
+      <div className="mt-8 overflow-x-auto rounded-card border border-line bg-surface shadow-card">
         <table className="min-w-[760px] w-full text-left text-sm">
-          <thead className="border-b border-ink/8 bg-canvas text-xs uppercase tracking-wide text-ink/40">
+          <thead className="border-b border-line bg-canvas text-xs uppercase tracking-wide text-ink/70">
             <tr>
               <th className="px-4 py-3 font-medium">Job</th>
               <th className="px-4 py-3 font-medium">Customer</th>
@@ -128,7 +128,7 @@ export default async function AdminProgressManagementPage() {
           <tbody>
             {!bookings.length ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-sm text-ink/40">
+                <td colSpan={6} className="px-4 py-6 text-center text-sm text-ink/70">
                   No active jobs right now.
                 </td>
               </tr>
@@ -143,10 +143,10 @@ export default async function AdminProgressManagementPage() {
                       <p className="font-medium capitalize text-ink">
                         {r?.appliance_type.replace("_", " ") ?? "Repair"}
                       </p>
-                      <p className="text-xs text-ink/40">{r?.problem_description}</p>
+                      <p className="text-xs text-ink/70">{r?.problem_description}</p>
                     </td>
-                    <td className="px-4 py-3 text-ink/70">{userMap.get(b.customer_id) ?? "—"}</td>
-                    <td className="px-4 py-3 text-ink/70">{userMap.get(b.technician_id) ?? "—"}</td>
+                    <td className="px-4 py-3 text-ink/70">{userMap.get(b.customer_id) ?? "N/A"}</td>
+                    <td className="px-4 py-3 text-ink/70">{userMap.get(b.technician_id) ?? "N/A"}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 w-20 overflow-hidden rounded-full bg-ink/10">
@@ -157,12 +157,12 @@ export default async function AdminProgressManagementPage() {
                             }}
                           />
                         </div>
-                        <span className="text-xs text-ink/50">
+                        <span className="text-xs text-ink/70">
                           {completed}/{jobVisits.length}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-xs text-ink/50">{r?.location}</td>
+                    <td className="px-4 py-3 text-xs text-ink/70">{r?.location}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={b.status} />
                     </td>
@@ -182,7 +182,7 @@ function firstTimeFixRate(
   visits: { booking_id: string; status: string }[]
 ): string {
   const completedBookings = bookings.filter((b) => b.status === "completed");
-  if (!completedBookings.length) return "—";
+  if (!completedBookings.length) return "N/A";
   const fixedFirstTry = completedBookings.filter(
     (b) => visits.filter((v) => v.booking_id === b.id).length <= 1
   ).length;
@@ -191,9 +191,9 @@ function firstTimeFixRate(
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-card border border-ink/8 bg-surface p-3 shadow-card">
+    <div className="rounded-card border border-line bg-surface p-3 shadow-card">
       <p className="font-display text-lg font-semibold text-ink">{value}</p>
-      <p className="mt-0.5 text-xs text-ink/50">{label}</p>
+      <p className="mt-0.5 text-xs text-ink/70">{label}</p>
     </div>
   );
 }

@@ -2,14 +2,14 @@
  * Clock times for the request form's preferred service window.
  *
  * Free of React imports so the test suite can run the real code (Node strips the
- * types — no build step, and no second copy of these rules to drift).
+ * types, no build step, and no second copy of these rules to drift).
  *
  * ## Why selects and not `input type="time"`
  *
  * The native time input renders as plain `--:--` segments with a small clock icon, the
  * same problem the date fields had: no calendar/clock popup on Firefox desktop, nothing
  * to style, and the segments are easy to misread. The window is a five-minute grid
- * instead, which is what a service visit actually needs — nobody books 09:07.
+ * instead, which is what a service visit actually needs, nobody books 09:07.
  *
  * ## The one invariant
  *
@@ -34,8 +34,7 @@ export interface ClockTime {
 /**
  * Minutes since midnight, or null when the value is not a clock time.
  *
- * Accepts the optional seconds that Postgres appends to a `time` column ("09:00:00") —
- * the same shape `zonedToUtc()` accepts, so a stored window and a picked one read alike.
+ * Accepts the optional seconds that Postgres appends to a `time` column ("09:00:00"), * the same shape `zonedToUtc()` accepts, so a stored window and a picked one read alike.
  */
 export function minutesOfDay(value: string | null | undefined): number | null {
   const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec((value ?? "").trim());
@@ -47,7 +46,7 @@ export function minutesOfDay(value: string | null | undefined): number | null {
   return hour * 60 + minute;
 }
 
-/** `"HH:MM"`, 24-hour — the shape the request body and the database read. */
+/** `"HH:MM"`, 24-hour, the shape the request body and the database read. */
 export function toClockTime(hour: number, minute: number): string {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
@@ -69,7 +68,7 @@ export function hour24Of(hour12: number, meridiem: "AM" | "PM"): number {
   return hour12 === 12 ? 12 : hour12 + 12;
 }
 
-/** "9:00 AM" — how a chosen time reads back to the customer. */
+/** "9:00 AM", how a chosen time reads back to the customer. */
 export function formatClockTime(value: string | null | undefined): string {
   const minutes = minutesOfDay(value);
   if (minutes === null) return "";
@@ -79,7 +78,7 @@ export function formatClockTime(value: string | null | undefined): string {
 }
 
 /**
- * Every selectable time in a day at the step, or — when `after` is given — only those
+ * Every selectable time in a day at the step, or, when `after` is given, only those
  * strictly after it. That single filter is what keeps a window end legal.
  */
 export function timeOptions(
@@ -104,7 +103,7 @@ export function isAfter(start: string | null | undefined, end: string | null | u
 }
 
 /**
- * The options that survive a partial 12-hour selection — the pool a picker draws from.
+ * The options that survive a partial 12-hour selection, the pool a picker draws from.
  *
  * This is what keeps the three selects consistent with each other: the minute list can
  * only contain minutes that exist for the chosen hour and half-day, so every combination

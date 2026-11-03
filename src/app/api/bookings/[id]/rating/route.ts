@@ -6,7 +6,7 @@ import { notify } from "@/lib/notifications";
 const MAX_COMMENT_LENGTH = 1000;
 
 /**
- * POST /api/bookings/:id/rating — the customer rates the technician after a
+ * POST /api/bookings/:id/rating, the customer rates the technician after a
  * completed repair.
  *
  * `public.ratings.booking_id` is UNIQUE, so a booking can only ever have one
@@ -91,7 +91,7 @@ export async function POST(
       .single();
 
     if (error) {
-      // Unique violation — a concurrent submit already created the row.
+      // Unique violation, a concurrent submit already created the row.
       if ((error as { code?: string }).code === "23505") {
         return NextResponse.json(
           { error: "You have already rated this repair.", code: "already_rated" },

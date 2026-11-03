@@ -30,7 +30,7 @@
  *    than degrading to "trust the cookie".
  *  - **Session-bound**, so it dies with the session it was issued for. Signing
  *    out and back in produces a new `session_id`, and the marker stops matching
- *    even though the cookie is still there — which is what makes the reset
+ *    even though the cookie is still there, which is what makes the reset
  *    authorization one-use in practice, without server-side state.
  *  - **Self-expiring**, so a cookie kept alive past its `maxAge` is still
  *    refused.
@@ -38,7 +38,7 @@
  * The user id is never taken from the browser as authority: it is written from
  * the GoTrue response to the code/token exchange, and re-checked against the
  * user `getUser()` returns. Nothing in this file decides *whose* password is
- * changed — `updateUser({ password })` always acts on the session.
+ * changed, `updateUser({ password })` always acts on the session.
  *
  * Server-only (imports `node:crypto`, which must not reach a client bundle), so
  * `scripts/tests/password-recovery.test.mjs` exercises it directly under Node.
@@ -74,7 +74,7 @@ export interface RecoveryMarkerClaims {
  * server (see `.env.example`) and is never exposed to the browser, which is what
  * makes it usable here without adding another variable to configure. Returns
  * null when it is absent, and every caller treats null as "no recovery
- * authorization" — the flow fails closed, it does not fall back to an unsigned
+ * authorization", the flow fails closed, it does not fall back to an unsigned
  * cookie.
  *
  * The environment is a parameter so the rule can be exercised without one.
@@ -105,7 +105,7 @@ function currentSeconds(override?: number): number {
 /**
  * Builds the marker value for a session that a recovery exchange just created.
  *
- * Returns null when it cannot be built — no secret, or a session that carries no
+ * Returns null when it cannot be built, no secret, or a session that carries no
  * id. Callers treat null as "no recovery authorization": the callback refuses to
  * open the form rather than falling back to something unsigned.
  */
@@ -146,8 +146,8 @@ export interface RecoveryAuthorizationInput {
  * The single decision behind /update-password: is this browser, right now,
  * authorized by the recovery link that was exchanged here?
  *
- * Every input comes from the server — the cookie from the request, the user and
- * session id from a validated session, the secret from the environment — so no
+ * Every input comes from the server, the cookie from the request, the user and
+ * session id from a validated session, the secret from the environment, so no
  * browser-supplied value is ever authority to change a password. A refusal is
  * the default for every unknown: a missing secret, a missing marker, no
  * validated user, no session id, a malformed or unsigned value, a signature that
@@ -195,7 +195,7 @@ function decodeClaims(payload: string): DecodedClaims | null {
 /**
  * Reads the `session_id` claim out of an access token.
  *
- * The token is deliberately *not* verified here — the caller has already
+ * The token is deliberately *not* verified here, the caller has already
  * validated the session with `getUser()`, which is the authoritative check. This
  * only names the session that check approved, so the marker can be bound to that
  * exact session rather than to "whoever happens to be logged in".

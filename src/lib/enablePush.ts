@@ -13,7 +13,7 @@ function urlBase64ToUint8Array(base64String: string): BufferSource {
 
 /**
  * Registers the service worker, asks for notification permission, and
- * subscribes to push — then saves the subscription server-side. Safe to
+ * subscribes to push, then saves the subscription server-side. Safe to
  * call multiple times; browsers return the existing subscription if one
  * already exists.
  */
@@ -27,7 +27,7 @@ export async function enablePushNotifications(): Promise<"granted" | "denied" | 
 
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   if (!publicKey) {
-    console.warn("NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set — push notifications are disabled.");
+    console.warn("NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set, push notifications are disabled.");
     return "unsupported";
   }
 

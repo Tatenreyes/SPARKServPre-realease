@@ -13,15 +13,23 @@ import { requireRows } from "@/lib/payments-queue";
  * has no dynamic signal here and PRERENDERS the route at build time. The page then
  * becomes a payments list frozen at deploy: a customer's later payment is in the
  * database but never in the page, and there is nothing to Confirm.
+ *
+ * `fetchCache` is the other half, and the half that actually bit us. Declaring the
+ * route dynamic does not stop the Data Cache: a Supabase GET is stored with
+ * `revalidate: false` (one year) and replayed on every later render of the same
+ * URL, so the queue stayed frozen at the body fetched on 30 Oct even though the
+ * route was rendered per request. `force-no-store` sets that revalidate to 0,
+ * which is the only signal Next.js honours. See `src/lib/payments-queue.ts` and
+ * the comment on `noStoreFetch` in `src/lib/supabase/server.ts`.
  */
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 export default async function AdminPaymentsPage() {
   const supabase = createServiceRoleClient();
 
   // Every query below is guarded by `requireRows()`, which raises on a query error
-  // instead of returning `[]`. A failed SELECT must never render as an empty queue —
-  // see `src/lib/payments-queue.ts` for why, and for exactly what is (and is not)
+  // instead of returning `[]`. A failed SELECT must never render as an empty queue, // see `src/lib/payments-queue.ts` for why, and for exactly what is (and is not)
   // written to the server log.
   const paymentsResult = await supabase
     .from("payments")
@@ -80,9 +88,9 @@ export default async function AdminPaymentsPage() {
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">Transactions</h1>
-      <p className="mt-1 text-sm text-ink/65">
+      <p className="mt-1 text-sm text-ink/70">
         Verify GCash payment references. Confirming a reference completes the repair it
-        belongs to — that is the only way a repair reaches <strong>Completed</strong>.
+        belongs to, that is the only way a repair reaches <strong>Completed</strong>.
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -102,9 +110,9 @@ export default async function AdminPaymentsPage() {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-card border border-ink/8 bg-surface p-3 shadow-card">
+    <div className="rounded-card border border-line bg-surface p-3 shadow-card">
       <p className="font-display text-lg font-semibold text-ink">{value}</p>
-      <p className="mt-0.5 text-xs text-ink/50">{label}</p>
+      <p className="mt-0.5 text-xs text-ink/70">{label}</p>
     </div>
   );
 }

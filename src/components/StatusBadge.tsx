@@ -15,7 +15,7 @@ const TONE_STYLES: Record<Tone, { chip: string; dot: string }> = {
   // brand-300 in dark, where a #0E429F dot disappears into the dark chip.
   brand: { chip: "bg-brand-soft text-brand-ink border border-line", dot: "bg-brand-ink" },
   // `spark-50`/`spark-300` are the same hex values as brand-50/brand-300, but they
-  // are fixed — a fixed near-white chip stays a glaring white pill on a dark
+  // are fixed, a fixed near-white chip stays a glaring white pill on a dark
   // canvas. Same pixels in light mode, theme-aware in dark.
   progress: { chip: "bg-brand-soft text-brand-ink border border-brand-300", dot: "bg-brand-400" },
   warn: { chip: "bg-warn-soft text-warn-ink border border-line", dot: "bg-amber-500" },
@@ -39,7 +39,7 @@ const STATUS_TONES: Record<string, Tone> = {
   // Waiting on the customer's GCash reference and an administrator's verification:
   // the repair is finished, the transaction is not.
   awaiting_payment: "info",
-  // estimates.status — `pending` is shared with bookings.status above.
+  // estimates.status, `pending` is shared with bookings.status above.
   draft: "neutral",
   revision_requested: "warn",
   accepted: "success",
@@ -70,7 +70,7 @@ export default function StatusBadge({
   return (
     <span
       className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full font-semibold capitalize ${
-        size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]"
+        size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-[11px]"
       } ${chip}`}
     >
       {withDot && <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden="true" />}

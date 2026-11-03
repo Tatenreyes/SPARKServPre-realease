@@ -15,7 +15,7 @@
  * the route, the only 201 is the `booked` case, and a refusal can never reach it.
  *
  * It reads both files as text, so it is deliberately a structural test: there is no
- * route runner in this repository (see TESTING.md §4), and a copy of the mapping in
+ * route runner in this repository (see TESTING.md §5), and a copy of the mapping in
  * the test would be a second thing to drift.
  */
 import test from "node:test";

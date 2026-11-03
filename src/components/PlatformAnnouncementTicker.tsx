@@ -25,7 +25,7 @@ const TICKER_FALLBACK_SECONDS = 24;
  *
  * The message travels right-to-left and loops. Two identical groups sit in one
  * clipping row and both translate by exactly `-100%`, so group two lands where
- * group one began and the wrap point is invisible — see `.spark-ticker` in
+ * group one began and the wrap point is invisible, see `.spark-ticker` in
  * `globals.css` for why each group is at least a strip wide.
  *
  * The duration is measured, not guessed: one cycle travels a group's width,
@@ -39,8 +39,7 @@ const TICKER_FALLBACK_SECONDS = 24;
  *
  * Motion is controllable, which is what WCAG 2.2.2 asks of anything that moves on
  * its own: the dismiss button stops it for the session, hovering pauses it, and
- * the global `prefers-reduced-motion` rule in `globals.css` halts it outright —
- * the strip then reads as a plain line of text.
+ * the global `prefers-reduced-motion` rule in `globals.css` halts it outright, * the strip then reads as a plain line of text.
  */
 export default function PlatformAnnouncementTicker({
   message,

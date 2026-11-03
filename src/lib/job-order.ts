@@ -1,12 +1,12 @@
 /**
- * The job order — the document a completed repair leaves behind.
+ * The job order, the document a completed repair leaves behind.
  *
  * ## Why this module exists
  *
  * SPARKServ's argument is that a repair should leave a record the customer can
  * hold. Service and repair enterprises are required to be DTI-accredited
  * (PD 1572; Art. 128, RA 7394) and the same framework expects an enterprise to
- * document the work performed, the parts used and the amount charged — but the
+ * document the work performed, the parts used and the amount charged, but the
  * app used to end at a status of `completed`, with the evidence scattered across
  * five tables that only staff could assemble.
  *
@@ -18,7 +18,7 @@
  * ## Deliberate limits
  *
  * * **An unverified reference is never printed.** A pending or rejected payment
- *   shows a sentence, never the GCash number — the document is evidence, and
+ *   shows a sentence, never the GCash number, the document is evidence, and
  *   evidence nobody has checked is not evidence.
  * * **No invented rows.** A missing brand, model or serial is omitted rather than
  *   printed as "null", and a repair with no estimate falls back to the amount the
@@ -32,7 +32,7 @@
  * `buildJobOrder()` is a pure function over already-fetched rows, so
  * `scripts/tests/job-order.test.mjs` runs the REAL rules with no database, no
  * React and no build step. `loadJobOrder()` receives the caller's Supabase client
- * as an argument instead of creating one — the module must stay importable
+ * as an argument instead of creating one, the module must stay importable
  * outside Next.js, and a job order is the customer's own record, so it must never
  * be assembled with a service-role client.
  */
@@ -69,7 +69,7 @@ export interface JobOrderPayment {
   paidOn: string | null;
 }
 
-/** Everything the document renders — display-ready, no raw rows. */
+/** Everything the document renders, display-ready, no raw rows. */
 export interface JobOrder {
   reference: string;
   scheduledAt: string;
@@ -93,7 +93,7 @@ export interface JobOrder {
   warrantyUntil: string | null;
 }
 
-/** The rows a job order is built from — already fetched, nothing inferred. */
+/** The rows a job order is built from, already fetched, nothing inferred. */
 export interface JobOrderSource {
   booking: Pick<
     BookingRow,
@@ -129,7 +129,7 @@ function pad2(value: number): string {
 /**
  * A stable reference number for one repair: `SVC-YYYYMMDD-XXXXXX`.
  *
- * Derived, never stored — there is no sequence to migrate and no counter to keep
+ * Derived, never stored, there is no sequence to migrate and no counter to keep
  * consistent, and the same booking always produces the same reference.
  *
  * The date comes from the scheduled appointment **in UTC**, deliberately: the
@@ -149,7 +149,7 @@ export function jobOrderReference(bookingId: string, scheduledAt: string): strin
 /**
  * The GCash reference as it may appear on the document.
  *
- * A confirmed reference is printed in full — it is the proof the customer paid.
+ * A confirmed reference is printed in full, it is the proof the customer paid.
  * Anything unverified is masked to its last four digits, so a document that
  * leaves the app cannot leak a reference nobody has checked.
  */
@@ -166,7 +166,7 @@ export function maskPaymentReference(
 }
 
 /**
- * Turn fetched rows into the document. Pure — same input, same output, no I/O.
+ * Turn fetched rows into the document. Pure, same input, same output, no I/O.
  *
  * The rules, all of which the test suite pins:
  *   * labour and parts are always shown (a repair that needed no parts says
@@ -174,7 +174,7 @@ export function maskPaymentReference(
  *   * an additional charge appears only when it is above zero, and always with
  *     the description the technician was required to give;
  *   * the total is what the technician recorded as `final_cost`, falling back to
- *     the approved estimate's stored `estimated_cost` — the figure
+ *     the approved estimate's stored `estimated_cost`, the figure
  *     `submit_estimate()` computed and `estimates_amounts_check` enforces. Never a
  *     sum recomputed from the lines here, and deliberately the same pair in the
  *     same order the booking page reads for the amount due, so the receipt and the
@@ -259,7 +259,7 @@ export interface LoadedJobOrder {
  * Fetch everything one job order needs, scoped to the owning customer.
  *
  * The ownership predicate is in the QUERY (`customer_id = the caller`), not only
- * in the page, so a booking id belonging to somebody else returns `null` — the
+ * in the page, so a booking id belonging to somebody else returns `null`, the
  * same "404, not a page" rule the booking detail page follows. RLS refuses it a
  * second time; this is defence in depth, not the boundary.
  *
@@ -298,7 +298,7 @@ export async function loadJobOrder(
 
   // The estimate this booking was made from. A booking created before
   // `estimate_id` existed has none, so the accepted estimate for the request is
-  // the fallback — the same one the booking page uses to show the amount due.
+  // the fallback, the same one the booking page uses to show the amount due.
   let estimate: JobOrderSource["estimate"] = null;
   if (booking.estimate_id) {
     const { data } = await supabase

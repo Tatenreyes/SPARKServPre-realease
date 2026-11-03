@@ -187,6 +187,14 @@ await exec("supabase/migration_cancel_release.sql (2nd run)", read("supabase/mig
 // exercised. A project still on the pre-step-19 schema takes the same path, minus
 // the pre-existing objects.
 await exec("supabase/migration_service_warranty.sql", read("supabase/migration_service_warranty.sql"));
+// Step 20: the queue view exposes whose turn was last consumed, and the walk
+// refuses a request that already has an owner (so a technician's turn can never
+// be spent on a request that cannot become a booking). Loaded after step 4 and
+// step 14 because it replaces functions both of them create, and run twice like
+// the others: the `drop function` + `create` and the idempotent permission block
+// must both survive a re-apply.
+await exec("supabase/migration_queue_offer_guards.sql", read("supabase/migration_queue_offer_guards.sql"));
+await exec("supabase/migration_queue_offer_guards.sql (2nd run)", read("supabase/migration_queue_offer_guards.sql"));
 
 // Supabase grants table privileges to `authenticated` by default and relies on
 // RLS to decide which ROWS are visible; a bare Postgres grants nothing. Without
@@ -5603,6 +5611,136 @@ check(
     cancelGrants.release_authenticated_can === false &&
     cancelGrants.release_service_role_can === true,
   JSON.stringify(cancelGrants)
+);
+
+
+console.log("\n== 28. Step 20: a turn is never spent on a request that already has an owner ==");
+
+// The snapshot gained ONE column, and it is the one that makes a position
+// readable: after accepting, a technician is moved to the end of the rotation,
+// so a bare `#3` reads like a contradiction. `last_assigned_at` is what lets the
+// screen say "your last job was accepted on 31 Oct".
+const snapshotWithTurn = await asUser(tech.A, "authenticated", () =>
+  query("select * from public.technician_queue_snapshot(null) limit 1")
+);
+check(
+  "the queue snapshot exposes last_assigned_at (step 20)",
+  snapshotWithTurn.length > 0 && "last_assigned_at" in snapshotWithTurn[0],
+  Object.keys(snapshotWithTurn[0] ?? {}).join(",")
+);
+
+// Build a request that already has an owner, the way the live project had one:
+// an accepted technician (a declined estimate keeps them; so does a cancelled
+// booking) sitting in a walkable assignment state. `7d095e43` on the live
+// project was exactly this, and the walk offered it again on 3 Nov.
+const ownedRequest = await createRequest(
+  "2032-03-01T01:00:00Z",
+  "2032-03-01T03:00:00Z",
+  "Already owned by a technician"
+);
+const ownedOffer = await assign(ownedRequest);
+const owner = ownedOffer.assigned_technician_id;
+check(
+  "the scenario request reaches an owner to start with",
+  Boolean(owner),
+  JSON.stringify(ownedOffer)
+);
+await respond(ownedRequest, owner, "accept");
+
+const ownedRow = (
+  await query("select appliance_type from public.service_requests where id = $1", [ownedRequest])
+)[0];
+const ownerQueue = async () =>
+  (
+    await query(
+      `select queue_position, turn_count, last_assigned_at
+         from public.technician_queue_state
+        where technician_id = $1 and appliance_type = $2`,
+      [owner, ownedRow.appliance_type]
+    )
+  )[0];
+const ownerBefore = await ownerQueue();
+check(
+  "accepting recorded the turn: last_assigned_at is set",
+  Boolean(ownerBefore?.last_assigned_at),
+  JSON.stringify(ownerBefore)
+);
+
+// `quoted` + an owner + a walkable assignment_status: the state that produced the
+// incident. Written directly because it is the DATA that is under test, not the
+// route that produced it.
+await query(
+  `update public.service_requests
+      set status = 'quoted', assignment_status = 'matching', offers_expires_at = null
+    where id = $1`,
+  [ownedRequest]
+);
+
+const offersBeforeRefusedWalk = (
+  await query(
+    `select count(*)::int as n from public.technician_queue_events
+      where repair_request_id = $1 and action = 'OFFERED'`,
+    [ownedRequest]
+  )
+)[0].n;
+
+const ownedWalk = await assign(ownedRequest);
+check(
+  "walking a request that already has an owner is refused, never offered",
+  ownedWalk.outcome === "unchanged" && ownedWalk.reason === "already_assigned",
+  JSON.stringify(ownedWalk)
+);
+
+const ownedOffers = await query(
+  `select count(*)::int as n from public.technician_queue_events
+    where repair_request_id = $1 and action = 'OFFERED'`,
+  [ownedRequest]
+);
+// The request was offered ONCE, legitimately, when it was first assigned — that is
+// how it came to have an owner. The refused walk must not add a second.
+check(
+  "the refused walk writes no second OFFERED event",
+  ownedOffers[0].n === offersBeforeRefusedWalk,
+  JSON.stringify({ before: offersBeforeRefusedWalk, after: ownedOffers[0].n })
+);
+
+const ownerAfter = await ownerQueue();
+check(
+  "the refused walk consumes nobody's turn",
+  ownerBefore.queue_position === ownerAfter.queue_position &&
+    ownerBefore.turn_count === ownerAfter.turn_count,
+  JSON.stringify({ ownerBefore, ownerAfter })
+);
+
+const ownedState = (
+  await query(
+    "select assignment_status, assigned_technician_id from public.service_requests where id = $1",
+    [ownedRequest]
+  )
+)[0];
+check(
+  "the owner keeps the request, and it stays walkable for a later fix",
+  ownedState.assigned_technician_id === owner && ownedState.assignment_status === "matching",
+  JSON.stringify(ownedState)
+);
+
+// The closed-request guard from step 14 still wins over this one, and a request
+// with NO owner is still walked normally — the new guard must not be a blanket
+// refusal of `quoted` requests.
+const unownedQuoted = await createRequest(
+  "2032-03-02T01:00:00Z",
+  "2032-03-02T03:00:00Z",
+  "Quoted but unowned"
+);
+await query(
+  "update public.service_requests set status = 'quoted', assignment_status = 'matching' where id = $1",
+  [unownedQuoted]
+);
+const unownedWalk = await assign(unownedQuoted);
+check(
+  "a quoted request with no owner is still offered (the guard is about ownership, not the status)",
+  unownedWalk.outcome === "offered" && Boolean(unownedWalk.assigned_technician_id),
+  JSON.stringify(unownedWalk)
 );
 
 

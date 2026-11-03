@@ -204,7 +204,7 @@ workable:
 | `respond_to_offer(uuid, uuid, text, text)` | `service_role` | accept / decline |
 | `expire_stale_offers()` | `service_role` | lapse ignored offers and re-offer |
 | `consume_queue_turn(...)` | `service_role` | move a technician to the end (audited) |
-| `technician_queue_snapshot(text)` | `authenticated`, `service_role` | full queue per appliance (technicians: queues they belong to; admins: all) |
+| `technician_queue_snapshot(text)` | `authenticated`, `service_role` | full queue per appliance (technicians: queues they belong to; admins: all), including `last_assigned_at` — the turn each member's position was measured after (step 20) |
 | `admin_queue_override(text, uuid, text, text)` | `authenticated` (admin-checked), `service_role` | audited manual correction |
 | `refresh_technician_operational_status(uuid)` | `service_role` | recompute `operational_status` |
 | `technician_eligibility_failure(...)`, `technician_schedule_conflict(...)`, `technician_capacity_failure(...)`, `technician_within_availability(...)` | `service_role` | the checks the queue walk uses |

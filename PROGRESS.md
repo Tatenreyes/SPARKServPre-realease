@@ -10,7 +10,10 @@ rules themselves are in `QUEUE-SYSTEM.md`; how to re-prove them is in
 The technician queue redesign, Batches 1–3, the booking-eligibility invariant
 (step 17) and the atomic cancellation release (step 18) are **code-complete and
 locally verified, and the live database now has every migration applied —
-steps 1–19** (`npm run db:check` exits 0 with 79 checks passed). What is still
+steps 1–19** (`npm run db:check` exits 0 with 79 checks passed). A UI polish pass has
+since corrected the colour system: three screens were white-on-white in light mode and
+368 class strings were normalised to the theme tokens and the WCAG AA contrast floor
+(`npm run test:design`, 11/11). What is still
 owed is on the code side: the whole implementation sits uncommitted in the
 working tree, and no deployment has been verified. Until the release is committed
 and deployed, the *deployed* app is not the app this document describes.
@@ -69,6 +72,28 @@ and deployed, the *deployed* app is not the app this document describes.
   statuses, skip reasons, offer activity, history, override), and the
   customer-facing `AssignmentStatusCard` / `ServiceTracking`.
 
+### Interface
+
+* **The colour system was audited and normalised.** Three screens were unreadable in
+  light mode — the repair-request wizard, the service-location picker and the technician
+  profile form all painted `text-white` on `bg-surface`, which is #FFFFFF in light mode,
+  so a customer typed into blank white boxes on any device whose OS was not in dark mode
+  (the app follows the OS unless a theme is chosen). A one-off migration
+  (`scripts/normalise-ui-colours.mjs`, dry-run by default) then normalised 368 class
+  strings across 79 files: text opacities below the floor (`text-ink/30`…`/60` measured
+  1.9:1 to 4.2:1 against AA's 4.5:1) became `text-ink/70`, a faded `text-muted/N` became
+  plain `text-muted`, faint `border-ink/8…15` hairlines became `border-line`, invisible
+  `focus:ring-line` rings became brand-tinted, 10px type became 11px (12px in the mobile
+  shell), and fixed near-white `-50` tints became the theme-aware `-soft` tokens. Three
+  tokens moved so the maths passes in both themes: light `muted` slate-500 → slate-600
+  (4.44:1 → 7.0:1 on the canvas), light `line` slate-200 → slate-300 (1.15:1 → 1.37:1,
+  matching the dark theme's 1.39:1), and light `signal-ink` emerald-600 → emerald-700
+  (4.11:1 → 5.1:1 on `signal-soft`). `npm run test:design` pins every one of those
+  numbers, in both themes.
+* The install banner no longer covers a form's submit button: `/customer/request-repair`
+  is an immersive route, so `InstallPrompt` stands down there exactly as the tab bar
+  already does, and its own buttons now meet the 44px tap minimum.
+
 ### Surfaces removed
 
 `POST /api/recommend`, `src/lib/recommendation.ts`, `TechnicianWithScore` and
@@ -85,7 +110,8 @@ so nothing broke. Reasoning is recorded in `QUEUE-SYSTEM.md`.
 | Types | `npx tsc --noEmit` | clean |
 | Lint | `npm run lint` | clean — no warnings or errors |
 | Whole app compiles, routes resolve | `npm run build` | succeeded; `/technician/queue`, `/api/admin/queue-override`, `/api/cron/assignment-tick`, `/api/technician-availability` all present |
-| **Live DB migration state** | `npm run db:check` | exit 0 — **all 18 applied** (76 checks passed) |
+| **Live DB migration state** | `npm run db:check` | exit 0 — **all 19 applied** (79 checks passed) |
+| Colour system: contrast in both themes, and the utility rules | `npm run test:design` | **11/11 passed** — every text pair clears WCAG AA in light and dark, and no forbidden colour utility remains in `src/` |
 
 `npm run test:queue-sql` boots a real Postgres in-process (PGlite), loads
 `schema.sql` and the two `SECURITY INVOKER` harness files, and asserts the spec
@@ -157,9 +183,9 @@ Manila, so the conversion does not depend on the machine's clock.
    release paths explicitly (never `git add -A`), commit, push `main` to
    `origin/main`, and deploy. `DATABASE.md` → *Known state worth flagging* carries the
    safety checks and the ordering rules; the release manifest lists the exact paths.
-2. **`npm run db:check`** — must still exit 0 (all 18 applied) before and after the
+2. **`npm run db:check`** — must still exit 0 (all 19 applied) before and after the
    deploy. This is the gate; it replaces guessing. Do **not** re-apply migrations
-   1–18: they are applied, and idempotence is a safety net, not an invitation.
+   1–19: they are applied, and idempotence is a safety net, not an invitation.
 3. **Confirm the deployed revision** — the deployed commit must be the one that was
    tested locally. There is no deployment URL recorded in this repo, so this is a
    check against the hosting dashboard, not against a documented URL.
@@ -176,4 +202,11 @@ Manila, so the conversion does not depend on the machine's clock.
 7. Keep this document honest. It reported the migrations as pending for five weeks
    after they had been applied; update `PROGRESS.md` in the same commit as the
    release, not afterwards.
+8. **Manuscript revision** — `MANUSCRIPT_REVISION.md` replaces the superseded
+   `MANUSCRIPT_CORRECTIONS.md`: Chapter I corrected, Chapter III, the figures, a
+   claim-to-evidence appendix (Appendix A) and a defence Q&A. Every citation in it is
+   checked by `npm run manuscript:check`, which fails if a cited file or npm script
+   no longer exists. The results it must **not** invent yet — user acceptance test,
+   ISO/IEC 25010 instrument, the fairness experiment, deployment confirmation and the
+   manual colour pass — are listed in its Part 5.
 

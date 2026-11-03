@@ -24,7 +24,7 @@ export default function Footer({ variant = "default" }: { variant?: "default" | 
                 SPARK<span className={accent}>Serv</span>
               </span>
             </Link>
-            <p className={`mt-2 text-[10px] font-bold uppercase tracking-[0.16em] ${accent}`}>
+            <p className={`mt-2 text-[11px] font-bold uppercase tracking-[0.16em] ${accent}`}>
               Appliance Repair &amp; Service
             </p>
             <p className="mt-3 max-w-sm text-sm leading-6 text-white/65">

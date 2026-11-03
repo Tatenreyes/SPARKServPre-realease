@@ -25,7 +25,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SPARKServ — Appliance Repair Management System",
+  title: "SPARKServ, Appliance Repair Management System",
   description: "Connecting customers with trusted appliance repair technicians.",
   icons: {
     icon: "/icons/icon.svg",
@@ -56,7 +56,7 @@ export const viewport: Viewport = {
  * otherwise the OS preference. Without it a dark-mode visitor gets a white
  * flash, and `suppressHydrationWarning` on `<html>` would only hide the React
  * warning, not fix the flash. It writes the same `dark` class, `color-scheme`
- * and storage key `ThemeProvider` reads — `STORAGE_KEY` comes from
+ * and storage key `ThemeProvider` reads, `STORAGE_KEY` comes from
  * `src/lib/theme.ts`, a plain module, because importing the value out of the
  * client `ThemeProvider` here would interpolate a client reference object and
  * render `var key = "[object Object]"`. It lives in the body rather than a
@@ -87,7 +87,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Navbar />
           <main>{children}</main>
           {/* The install offer only appears when the browser says the app is
-              installable and the visitor has not dismissed it — see the component. */}
+              installable and the visitor has not dismissed it, see the component. */}
           <InstallPrompt />
         </ThemeProvider>
       </body>

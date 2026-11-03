@@ -17,7 +17,7 @@
  *
  * What is NOT covered here, and cannot be: the rendered React components, a real
  * recovery email, the live Supabase project's redirect allow-list, and the
- * browser's cookie handling. TESTING.md §4 lists the manual pass for those.
+ * browser's cookie handling. TESTING.md §5 lists the manual pass for those.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

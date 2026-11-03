@@ -14,7 +14,7 @@ export interface SidebarNavItem {
   label: string;
   href?: string;
   icon?: LucideIcon;
-  /** Count rendered on the right of the row — pending offers, unread, etc. */
+  /** Count rendered on the right of the row, pending offers, unread, etc. */
   badge?: number;
   children?: SidebarNavItem[];
 }
@@ -34,7 +34,7 @@ interface SidebarProps {
   collapsed?: boolean;
   /**
    * Re-open the rail to full width. Called when a collapsed group's parent is
-   * clicked, because a collapsed rail can't show a group's children — expanding
+   * clicked, because a collapsed rail can't show a group's children, expanding
    * is the only way to reach them.
    */
   onExpand?: () => void;
@@ -51,7 +51,7 @@ interface SidebarProps {
 /**
  * Deep-navy workspace rail, identical across all four roles. Role identity is
  * carried by the label here and by the dot in the topbar rather than by
- * recolouring the whole shell — four differently coloured sidebars made the
+ * recolouring the whole shell, four differently coloured sidebars made the
  * product look like four products.
  *
  * `active` styling only ever changes colour/background, never geometry, so
@@ -179,7 +179,7 @@ export default function Sidebar({
               <LifeBuoy className="h-[18px] w-[18px] shrink-0 text-[#81EDF4]" />
               <span className={`min-w-0 ${collapsed ? "lg:hidden" : ""}`}>
                 <span className="block text-xs font-semibold text-white">Need a hand?</span>
-                <span className="mt-0.5 block text-[10px] text-white/60">Contact support</span>
+                <span className="mt-0.5 block text-[11px] text-white/60">Contact support</span>
               </span>
               {collapsed && <RailTooltip label="Need a hand? Contact support" />}
             </Link>
@@ -217,7 +217,7 @@ const ROW_IDLE = "text-white/65 hover:bg-white/10 hover:text-white";
  * The hover/focus label that appears beside an icon when the rail is collapsed.
  *
  * Rendered as a real element rather than a `title` attribute so it can be
- * positioned, themed and — crucially — shown on keyboard focus as well as hover,
+ * positioned, themed and, crucially, shown on keyboard focus as well as hover,
  * which a native tooltip will not do. It fades with opacity (not `display`) so
  * the transition animates, and it is `lg:`-scoped so it never appears in the
  * mobile drawer, which always shows full labels. `aria-hidden` because the link

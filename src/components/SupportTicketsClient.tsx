@@ -15,7 +15,7 @@ const TYPE_OPTIONS: { value: TicketType; label: string }[] = [
 /**
  * Deep links used by the mobile Support hub.
  *
- * "Warranty concern" and "Feedback" are not separate destinations — they are the
+ * "Warranty concern" and "Feedback" are not separate destinations, they are the
  * same support form with the type and an opening line already chosen. Two extra
  * routes would have been two extra pages to keep in sync with one API; a preset
  * gives the customer the same head start without inventing a parallel workflow.
@@ -23,14 +23,19 @@ const TYPE_OPTIONS: { value: TicketType; label: string }[] = [
 export type SupportPreset = "warranty" | "feedback";
 
 const PRESETS: Record<SupportPreset, { type: TicketType; subject: string }> = {
-  warranty: { type: "technical_issue", subject: "Warranty concern — " },
-  feedback: { type: "other", subject: "Feedback — " },
+  warranty: { type: "technical_issue", subject: "Warranty concern, " },
+  feedback: { type: "other", subject: "Feedback, " },
 };
 
-/** Shared field styling: 16px text on a phone so iOS Safari does not zoom the
- *  viewport on focus, back to 14px once there is a pointer. */
+/**
+ * The shared control recipe (see RequestRepairWizard): 16px text on a phone so iOS
+ * Safari does not zoom the viewport on focus, back to 14px once there is a pointer.
+ *
+ * `text-ink`, a themed placeholder and a brand-tinted focus ring, the three
+ * properties `npm run test:design` holds every local `FIELD` in the app to.
+ */
 const FIELD =
-  "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-base sm:text-sm";
+  "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-base text-ink placeholder:text-ink/50 transition-colors duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 sm:text-sm";
 
 const PRIORITY_OPTIONS: TicketPriority[] = ["low", "medium", "high", "critical"];
 
@@ -46,7 +51,7 @@ export default function SupportTicketsClient({
   preset,
 }: {
   initialTickets: SupportTicketRow[];
-  /** Opens the form with a topic already chosen — see the mobile Support hub. */
+  /** Opens the form with a topic already chosen, see the mobile Support hub. */
   preset?: SupportPreset;
 }) {
   const [tickets, setTickets] = useState(initialTickets);
@@ -197,7 +202,7 @@ export default function SupportTicketsClient({
 
       {tickets.length > 0 && (
         <div className="mb-3 flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2.5">
-          <Search className="h-4 w-4 shrink-0 text-muted/80" aria-hidden="true" />
+          <Search className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -220,8 +225,7 @@ export default function SupportTicketsClient({
       ) : (
         <>
           {/* Phone: one card per ticket. The old `min-w-[720px]` table forced a
-              sideways scroll on every phone, which pushed the status column —
-              the only thing a customer actually checks — off screen. */}
+              sideways scroll on every phone, which pushed the status column, the only thing a customer actually checks, off screen. */}
           <ul className="space-y-3 md:hidden">
             {filtered.map((t) => (
               <li
@@ -235,7 +239,7 @@ export default function SupportTicketsClient({
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <StatusBadge status={t.status} size="sm" withDot />
                   <span
-                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${
                       PRIORITY_COLOR[t.priority]
                     }`}
                   >
@@ -272,12 +276,12 @@ export default function SupportTicketsClient({
                     <td className="px-4 py-3">
                       <p className="font-medium text-ink">{t.subject}</p>
                       <p className="mt-0.5 max-w-md text-xs text-muted">{t.message}</p>
-                      <p className="mt-0.5 text-[11px] text-muted/80">
+                      <p className="mt-0.5 text-[11px] text-muted">
                         {new Date(t.created_at).toLocaleDateString()}
                        </p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-xs capitalize text-ink/60">
+                      <p className="text-xs capitalize text-ink/70">
                         {t.type.replace(/_/g, " ")}
                       </p>
                       <span

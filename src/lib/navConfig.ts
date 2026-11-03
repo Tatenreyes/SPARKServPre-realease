@@ -27,7 +27,7 @@ import type { UserRole } from "@/types/database";
  *
  * This lives in client code (it's only imported by `DashboardShell`, a client
  * component) because each item carries a lucide icon *component*, and functions
- * can't be serialized across the server/client boundary — a route layout can't
+ * can't be serialized across the server/client boundary, a route layout can't
  * hand an array of icons down to a client shell. So layouts only declare their
  * `role`; the nav itself is resolved here.
  *
@@ -44,6 +44,10 @@ export function navForRole(role: UserRole): SidebarNavItem[] {
           icon: ListOrdered,
         },
         { label: "My Jobs", href: "/technician/jobs", icon: Wrench },
+        // The record of finished work. Before this, a completed repair left the
+        // technician's screens entirely: the customer had a repair-history page and
+        // the person who did the job had one line in My jobs with a date on it.
+        { label: "Past Jobs", href: "/technician/past-jobs", icon: ClipboardList },
         { label: "Queue / Schedule", href: "/technician/queue", icon: CalendarClock },
         { label: "Messages", href: "/technician/messages", icon: MessageSquareText },
         { label: "Profile & Availability", href: "/technician/profile", icon: UserRound },
@@ -68,7 +72,7 @@ export function navForRole(role: UserRole): SidebarNavItem[] {
         { label: "Technicians", href: "/admin/technicians", icon: Users },
         { label: "All Users", href: "/admin/users", icon: UserRound },
         // Verifying a GCash reference is what completes a repair, and /admin is
-        // reachable for a super_admin — but without this entry there was no link to
+        // reachable for a super_admin, but without this entry there was no link to
         // it anywhere in this navigation, so the only way to finish a repair was to
         // type the URL.
         { label: "Transactions", href: "/admin/payments", icon: CircleDollarSign },
@@ -89,12 +93,10 @@ export function navForRole(role: UserRole): SidebarNavItem[] {
             { label: "Estimates", href: "/customer/estimates", icon: ClipboardList },
             { label: "Bookings", href: "/customer/bookings", icon: CalendarClock },
             { label: "Repair Progress", href: "/customer/progress-tracking", icon: Timer },
-            { label: "Service History", href: "/customer/repair-history", icon: ClipboardList },
-            // Deliberately last: this is where a customer goes to look over — or
-            // remove — a request they have already submitted, not the first thing
-            // they need. The page itself was reachable from the dashboard tile and
-            // the phone hub, but the sidebar had no entry for it at all.
+            // Keep submitted repair requests directly after progress so customers
+            // can reach active work before browsing completed service history.
             { label: "Repair Requests", href: "/customer/repairs/requests", icon: ClipboardList },
+            { label: "Service History", href: "/customer/repair-history", icon: ClipboardList },
           ],
         },
         {
@@ -120,7 +122,7 @@ export interface BottomNavItem {
    * A tab points at a section hub, but the section's real pages live under
    * different paths (`/customer/estimates`, `/customer/bookings`, …). Without
    * this, opening an estimate would light no tab at all and the phone would lose
-   * its sense of place. Routes are matched by prefix, longest first — see
+   * its sense of place. Routes are matched by prefix, longest first, see
    * `MobileBottomNav`.
    */
   alsoMatches?: string[];
@@ -261,8 +263,7 @@ export function bottomNavForRole(role: UserRole): BottomNavItem[] {
  * Routes that own the bottom of the phone screen themselves with a sticky
  * primary action, so the bottom navigation steps aside.
  *
- * Two fixed bars stacked on a phone spend roughly 120px of a ~700px viewport —
- * more than a sixth of the screen — and the submit button is the one control
+ * Two fixed bars stacked on a phone spend roughly 120px of a ~700px viewport, * more than a sixth of the screen, and the submit button is the one control
  * that must never compete with a tab bar for attention. The content column swaps
  * its bottom-navigation clearance for the taller sticky-action clearance on the
  * same condition, so nothing is either hidden or left with a dead gap.

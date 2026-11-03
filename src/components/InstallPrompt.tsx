@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Download, X } from "lucide-react";
+import { isImmersiveRoute } from "@/lib/navConfig";
 
 /**
  * Chrome's install prompt is not a public DOM event type, so it is declared here.
@@ -14,7 +16,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 /**
  * Dismissal is remembered. The people who use this app are on site, often on a phone
- * they will not install to, and a banner that returns on every page is noise — the
+ * they will not install to, and a banner that returns on every page is noise, the
  * opposite of the calm the rest of the interface is trying to project.
  */
 const DISMISSED_KEY = "sparkserv:install-dismissed";
@@ -34,12 +36,13 @@ const DISMISSED_KEY = "sparkserv:install-dismissed";
  *
  * It never prompts on its own. `beforeinstallprompt` is the browser's own signal
  * that the app is installable and the visitor is eligible, and the prompt is only
- * shown when they press the button — an unprompted install dialog is the fastest way
+ * shown when they press the button, an unprompted install dialog is the fastest way
  * to have a banner dismissed forever. Browsers that never fire the event (iOS
  * Safari) simply see nothing, which is why `layout.tsx` still declares an
  * `apple-touch-icon`.
  */
 export default function InstallPrompt() {
+  const pathname = usePathname();
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [dismissed, setDismissed] = useState(true);
 
@@ -78,7 +81,13 @@ export default function InstallPrompt() {
     }
   }
 
-  if (!deferred || dismissed) return null;
+  // A page with its own sticky primary action owns the bottom of the screen, the
+  // tab bar steps aside for exactly the same reason (`MobileBottomNav`, and the note
+  // on `.spark-sticky-action` in globals.css). The banner used to float 5rem up on
+  // those routes, which parked it on top of the form's submit button; both are `z-40`,
+  // so the two overlapped and the button underneath could not be pressed. Suppressing
+  // it here means the install offer waits until the visitor is not mid-form.
+  if (!deferred || dismissed || isImmersiveRoute(pathname)) return null;
 
   return (
     <div className="fixed inset-x-3 bottom-20 z-40 flex items-center gap-3 rounded-card border border-line bg-surface p-3 shadow-card lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-sm">
@@ -98,7 +107,7 @@ export default function InstallPrompt() {
           await deferred.userChoice.catch(() => undefined);
           setDeferred(null);
         }}
-        className="inline-flex h-9 shrink-0 items-center rounded-lg bg-brand-500 px-3 text-xs font-semibold text-white transition duration-200 hover:bg-brand-600"
+        className="inline-flex min-h-[44px] shrink-0 items-center rounded-lg bg-brand-500 px-3 text-xs font-semibold text-white transition duration-200 hover:bg-brand-600"
       >
         Install
       </button>
@@ -106,7 +115,7 @@ export default function InstallPrompt() {
         type="button"
         onClick={dismiss}
         aria-label="Dismiss"
-        className="shrink-0 rounded-lg p-1.5 text-muted transition hover:bg-soft hover:text-ink"
+        className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg text-muted transition hover:bg-soft hover:text-ink"
       >
         <X className="h-4 w-4" aria-hidden="true" />
       </button>

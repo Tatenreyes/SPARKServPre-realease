@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 
-// POST /api/support-tickets — any logged-in user opens a support ticket
+// POST /api/support-tickets, any logged-in user opens a support ticket
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/support-tickets — list the caller's own tickets (or all, for admins)
+// GET /api/support-tickets, list the caller's own tickets (or all, for admins)
 export async function GET() {
   try {
     const user = await getCurrentUser();

@@ -4,7 +4,7 @@
  * The Leaflet map itself.
  *
  * This module imports `leaflet` at the top level, and Leaflet reads `window` /
- * `document` while its own modules are evaluated — so this file must never be
+ * `document` while its own modules are evaluated, so this file must never be
  * part of the server bundle. It is only ever reached through
  * `ServiceLocationMap`, which loads it with `next/dynamic({ ssr: false })`.
  *
@@ -70,7 +70,7 @@ export default function LeafletLocationMap({
         // The wheel is OFF until the customer clicks the map (see
         // WheelZoomOnDemand). A full-width map that eats the page scroll as soon as
         // the cursor crosses it is worse than one that needs a click, and the click
-        // is what makes the wheel — and the keyboard — available.
+        // is what makes the wheel, and the keyboard, available.
         scrollWheelZoom={false}
         // Pinch-zoom, double-tap/double-click and the arrow/+/- keys, all on. These
         // are the zoom gestures a phone and a keyboard already have; they were never
@@ -125,7 +125,7 @@ export default function LeafletLocationMap({
  * Turns the mouse wheel into zoom once the customer has clicked (or tabbed into)
  * the map, and back off when the pointer leaves it.
  *
- * Without this the wheel did nothing at all — `scrollWheelZoom={false}` — so the
+ * Without this the wheel did nothing at all, `scrollWheelZoom={false}`, so the
  * only way to zoom was Leaflet's 26px +/- buttons. Enabling it on hover instead
  * would trade one annoyance for another: the map fills the card, and scrolling the
  * form past it would start zooming the map.

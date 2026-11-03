@@ -27,7 +27,7 @@ const ACTION_OPTIONS: { value: OverrideAction; label: string; hint: string }[] =
 /**
  * The audited administrative override (spec §32, §33).
  *
- * Deliberately two-step — pick an action, write a reason, then confirm — because
+ * Deliberately two-step, pick an action, write a reason, then confirm, because
  * this is the only way to change the rotation by hand. The reason is required
  * client-side *and* server-side (`admin_queue_override` raises without one), and
  * every override is written to `technician_queue_events` with the administrator's
@@ -93,7 +93,7 @@ export default function QueueOverrideControl({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs font-semibold text-ink">
           {technicianName}
-          <span className="ml-2 font-normal text-muted/80">
+          <span className="ml-2 font-normal text-muted">
             {position ? `#${position}` : "out of rotation"}
             {isActive ? "" : " · removed"}
           </span>
@@ -104,7 +104,7 @@ export default function QueueOverrideControl({
             setConfirming(false);
             setMessage(null);
           }}
-          className="cursor-pointer rounded-full border border-ink/15 px-3 py-1 text-[11px] font-semibold text-ink/70 transition duration-200 hover:bg-soft"
+          className="cursor-pointer rounded-full border border-line px-3 py-1 text-[11px] font-semibold text-ink/70 transition duration-200 hover:bg-soft"
         >
           {open ? "Cancel" : "Override…"}
         </button>
@@ -117,7 +117,7 @@ export default function QueueOverrideControl({
               setAction(event.target.value as OverrideAction);
               setConfirming(false);
             }}
-            className="w-full rounded-lg border border-ink/15 px-3 py-1.5 text-xs"
+            className="w-full rounded-lg border border-line px-3 py-1.5 text-xs"
           >
             {ACTION_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -130,8 +130,8 @@ export default function QueueOverrideControl({
           <input
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            placeholder="Reason (required — this is audited)"
-            className="w-full rounded-lg border border-ink/15 px-3 py-1.5 text-xs"
+            placeholder="Reason (required, this is audited)"
+            className="w-full rounded-lg border border-line px-3 py-1.5 text-xs"
           />
 
           {!confirming ? (
@@ -159,7 +159,7 @@ export default function QueueOverrideControl({
                 </button>
                 <button
                   onClick={() => setConfirming(false)}
-                  className="cursor-pointer rounded-full border border-ink/15 px-3 py-1.5 text-xs font-medium text-ink/70 transition duration-200 hover:bg-surface"
+                  className="cursor-pointer rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink/70 transition duration-200 hover:bg-surface"
                 >
                   Back
                 </button>

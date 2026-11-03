@@ -58,7 +58,7 @@ export default function HomePage() {
   return (
     <div className="bg-[#070D12]">
       {/* Hero. The photograph is the same wide technician shot used before
-          (`Backgound.jpg` is the real filename — there is no `Background.jpg`),
+          (`Backgound.jpg` is the real filename, there is no `Background.jpg`),
           now paired with a single directional navy scrim instead of the old
           badge, trust row, and floating caption competing with the headline. */}
       <section className="relative isolate overflow-hidden bg-[#070D12]">
@@ -80,9 +80,9 @@ export default function HomePage() {
         <div className="spark-section relative flex min-h-[440px] flex-col justify-center py-14 md:min-h-[480px] md:py-16">
           <div className="max-w-2xl">
             <h1 className="text-4xl font-bold leading-[1.08] text-white sm:text-5xl lg:text-[3.5rem]">
-              Appliance Repair,
+              Appliance Repair
               <br />
-              <span className="text-[#81EDF4]">Made Simple.</span>
+              <span className="text-[#81EDF4]">Made Simple</span>
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-white/85 md:text-lg">
               Appliance repair for Cagayan de Oro. Submit a request, review the estimate, and follow each update in one place.
@@ -144,9 +144,9 @@ export default function HomePage() {
         <div className="spark-section py-12 md:py-14">
           <div className="mx-auto max-w-2xl text-center">
             <p className="spark-eyebrow text-[#81EDF4]">How SPARKServ Works</p>
-            <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">From Problem to Service, in 3 Simple Steps</h2>
+            <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">From Problem to Service in 3 Simple Steps</h2>
             <p className="mt-3 text-sm leading-6 text-white/70 md:text-base">
-              Tell us what&apos;s wrong, review your estimate, and track your repair — all in one place.
+              Tell us what&apos;s wrong, review your estimate, and track your repair, all in one place.
             </p>
           </div>
 
@@ -158,7 +158,7 @@ export default function HomePage() {
               >
                 <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#101923] text-[#81EDF4] ring-1 ring-inset ring-white/15">
                   <step.icon className="h-5 w-5" />
-                  <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#6D70F0] text-[10px] font-bold text-white">
+                  <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#6D70F0] text-[11px] font-bold text-white">
                     {step.number}
                   </span>
                 </span>
@@ -182,7 +182,7 @@ export default function HomePage() {
           `ApplianceGallery`, which reads the shared `APPLIANCES` catalogue. */}
       <ApplianceGallery />
 
-      {/* Final CTA. One blue band, one action — the section is a button target,
+      {/* Final CTA. One blue band, one action, the section is a button target,
           not another feature block. */}
       <section className="bg-[#6D70F0] text-white">
         <div className="spark-section flex flex-col gap-5 py-8 sm:flex-row sm:items-center sm:justify-between md:py-10">

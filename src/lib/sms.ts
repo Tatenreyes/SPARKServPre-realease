@@ -1,7 +1,7 @@
 /**
- * Semaphore SMS — SERVER-ONLY utility. Reads credentials from server-side env
+ * Semaphore SMS, SERVER-ONLY utility. Reads credentials from server-side env
  * vars and POSTs to the official Semaphore v4 endpoint. Never import from a
- * Client Component — it reads `process.env` and would leak the API key.
+ * Client Component, it reads `process.env` and would leak the API key.
  * Provider docs: https://api.semaphore.co/docs (POST .../api/v4/messages).
  */
 
@@ -55,7 +55,7 @@ export class SemaphoreError extends Error {
 /**
  * Sends one SMS via Semaphore. Throws `SemaphoreError` on provider rejection,
  * network failure, or misconfiguration. Returns the provider's own status
- * verbatim — it never claims delivery: only "Sent" means handed to the network.
+ * verbatim, it never claims delivery: only "Sent" means handed to the network.
  */
 export async function sendSms(options: {
   number: string;
@@ -133,7 +133,7 @@ export async function sendSms(options: {
     );
   }
 
-  // The network rejected or refunded the message — it was not delivered.
+  // The network rejected or refunded the message, it was not delivered.
   if (status === "failed" || status === "refunded") {
     throw new SemaphoreError(
       `Semaphore reported the message as ${String(first.status)}.`,

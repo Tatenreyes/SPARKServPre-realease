@@ -3,14 +3,14 @@
 /**
  * The technician's estimate form: itemized costs, a live total, and a draft.
  *
- * The total is computed with `computeEstimateTotal` — the same function the API
- * route and the database constraint use — so the number on the button is the
+ * The total is computed with `computeEstimateTotal`, the same function the API
+ * route and the database constraint use, so the number on the button is the
  * number that gets stored. The server recomputes it from the itemized fields and
  * ignores any total a client might send.
  *
  * "Save draft" keeps the quote invisible to the customer; "Submit" sends it for
  * approval. When a version has already been sent (or approved), submitting again
- * creates a NEW version and leaves the old one intact — that is how additional
+ * creates a NEW version and leaves the old one intact, that is how additional
  * chargeable work is proposed.
  */
 
@@ -20,8 +20,18 @@ import { AlertTriangle, Info, Receipt } from "lucide-react";
 import { computeEstimateTotal, formatMoney, validateEstimate } from "@/lib/estimate-costs";
 import type { EstimateRow } from "@/types/database";
 
+/**
+ * The shared control recipe (see RequestRepairWizard): 44px tall, 16px text on a
+ * phone so iOS Safari does not zoom the viewport on focus.
+ *
+ * It is `text-ink` with a themed placeholder and a brand-tinted focus ring, this
+ * const used to set no colour at all, which was survivable while it happened to be
+ * inside a panel that inherited the palette, and invisible the moment it was not.
+ * `npm run test:design` holds every local `FIELD` in the app to the same three
+ * properties.
+ */
 const FIELD =
-  "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-base sm:text-sm";
+  "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-base text-ink placeholder:text-ink/50 transition-colors duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 sm:text-sm";
 
 export interface EstimateFormProps {
   serviceRequestId: string;
@@ -144,7 +154,7 @@ export default function EstimateForm({
         <p className="flex items-start gap-1.5 rounded-lg bg-brand-soft/60 px-3 py-2 text-xs leading-relaxed text-brand-ink">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {current.status === "revision_requested"
-            ? "The customer asked for a change — submitting now creates a new version."
+            ? "The customer asked for a change, submitting now creates a new version."
             : `Version ${current.version} is already with the customer. Submitting creates a NEW version; the old one is kept, and any approval it had does not cover the new price or scope.`}
           {current.revision_reason ? ` Their note: “${current.revision_reason}”.` : ""}
         </p>

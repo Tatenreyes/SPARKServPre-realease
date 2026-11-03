@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { requireRole, AuthError } from "@/lib/auth";
 
-// PATCH /api/users/:id/status — admin sets a user Active/Inactive instead of deleting them
+// PATCH /api/users/:id/status, admin sets a user Active/Inactive instead of deleting them
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }

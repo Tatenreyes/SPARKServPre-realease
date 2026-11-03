@@ -6,7 +6,7 @@ import type { UserRole } from "@/types/database";
  * slightly different ideas of what a role is called or coloured.
  */
 
-/** Landing route per role — the topbar's brand link, and post-login redirects. */
+/** Landing route per role, the topbar's brand link, and post-login redirects. */
 export const ROLE_HOME: Record<UserRole, string> = {
   customer: "/customer/dashboard",
   technician: "/technician/dashboard",
@@ -24,7 +24,7 @@ export const ROLE_LABEL: Record<UserRole, string> = {
 
 /**
  * Tailwind class for the role dot. Role identity is a single 6px accent next to
- * a label — deliberately not a whole recoloured chrome, which made the product
+ * a label, deliberately not a whole recoloured chrome, which made the product
  * read as four different products.
  */
 export const ROLE_DOT: Record<UserRole, string> = {

@@ -7,8 +7,7 @@ import { ChevronDown } from "lucide-react";
  *
  * Collapsing is a *reading* aid, never a way to hide work: every section starts
  * open, and both the submit button and the form's own invalid handler re-expand
- * everything before validation runs (see `RequestRepairWizard`). That matters —
- * a browser cannot focus or scroll to an invalid `required` control inside a
+ * everything before validation runs (see `RequestRepairWizard`). That matters, * a browser cannot focus or scroll to an invalid `required` control inside a
  * collapsed container, so it abandons the submit with no message at all and the
  * form silently does nothing. Staying open on approach removes that failure mode
  * entirely rather than hoping the customer re-expands the right section.
@@ -35,7 +34,7 @@ export default function CollapsibleSection({
   hint?: string;
   open: boolean;
   onToggle: () => void;
-  /** Extra classes on the outer card — e.g. `xl:hidden` to drop it on desktop. */
+  /** Extra classes on the outer card, e.g. `xl:hidden` to drop it on desktop. */
   className?: string;
   children: React.ReactNode;
 }) {
@@ -75,7 +74,7 @@ export default function CollapsibleSection({
 
           <ChevronDown
             aria-hidden="true"
-            className={`h-4 w-4 shrink-0 text-muted/80 transition-transform duration-200 ${
+            className={`h-4 w-4 shrink-0 text-muted transition-transform duration-200 ${
               open ? "rotate-180" : ""
             }`}
           />

@@ -4,7 +4,7 @@ import { getCurrentUser, AuthError } from "@/lib/auth";
 import type { EstimateDecision, EstimateDecisionOutcome } from "@/types/database";
 
 /**
- * PATCH /api/estimates/:id — legacy shape, kept working.
+ * PATCH /api/estimates/:id, legacy shape, kept working.
  *
  * The estimate lifecycle now runs through POST /api/estimates/:id/decision
  * (`{ decision, reason }`). This endpoint maps the old body onto it, so a caller

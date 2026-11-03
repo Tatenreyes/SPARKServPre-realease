@@ -9,7 +9,7 @@ import { AuthError, getCurrentUser } from "@/lib/auth";
  * `service_requests.photos` array contains real, durable public URLs.
  *
  * This replaces the wizard's previous behaviour of storing
- * `URL.createObjectURL(file)` values — `blob:` URLs scoped to the page that
+ * `URL.createObjectURL(file)` values, `blob:` URLs scoped to the page that
  * created them. Those were persisted to the database and were dead the moment
  * the customer closed the tab, so no technician could ever open the photo they
  * had been sent. The API contract is unchanged (`photos: string[]`); only the
@@ -17,7 +17,7 @@ import { AuthError, getCurrentUser } from "@/lib/auth";
  *
  * The bucket is created by `supabase/migration_service_request_photos_bucket.sql`.
  * If it has not been applied the upload fails loudly with a 502 naming the
- * migration — the alternative (accepting the request without its photos) would
+ * migration, the alternative (accepting the request without its photos) would
  * silently lose the evidence again, which is the bug being fixed.
  */
 const MAX_FILE_SIZE = 10 * 1024 * 1024;

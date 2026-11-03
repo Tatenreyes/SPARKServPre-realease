@@ -12,7 +12,7 @@ import type {
 } from "@/types/database";
 
 /**
- * AvailabilityManager — a technician's own scheduling inputs.
+ * AvailabilityManager, a technician's own scheduling inputs.
  *
  * These are the three tables the queue reads when it asks "can this technician
  * actually work the window the customer asked for?":
@@ -23,13 +23,13 @@ import type {
  *
  * The single most important thing this screen does is state the empty case
  * clearly. The SQL treats "no windows configured" and "no areas configured" as
- * NO RESTRICTION, not as "unavailable" — so an empty list means "you are
+ * NO RESTRICTION, not as "unavailable", so an empty list means "you are
  * offered everything", which is the opposite of what a blank schedule usually
  * implies. Saying so on screen is the difference between a technician
  * understanding their setup and quietly believing they are switched off.
  *
  * Times are entered in the SERVICE timezone (`queue_service_timezone`,
- * Asia/Manila), not the browser's, and `zonedToUtc()` converts them — the same
+ * Asia/Manila), not the browser's, and `zonedToUtc()` converts them, the same
  * helper the request wizard uses, so a technician's "09:00" and a customer's
  * "09:00" mean the same instant.
  */
@@ -43,7 +43,7 @@ const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frida
  * used in the customer form: this is a dense scheduling row, and one control standing a
  * head above its neighbours reads as a mistake.
  */
-const FIELD_COMPACT = "rounded-lg border border-ink/15 px-3 py-1.5 text-sm text-ink";
+const FIELD_COMPACT = "rounded-lg border border-line px-3 py-1.5 text-sm text-ink";
 
 function prettyDateTime(iso: string, timeZone: string): string {
   const d = new Date(iso);
@@ -138,7 +138,7 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
       start_time: startTime,
       end_time: endTime,
     });
-    if (saved) setNotice(`Added ${WEEKDAYS[Number(weekday)]} ${formatClockTime(startTime)}–${formatClockTime(endTime)}.`);
+    if (saved) setNotice(`Added ${WEEKDAYS[Number(weekday)]} ${formatClockTime(startTime)} ${formatClockTime(endTime)}.`);
   }
 
   async function addTimeOff() {
@@ -197,8 +197,8 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
 
   if (loading) {
     return (
-      <div className="rounded-card border border-ink/8 bg-surface p-4 shadow-card">
-        <p className="text-sm text-ink/50">Loading your availability…</p>
+      <div className="rounded-card border border-line bg-surface p-4 shadow-card">
+        <p className="text-sm text-ink/70">Loading your availability…</p>
       </div>
     );
   }
@@ -216,33 +216,33 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
         </p>
       )}
 
-      <section className="rounded-card border border-ink/8 bg-surface p-4 shadow-card">
+      <section className="rounded-card border border-line bg-surface p-4 shadow-card">
         <header className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-ink/40" />
+          <Clock className="h-4 w-4 text-ink/70" />
           <h2 className="font-display text-lg font-semibold text-ink">Weekly working hours</h2>
         </header>
-        <p className="mt-1 text-xs text-ink/55">
+        <p className="mt-1 text-xs text-ink/70">
           You are only offered jobs that fit inside these windows. All times are {serviceTimeZone}.
           {windows.length === 0
             ? " You have none set, so you currently count as available at any time."
-            : " Requests outside them are passed to someone else — you keep your place in the queue."}
+            : " Requests outside them are passed to someone else, you keep your place in the queue."}
         </p>
 
         {windows.length > 0 && (
-          <ul className="mt-3 divide-y divide-ink/8">
+          <ul className="mt-3 divide-y divide-line">
             {windows.map((w) => (
               <li key={w.id} className="flex items-center justify-between py-2 text-sm">
                 <span className="text-ink">
                   <span className="font-medium">{WEEKDAYS[w.weekday] ?? `Day ${w.weekday}`}</span>{" "}
-                  <span className="text-ink/65">
-                    {formatClockTime(w.start_time)} – {formatClockTime(w.end_time)}
+                  <span className="text-ink/70">
+                    {formatClockTime(w.start_time)}, {formatClockTime(w.end_time)}
                   </span>
                 </span>
                 <button
                   onClick={() => remove("window", w.id)}
                   disabled={busy}
                   aria-label={`Remove ${WEEKDAYS[w.weekday]} window`}
-                  className="rounded-full p-1.5 text-ink/40 hover:bg-alert-soft hover:text-alert-ink disabled:opacity-40"
+                  className="rounded-full p-1.5 text-ink/70 hover:bg-alert-soft hover:text-alert-ink disabled:opacity-40"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -256,7 +256,7 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
             value={weekday}
             onChange={(e) => setWeekday(e.target.value)}
             aria-label="Weekday"
-            className="rounded-lg border border-ink/15 px-3 py-1.5 text-sm"
+            className="rounded-lg border border-line px-3 py-1.5 text-sm"
           >
             {WEEKDAYS.map((day, index) => (
               <option key={day} value={index}>
@@ -265,7 +265,7 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
             ))}
           </select>
           {/* Two pickers rather than native time inputs, and the end only offers times that
-              follow the start — `addWindow()` refuses a window that ends before it starts,
+              follow the start, `addWindow()` refuses a window that ends before it starts,
               and the API answers 400 for anything that is not HH:MM. */}
           <TimeSelect
             id="window-start"
@@ -300,34 +300,34 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
         </div>
       </section>
 
-      <section className="rounded-card border border-ink/8 bg-surface p-4 shadow-card">
+      <section className="rounded-card border border-line bg-surface p-4 shadow-card">
         <header className="flex items-center gap-2">
-          <CalendarClock className="h-4 w-4 text-ink/40" />
+          <CalendarClock className="h-4 w-4 text-ink/70" />
           <h2 className="font-display text-lg font-semibold text-ink">Time off</h2>
         </header>
-        <p className="mt-1 text-xs text-ink/55">
-          Block out a specific period — a day, an afternoon, a week. Requests overlapping it go
+        <p className="mt-1 text-xs text-ink/70">
+          Block out a specific period, a day, an afternoon, a week. Requests overlapping it go
           to someone else. Entered in {serviceTimeZone}. Past entries drop off this list on their own.
         </p>
 
         {timeOff.length === 0 ? (
-          <p className="mt-3 text-sm text-ink/50">Nothing booked off.</p>
+          <p className="mt-3 text-sm text-ink/70">Nothing booked off.</p>
         ) : (
-          <ul className="mt-3 divide-y divide-ink/8">
+          <ul className="mt-3 divide-y divide-line">
             {timeOff.map((t) => (
               <li key={t.id} className="flex items-center justify-between py-2 text-sm">
                 <span className="text-ink">
                   <span className="font-medium">
                     {prettyDateTime(t.starts_at, serviceTimeZone)}
                   </span>{" "}
-                  <span className="text-ink/65">→ {prettyDateTime(t.ends_at, serviceTimeZone)}</span>
-                  {t.reason && <span className="text-ink/45"> · {t.reason}</span>}
+                  <span className="text-ink/70">→ {prettyDateTime(t.ends_at, serviceTimeZone)}</span>
+                  {t.reason && <span className="text-ink/70"> · {t.reason}</span>}
                 </span>
                 <button
                   onClick={() => remove("time_off", t.id)}
                   disabled={busy}
                   aria-label="Remove time off"
-                  className="rounded-full p-1.5 text-ink/40 hover:bg-alert-soft hover:text-alert-ink disabled:opacity-40"
+                  className="rounded-full p-1.5 text-ink/70 hover:bg-alert-soft hover:text-alert-ink disabled:opacity-40"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -337,29 +337,29 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
         )}
 
         <div className="mt-3 flex flex-wrap items-end gap-2">
-          <label className="text-xs text-ink/55">
+          <label className="text-xs text-ink/70">
             From
             <input
               type="datetime-local"
               value={offStart}
               onChange={(e) => setOffStart(e.target.value)}
-              className="mt-1 block rounded-lg border border-ink/15 px-3 py-1.5 text-sm text-ink"
+              className="mt-1 block rounded-lg border border-line px-3 py-1.5 text-sm text-ink"
             />
           </label>
-          <label className="text-xs text-ink/55">
+          <label className="text-xs text-ink/70">
             To
             <input
               type="datetime-local"
               value={offEnd}
               onChange={(e) => setOffEnd(e.target.value)}
-              className="mt-1 block rounded-lg border border-ink/15 px-3 py-1.5 text-sm text-ink"
+              className="mt-1 block rounded-lg border border-line px-3 py-1.5 text-sm text-ink"
             />
           </label>
           <input
             value={offReason}
             onChange={(e) => setOffReason(e.target.value)}
             placeholder="Reason (optional)"
-            className="rounded-lg border border-ink/15 px-3 py-1.5 text-sm"
+            className="rounded-lg border border-line px-3 py-1.5 text-sm"
           />
           <button
             onClick={addTimeOff}
@@ -372,28 +372,28 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
         </div>
       </section>
 
-      <section className="rounded-card border border-ink/8 bg-surface p-4 shadow-card">
+      <section className="rounded-card border border-line bg-surface p-4 shadow-card">
         <header className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-ink/40" />
+          <MapPin className="h-4 w-4 text-ink/70" />
           <h2 className="font-display text-lg font-semibold text-ink">Service areas</h2>
         </header>
-        <p className="mt-1 text-xs text-ink/55">
+        <p className="mt-1 text-xs text-ink/70">
           Where you are willing to travel. Leave this empty and you cover everywhere you are
           qualified for. The match is on the area name inside the job&apos;s address, so use the
-          place name your customers use — &quot;Quezon City&quot;, not &quot;QC&quot;.
+          place name your customers use, &quot;Quezon City&quot;, not &quot;QC&quot;.
         </p>
 
         {areas.length === 0 ? (
-          <p className="mt-3 text-sm text-ink/50">
-            No areas set — you currently cover everywhere you are qualified for.
+          <p className="mt-3 text-sm text-ink/70">
+            No areas set, you currently cover everywhere you are qualified for.
           </p>
         ) : (
-          <ul className="mt-3 divide-y divide-ink/8">
+          <ul className="mt-3 divide-y divide-line">
             {areas.map((a) => (
               <li key={a.id} className="flex items-center justify-between py-2 text-sm">
                 <span className="text-ink">
                   <span className="font-medium">{a.area}</span>
-                  <span className="text-ink/45">
+                  <span className="text-ink/70">
                     {a.appliance_type ? ` · ${a.appliance_type.replace(/_/g, " ")} only` : " · all appliance types"}
                   </span>
                 </span>
@@ -401,7 +401,7 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
                   onClick={() => remove("area", a.id)}
                   disabled={busy}
                   aria-label={`Remove ${a.area}`}
-                  className="rounded-full p-1.5 text-ink/40 hover:bg-alert-soft hover:text-alert-ink disabled:opacity-40"
+                  className="rounded-full p-1.5 text-ink/70 hover:bg-alert-soft hover:text-alert-ink disabled:opacity-40"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -415,13 +415,13 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
             value={area}
             onChange={(e) => setArea(e.target.value)}
             placeholder="Area, e.g. Quezon City"
-            className="rounded-lg border border-ink/15 px-3 py-1.5 text-sm"
+            className="rounded-lg border border-line px-3 py-1.5 text-sm"
           />
           <input
             value={areaAppliance}
             onChange={(e) => setAreaAppliance(e.target.value)}
             placeholder="Appliance type (optional), e.g. aircon"
-            className="rounded-lg border border-ink/15 px-3 py-1.5 text-sm"
+            className="rounded-lg border border-line px-3 py-1.5 text-sm"
           />
           <button
             onClick={addArea}

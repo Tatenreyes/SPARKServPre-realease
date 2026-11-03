@@ -4,7 +4,7 @@
  * Two is the number of half-width tiles a 360px screen can carry without either
  * one looking empty, and it is the shape that keeps four figures on one
  * screenful. Any count that does not divide by two simply leaves its last row
- * half full — which is why the grid is `grid-cols-2` rather than a two-column
+ * half full, which is why the grid is `grid-cols-2` rather than a two-column
  * flex, so the remaining tile stays the same width as the ones above it instead
  * of stretching.
  *

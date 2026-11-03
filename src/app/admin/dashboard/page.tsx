@@ -85,7 +85,7 @@ export default async function AdminDashboard() {
   // The real rotation, read through the same RPC the dedicated monitoring page
   // uses. This panel previously fetched `technician_queue_state` with the
   // service-role key, sorted it by `last_assigned_at` in React, derived a
-  // position from it, and split technicians into "Available" / "Booked" — the
+  // position from it, and split technicians into "Available" / "Booked", the
   // exact implementation `ARCHITECTURE.md` rule 1 forbids and that
   // `/admin/technician-queue` documents itself as having replaced. Being a
   // second, differently-computed answer to "who is next", it could disagree
@@ -138,7 +138,7 @@ export default async function AdminDashboard() {
    * Payments a customer has submitted that no administrator has verified yet.
    *
    * This is the one queue on the platform where a customer is actively waiting on
-   * staff, so it belongs in the dashboard's priority list — the tile row counted
+   * staff, so it belongs in the dashboard's priority list, the tile row counted
    * approvals, requests and tickets, but nothing told an administrator that money
    * had arrived and was sitting unverified.
    */
@@ -156,14 +156,14 @@ export default async function AdminDashboard() {
         action={{ href: "/admin/technicians", label: "Review pending technicians" }}
       />
 
-      {/* Six tiles: a 2x2 grid on a phone, six columns from `xl` up — see
+      {/* Six tiles: a 2x2 grid on a phone, six columns from `xl` up, see
           `DashboardStatGroup`. */}
       <DashboardStatGroup
         desktopColumns={6}
         items={[
           { label: "Approved technicians", value: technicianCount ?? 0, href: "/admin/technicians", icon: Users, colorClass: "bg-brand-soft text-brand-ink" },
           { label: "Active jobs", value: activeRepairs ?? 0, href: "/admin/job-monitoring", icon: Wrench, colorClass: "bg-brand-soft text-brand-ink" },
-          // Was `bg-yellow-50 text-yellow-600` — raw Tailwind palette values rather
+          // Was `bg-yellow-50 text-yellow-600`, raw Tailwind palette values rather
           // than theme tokens, so the chip stayed a bright near-white pill on the
           // dark canvas while every other card on the row inverted.
           { label: "Pending approvals", value: pendingApprovals ?? 0, href: "/admin/technicians", icon: ShieldCheck, colorClass: "bg-warn-soft text-warn-ink" },
@@ -188,11 +188,11 @@ export default async function AdminDashboard() {
         >
           {!activeBookings?.length ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-soft text-muted/80">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-soft text-muted">
                 <CalendarClock className="h-6 w-6" />
               </div>
               <p className="mt-4 text-sm font-medium text-muted">No active bookings right now</p>
-              <p className="mt-1 text-xs text-muted/80">Active jobs appear here once scheduled.</p>
+              <p className="mt-1 text-xs text-muted">Active jobs appear here once scheduled.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -245,7 +245,7 @@ export default async function AdminDashboard() {
                       <p className="mt-0.5 truncate text-xs text-muted">
                         {request.location ? `Location: ${request.location}` : "No location recorded"}
                       </p>
-                      <p className="mt-1 text-[11px] text-muted/80">{timeAgo(request.created_at)}</p>
+                      <p className="mt-1 text-[11px] text-muted">{timeAgo(request.created_at)}</p>
                     </div>
                   </li>
                 );
@@ -292,7 +292,7 @@ export default async function AdminDashboard() {
                       <h3 className="font-display text-sm font-semibold capitalize text-ink">
                         {queue.label}
                       </h3>
-                      <span className="rounded-full bg-soft px-2.5 py-1 text-[10px] font-semibold text-muted">
+                      <span className="rounded-full bg-soft px-2.5 py-1 text-[11px] font-semibold text-muted">
                         {queue.activeTechnicianCount} in rotation
                       </span>
                     </div>
@@ -328,7 +328,7 @@ export default async function AdminDashboard() {
               accentClassName="text-[#81EDF4]"
               heightClass="h-40 sm:h-48"
             />
-            <div className="flex justify-between text-[10px] text-muted">
+            <div className="flex justify-between text-[11px] text-muted">
               <span>{trendStart.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}</span>
               <span>Today</span>
             </div>

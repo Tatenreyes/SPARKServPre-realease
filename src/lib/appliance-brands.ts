@@ -5,7 +5,7 @@
  * ## Why this module exists
  *
  * The request wizard used to hold its own brand table covering only three
- * appliances — refrigerator, air conditioner and washing machine — and fall back
+ * appliances, refrigerator, air conditioner and washing machine, and fall back
  * to a single option for everything else:
  *
  *     {(BRANDS[applianceType] || ["Other"]).map(...)}
@@ -25,10 +25,10 @@
  * small-appliance volume (Hanabishi, Imarflex, Kyowa, Asahi, Camel, Union, 3D,
  * Firefly). Two deliberate inclusions:
  *
- *   * `National` under rice cookers — Panasonic's former name, still moulded into
+ *   * `National` under rice cookers, Panasonic's former name, still moulded into
  *     millions of working Philippine units, so it must stay selectable even
  *     though nobody buys it new.
- *   * `Speed Queen` / `Maytag` under dryers — a dryer repair is
+ *   * `Speed Queen` / `Maytag` under dryers, a dryer repair is
  *     disproportionately a laundromat repair.
  *
  * The order is **prevalence, not alphabet**: the first entries are the ones most
@@ -36,7 +36,7 @@
  * still there. Each list is capped around a dozen entries (plus "Other") because
  * this is a phone-sized native `<select>`.
  *
- * `Other` is NOT stored in the lists — `brandOptionsFor()` appends it, so a
+ * `Other` is NOT stored in the lists, `brandOptionsFor()` appends it, so a
  * caller can never mistake it for a real brand. Choosing it opens a required
  * free-text box (see `RequestRepairWizard`), and `isListedBrand()` is what tells
  * the wizard that a saved brand falls outside the list and must be preserved as
@@ -44,8 +44,8 @@
  *
  * ## Adding an appliance
  *
- * The appliance list is derived from `APPLIANCE_ISSUES` — the canonical
- * catalogue — so an appliance can never exist for issues but not for brands.
+ * The appliance list is derived from `APPLIANCE_ISSUES`, the canonical
+ * catalogue, so an appliance can never exist for issues but not for brands.
  * Adding one there means adding its brand list here, and
  * `scripts/tests/appliance-brands.test.mjs` fails loudly if it is forgotten.
  */
@@ -280,7 +280,7 @@ export const BRANDS_BY_TYPE: Record<string, string[]> = {
 /**
  * The choices for one appliance: its brands, then "Other" last.
  *
- * Never empty — an appliance whose list was forgotten still offers the free-text
+ * Never empty, an appliance whose list was forgotten still offers the free-text
  * escape rather than trapping the customer on a required field with nothing to
  * choose (the bug this module replaces).
  */
@@ -306,7 +306,7 @@ export const MAX_BRAND_LENGTH = 40;
 
 /**
  * Everything a brand name may contain: letters, digits, spaces and the
- * punctuation real names use — "A.O. Smith", "3D", "White Westinghouse",
+ * punctuation real names use, "A.O. Smith", "3D", "White Westinghouse",
  * "CHiQ". Anything else is dropped as it is typed, so a pasted sentence cannot
  * become a brand.
  *

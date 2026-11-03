@@ -43,7 +43,7 @@ export default async function SuperAdminActivityPage() {
     ...(requests ?? []).map((r) => ({
       id: `req-${r.id}`,
       type: "Service request",
-      description: `New ${r.appliance_type.replace("_", " ")} request — ${r.location}`,
+      description: `New ${r.appliance_type.replace("_", " ")} request, ${r.location}`,
       timestamp: r.created_at,
     })),
     ...(bookings ?? []).map((b) => ({
@@ -55,7 +55,7 @@ export default async function SuperAdminActivityPage() {
     ...(payments ?? []).map((p) => ({
       id: `pay-${p.id}`,
       type: "Payment",
-      description: `₱${p.amount.toFixed(2)} — ${p.status.replace("_", " ")}`,
+      description: `₱${p.amount.toFixed(2)}, ${p.status.replace("_", " ")}`,
       timestamp: p.created_at,
     })),
     ...(users ?? []).map((u) => ({
@@ -75,16 +75,16 @@ export default async function SuperAdminActivityPage() {
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">Activity log</h1>
-      <p className="mt-1 text-sm text-ink/65">Recent events across the platform, most recent first.</p>
+      <p className="mt-1 text-sm text-ink/70">Recent events across the platform, most recent first.</p>
 
       <div className="mt-6 space-y-2">
         {!items.length ? (
-          <p className="text-sm text-ink/50">No activity yet.</p>
+          <p className="text-sm text-ink/70">No activity yet.</p>
         ) : (
           items.slice(0, 30).map((item) => (
             <div
               key={item.id}
-              className="flex items-center justify-between rounded-card border border-ink/8 bg-surface p-3 shadow-card"
+              className="flex items-center justify-between rounded-card border border-line bg-surface p-3 shadow-card"
             >
               <div>
                 <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-ink">
@@ -92,7 +92,7 @@ export default async function SuperAdminActivityPage() {
                 </span>
                 <p className="mt-1 text-sm text-ink">{item.description}</p>
               </div>
-              <p className="shrink-0 text-xs text-ink/35">
+              <p className="shrink-0 text-xs text-ink/70">
                 {new Date(item.timestamp).toLocaleString()}
               </p>
             </div>

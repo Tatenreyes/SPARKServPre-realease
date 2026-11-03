@@ -4,6 +4,7 @@ import {
   formatQueueTime,
   myQueueStanding,
   operationalStatusMeta,
+  queueTurnNote,
 } from "@/lib/queue";
 
 export const TONE_CHIP: Record<string, string> = {
@@ -19,7 +20,7 @@ export const TONE_CHIP: Record<string, string> = {
  *
  * This is a faithful read of the queue the assignment engine walks
  * (`technician_queue_snapshot()`, ordered by queue position), which is why every
- * technician in the rotation is listed — not just the signed-in one. The signed-in
+ * technician in the rotation is listed, not just the signed-in one. The signed-in
  * technician is highlighted, never re-sorted, so the order stays truthful.
  *
  * Language matters here: position #1 means "next turn", not "next job". A
@@ -48,23 +49,26 @@ export default function QueueCard({
 
   const myPosition = mine?.isMemberActive ? mine.position : null;
   const myMeta = mine ? operationalStatusMeta(mine.operationalStatus) : null;
+  // Why the number reads the way it does. Null on a database without step 20, and
+  // null for a technician who has not accepted anything in this queue yet.
+  const turnNote = queueTurnNote(queue);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,240px)_1fr]">
       {showPositionPanel && (
-        <div className="flex flex-col justify-center rounded-xl border border-line bg-brand-50/50 px-5 py-6 text-center">
+        <div className="flex flex-col justify-center rounded-xl border border-line bg-brand-soft/50 px-5 py-6 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-ink">
             Your queue position
           </p>
           <p className="mt-2 font-display text-5xl font-bold leading-none text-brand-ink">
-            {myPosition ? `#${myPosition}` : "—"}
+            {myPosition ? `#${myPosition}` : "N/A"}
           </p>
           <p className="mt-2 text-xs font-semibold text-ink">{queue.label}</p>
 
           {myMeta && (
             <p className="mt-3">
               <span
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] ${
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${
                   TONE_CHIP[myMeta.tone] ?? TONE_CHIP.neutral
                 }`}
               >
@@ -74,6 +78,13 @@ export default function QueueCard({
           )}
 
           <p className="mt-3 text-[11px] leading-relaxed text-muted">{myQueueStanding(queue)}</p>
+
+          {/* The position is a snapshot taken AFTER the last acceptance, so a bare
+              `#3` reads like "two people ahead of me, so why did I get the work?".
+              This is the half that was missing. */}
+          {turnNote && (
+            <p className="mt-2 text-[11px] leading-relaxed text-muted">{turnNote}</p>
+          )}
 
           <Link
             href="/technician/profile"
@@ -92,11 +103,11 @@ export default function QueueCard({
               {description ??
                 `${queue.activeTechnicianCount} technician${
                   queue.activeTechnicianCount === 1 ? "" : "s"
-                } in this rotation. Order is a fair rotation — never rating, experience or job count.`}
+                } in this rotation. Order is a fair rotation, never rating, experience or job count.`}
             </p>
           </div>
           {queue.nextTurnPosition !== null && (
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-brand-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-brand-ink">
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-brand-soft px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-ink">
               #{queue.nextTurnPosition} holds the next turn
             </span>
           )}
@@ -104,7 +115,7 @@ export default function QueueCard({
 
         {/* Phone: one card per technician, in rotation order. The desktop table
             needs 560px to stay readable; forcing it onto a 360px screen pushed
-            the status column — the only column that changes — off the edge. The
+            the status column, the only column that changes, off the edge. The
             order is identical in both, because it is the queue. */}
         <ul className="mt-3 space-y-2 md:hidden">
           {queue.entries.map((entry) => {
@@ -128,10 +139,10 @@ export default function QueueCard({
                         ? "bg-brand-600 text-white"
                         : entry.isMemberActive
                           ? "bg-soft text-muted"
-                          : "bg-soft text-muted/80"
+                          : "bg-soft text-muted"
                     }`}
                   >
-                    {entry.position ? `#${entry.position}` : "—"}
+                    {entry.position ? `#${entry.position}` : "N/A"}
                   </span>
 
                   <div className="min-w-0 flex-1">
@@ -144,12 +155,12 @@ export default function QueueCard({
                         {isMine ? "You" : entry.name}
                       </span>
                       {isMine && (
-                        <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-white">
+                        <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.1em] text-white">
                           You
                         </span>
                       )}
                       {entry.isNextInQueue && (
-                        <span className="rounded-full border border-line bg-signal-soft px-2 py-0.5 text-[10px] font-semibold text-signal-ink">
+                        <span className="rounded-full border border-line bg-signal-soft px-2 py-0.5 text-[11px] font-semibold text-signal-ink">
                           Next turn
                         </span>
                       )}
@@ -163,14 +174,14 @@ export default function QueueCard({
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span
                         title={meta.hint}
-                        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] ${
+                        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${
                           TONE_CHIP[meta.tone] ?? TONE_CHIP.neutral
                         }`}
                       >
                         {entry.isMemberActive ? meta.label : `${meta.label} · out of rotation`}
                       </span>
                       {entry.activeOfferRequestId && (
-                        <span className="rounded-full border border-line bg-warn-soft px-2 py-0.5 text-[10px] font-semibold text-warn-ink">
+                        <span className="rounded-full border border-line bg-warn-soft px-2 py-0.5 text-[11px] font-semibold text-warn-ink">
                           {isMine ? "Offer waiting on you" : "Reviewing an offer"}
                         </span>
                       )}
@@ -212,7 +223,7 @@ export default function QueueCard({
                         ? "bg-brand-soft/60 ring-1 ring-inset ring-line"
                         : entry.isMemberActive
                           ? "transition duration-200 hover:bg-soft/70"
-                          : "bg-soft/60 text-muted/80"
+                          : "bg-soft/60 text-muted"
                     }
                   >
                     <td className="py-3.5 pl-2 pr-4 align-middle">
@@ -222,10 +233,10 @@ export default function QueueCard({
                             ? "bg-brand-600 text-white"
                             : entry.isMemberActive
                               ? "bg-soft text-muted"
-                              : "bg-soft text-muted/80"
+                              : "bg-soft text-muted"
                         }`}
                       >
-                        {entry.position ? `#${entry.position}` : "—"}
+                        {entry.position ? `#${entry.position}` : "N/A"}
                       </span>
                     </td>
                     <td className="py-3.5 pr-4 align-middle">
@@ -236,17 +247,17 @@ export default function QueueCard({
                           {isMine ? "You" : entry.name}
                         </span>
                         {isMine && (
-                          <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-white">
+                          <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.1em] text-white">
                             You
                           </span>
                         )}
                         {entry.isNextInQueue && (
-                          <span className="rounded-full border border-line bg-signal-soft px-2 py-0.5 text-[10px] font-semibold text-signal-ink">
+                          <span className="rounded-full border border-line bg-signal-soft px-2 py-0.5 text-[11px] font-semibold text-signal-ink">
                             Next turn
                           </span>
                         )}
                         {entry.activeOfferRequestId && (
-                          <span className="rounded-full border border-line bg-warn-soft px-2 py-0.5 text-[10px] font-semibold text-warn-ink">
+                          <span className="rounded-full border border-line bg-warn-soft px-2 py-0.5 text-[11px] font-semibold text-warn-ink">
                             {isMine ? "Offer waiting on you" : "Reviewing an offer"}
                           </span>
                         )}
@@ -260,7 +271,7 @@ export default function QueueCard({
                     <td className="py-3.5 pr-4 align-middle">
                       <span
                         title={meta.hint}
-                        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] ${
+                        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${
                           TONE_CHIP[meta.tone] ?? TONE_CHIP.neutral
                         }`}
                       >
@@ -277,7 +288,7 @@ export default function QueueCard({
                           On job until {formatQueueTime(entry.currentJobUntil)}
                         </span>
                       ) : (
-                        <span className="text-xs text-muted/80">—</span>
+                        <span className="text-xs text-muted"> </span>
                       )}
                     </td>
                   </tr>
@@ -294,10 +305,12 @@ export default function QueueCard({
         )}
 
         <p className="mt-3 text-[11px] leading-relaxed text-muted">
-          Being #1 means your turn comes first — not that the next job is automatically yours.
+          Being #1 means your turn comes first, not that the next job is automatically yours.
           You are skipped for a specific request if the requested time clashes with your
           schedule or exceeds your workload, and a future booking never removes you from the
-          rotation.
+          rotation. Accepting a request does move you to the END of this rotation, so the
+          position you read here is where your last accepted job left you, not a count of
+          who was ahead of you when it was offered.
         </p>
       </div>
     </div>

@@ -4,7 +4,7 @@
  * Accept / decline the offer currently held by this technician.
  *
  * Every outcome is now reported. The previous version called `router.refresh()`
- * only when the response was ok and said NOTHING otherwise — so a technician
+ * only when the response was ok and said NOTHING otherwise, so a technician
  * whose offer had already lapsed (the engine answers HTTP 200 with
  * `outcome: "expired"` and re-offers the request) saw the card disappear with no
  * explanation, which looks exactly like "I pressed Accept and nothing happened".
@@ -81,7 +81,7 @@ export default function OfferResponseControl({
         setResult({
           tone: "warn",
           message:
-            "This offer is no longer yours — it has already been re-offered or accepted elsewhere.",
+            "This offer is no longer yours, it has already been re-offered or accepted elsewhere.",
         });
       } else if (outcome === "cancelled") {
         setResult({
@@ -142,14 +142,14 @@ export default function OfferResponseControl({
         <p className="flex items-start gap-1.5 rounded-lg bg-warn-soft/60 px-2.5 py-2 text-xs text-warn-ink">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           This offer expired
-          {expiresAt ? ` on ${new Date(expiresAt).toLocaleString()}` : ""} — it can no
+          {expiresAt ? ` on ${new Date(expiresAt).toLocaleString()}` : ""}, it can no
           longer be accepted. Release it to hand it straight back to the queue.
         </p>
         <div className="mt-2 flex gap-2">
           <button
             onClick={() => respond("decline")}
             disabled={busy}
-            className="rounded-full border border-ink/15 px-4 py-1.5 text-sm font-semibold text-ink/70 hover:bg-canvas disabled:opacity-50"
+            className="rounded-full border border-line px-4 py-1.5 text-sm font-semibold text-ink/70 hover:bg-canvas disabled:opacity-50"
           >
             {busy ? "..." : "Release offer"}
           </button>
@@ -167,7 +167,7 @@ export default function OfferResponseControl({
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Reason (optional)"
-          className="w-full rounded-lg border border-ink/15 px-3 py-1.5 text-sm"
+          className="w-full rounded-lg border border-line px-3 py-1.5 text-sm"
         />
         <div className="flex gap-2">
           <button
@@ -179,7 +179,7 @@ export default function OfferResponseControl({
           </button>
           <button
             onClick={() => setShowReasonFor(false)}
-            className="rounded-full border border-ink/15 px-3 py-1.5 text-xs font-medium text-ink/70"
+            className="rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink/70"
           >
             Cancel
           </button>

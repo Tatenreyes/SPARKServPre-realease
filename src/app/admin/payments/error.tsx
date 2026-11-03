@@ -11,7 +11,7 @@ import {
  *
  * A failed query must never be able to look like an empty queue, so this renders the
  * opposite claim: the queue is UNKNOWN, not empty, and there may still be references
- * waiting to be verified. It is scoped to this route on purpose — it catches the
+ * waiting to be verified. It is scoped to this route on purpose, it catches the
  * throws from `requireRows()` in this page and nothing else.
  *
  * `error.digest` is Next.js's own hash of the server error. It is safe to show and

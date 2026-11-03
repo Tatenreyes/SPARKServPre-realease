@@ -36,7 +36,7 @@ export default function HowItWorksPage() {
             variants={staggerContainer(0.1)}
             className="mx-auto max-w-3xl text-center"
           >
-            <motion.span variants={fadeUp} className="text-[10px] font-bold uppercase tracking-[0.16em] text-spark-300">
+            <motion.span variants={fadeUp} className="text-[11px] font-bold uppercase tracking-[0.16em] text-spark-300">
               How SPARKServ works
             </motion.span>
             <motion.h1 variants={fadeUp} className="mt-4 max-w-2xl text-4xl font-semibold leading-tight md:text-6xl">
@@ -57,7 +57,7 @@ export default function HowItWorksPage() {
           variants={staggerContainer(0.1)}
         >
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <motion.span variants={fadeUp} className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-ink">
+            <motion.span variants={fadeUp} className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-ink">
               The Process
             </motion.span>
             <motion.h2 variants={fadeUp} className="mt-3 text-3xl font-bold text-ink sm:text-4xl">
@@ -95,14 +95,14 @@ export default function HowItWorksPage() {
             className="grid items-center gap-12 md:grid-cols-2"
           >
             <div>
-              <motion.span variants={fadeUp} className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-ink">
+              <motion.span variants={fadeUp} className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-ink">
                 Why SPARKServ
               </motion.span>
               <motion.h2 variants={fadeUp} className="mt-3 text-3xl font-bold text-ink sm:text-4xl">
                 Built for real repair operations
               </motion.h2>
               <motion.p variants={fadeUp} className="mt-4 text-base text-muted">
-                Clear requests, technician matching, and repair progress updates — all in one platform designed for customers and technicians.
+                Clear requests, technician matching, and repair progress updates, all in one platform designed for customers and technicians.
               </motion.p>
               <motion.div variants={fadeUp} className="mt-8 space-y-4">
                 <div className="flex items-start gap-3">
@@ -159,7 +159,7 @@ export default function HowItWorksPage() {
             <h2 className="text-2xl font-semibold">Ready to start?</h2>
             <p className="mt-1 text-sm text-white/80">Tell us what your appliance needs.</p>
           </div>
-          {/* Fixed white on a fixed `spark-500` band — see the same note on the
+          {/* Fixed white on a fixed `spark-500` band, see the same note on the
               services page CTA. Theme tokens here would invert with the page and
               leave a dark button on a blue band. */}
           <Link

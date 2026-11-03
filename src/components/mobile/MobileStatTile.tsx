@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
 /**
- * One metric, as a compact tile — the phone's half of the statistic row.
+ * One metric, as a compact tile, the phone's half of the statistic row.
  *
  * The desktop tile (`DashboardStatCard`) is generous on purpose: 20px of padding,
  * a 30px figure, a 44px icon chip and a "View details ↗" footer, because in a
@@ -16,7 +16,7 @@ import type { LucideIcon } from "lucide-react";
  * Two deliberate choices:
  *
  *   1. **The figure is `text-xl`, not `text-3xl`.** A half-width tile has about
- *      130px of inner width, and the figures are not all short — "Confirmed
+ *      130px of inner width, and the figures are not all short, "Confirmed
  *      Revenue" renders as `₱1234567`. At 30px that overflows the tile with no
  *      space to break on, so the size is set by the longest real value, not by
  *      what looks best for "8". `tabular-nums` keeps columns of digits aligned
@@ -48,7 +48,7 @@ export default function MobileStatTile({
       className="spark-card-interactive flex min-h-[96px] flex-col justify-between gap-3 p-3.5"
     >
       <span className="flex items-start justify-between gap-2">
-        <span className="text-[11px] font-semibold uppercase leading-tight tracking-[0.08em] text-muted">
+        <span className="text-xs font-semibold uppercase leading-tight tracking-[0.08em] text-muted">
           {label}
         </span>
         <span

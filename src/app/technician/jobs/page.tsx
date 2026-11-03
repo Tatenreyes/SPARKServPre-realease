@@ -29,7 +29,7 @@ export default async function TechnicianJobsPage() {
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">My jobs</h1>
-      <p className="mt-1 text-sm text-ink/65">Track and update your assigned repair jobs.</p>
+      <p className="mt-1 text-sm text-ink/70">Track and update your assigned repair jobs.</p>
       <TechnicianJobsClient
         bookings={bookings ?? []}
         requests={requests ?? []}

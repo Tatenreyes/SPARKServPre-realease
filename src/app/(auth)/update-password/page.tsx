@@ -10,7 +10,7 @@ import {
 } from "@/lib/auth/recovery";
 
 export const metadata = {
-  title: "Choose a new password — SPARKServ",
+  title: "Choose a new password, SPARKServ",
   description: "Set a new password for your SPARKServ account.",
 };
 
@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
  * The destination of a recovery link, and the only screen that can change a
  * password without the old one.
  *
- * The check happens here, on the server, before any form is rendered — not in
+ * The check happens here, on the server, before any form is rendered, not in
  * the client component, and not by trusting a query parameter:
  *
  *   - arriving from `/auth/callback` leaves the httpOnly recovery marker cookie
@@ -32,8 +32,7 @@ export const dynamic = "force-dynamic";
  *   - typing the URL directly (or reopening a used link, or waiting out the
  *     marker) fails the gate, and the visitor gets the panel below instead.
  *
- * Nothing about the account is read here — no profile row, no role, no email —
- * so this page cannot be used to discover anything about a user, and it changes
+ * Nothing about the account is read here, no profile row, no role, no email, * so this page cannot be used to discover anything about a user, and it changes
  * nothing except the password of the session that opened it.
  */
 export default async function UpdatePasswordPage() {
@@ -42,7 +41,7 @@ export default async function UpdatePasswordPage() {
   return (
     <AuthShell
       headline="Choose a new password."
-      subhead="Pick something you haven't used before — you'll need it the next time you log in."
+      subhead="Pick something you haven't used before, you'll need it the next time you log in."
     >
       {allowed ? <UpdatePasswordForm /> : <RecoveryLinkInvalid />}
     </AuthShell>
@@ -59,7 +58,7 @@ function RecoveryLinkInvalid() {
       <h1 className="mt-5 font-display text-2xl font-bold leading-tight text-ink">
         This link can&apos;t be used
       </h1>
-      <p className="mt-2 text-sm leading-relaxed text-ink/60">{RECOVERY_SESSION_MISSING_MESSAGE}</p>
+      <p className="mt-2 text-sm leading-relaxed text-ink/70">{RECOVERY_SESSION_MISSING_MESSAGE}</p>
 
       <Link
         href={FORGOT_PASSWORD_PATH}
@@ -69,7 +68,7 @@ function RecoveryLinkInvalid() {
         Request a new link
       </Link>
 
-      <p className="mt-6 text-center text-sm text-ink/60">
+      <p className="mt-6 text-center text-sm text-ink/70">
         <Link
           href={LOGIN_PATH}
           className="inline-flex items-center gap-1.5 font-semibold text-brand-ink underline-offset-2 transition-colors hover:underline"

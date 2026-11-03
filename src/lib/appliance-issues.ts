@@ -7,7 +7,7 @@
  *     return an issue that exists here, and
  *   * the troubleshooting guides (`src/lib/troubleshooting.ts`), keyed by these ids.
  *
- * Every entry is an issue SPARKServ already supported — this file introduces no
+ * Every entry is an issue SPARKServ already supported, this file introduces no
  * new faults, it only gives each existing one a stable identifier. The `label` is
  * the exact string the form used before, so `service_requests.issue_category`
  * (and every screen that reads it) keeps working unchanged.
@@ -15,7 +15,7 @@
  * ## Adding an appliance or an issue
  *   1. add `{ id, label }` to the appliance's list below (or add the appliance),
  *   2. add its approved synonyms in `issue-matching.ts`,
- *   3. add its guide in `troubleshooting.ts` (or leave it out deliberately — the
+ *   3. add its guide in `troubleshooting.ts` (or leave it out deliberately, the
  *      form then says no guide is available instead of inventing one).
  *
  * `id` must be stable: it is persisted in `service_requests.issue_id`, so renaming
@@ -23,7 +23,7 @@
  */
 
 export interface ApplianceIssue {
-  /** Stable identifier, e.g. "not-cooling". Persisted — never rename casually. */
+  /** Stable identifier, e.g. "not-cooling". Persisted, never rename casually. */
   id: string;
   /** Customer-facing label, e.g. "Not cooling". */
   label: string;
@@ -161,7 +161,7 @@ export function applianceSlug(applianceType: string): string {
 
 /**
  * The issues the customer may pick for this appliance. Returns an empty array for
- * an unknown appliance — the caller shows an empty state rather than falling back
+ * an unknown appliance, the caller shows an empty state rather than falling back
  * to another appliance's list, which is how a stale issue used to stay selectable.
  */
 export function getApplianceIssues(applianceType: string): ApplianceIssue[] {

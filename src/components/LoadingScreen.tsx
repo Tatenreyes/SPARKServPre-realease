@@ -8,7 +8,7 @@ interface LoadingScreenProps {
 }
 
 /**
- * The full-screen "something is happening" overlay — sign-in, sign-out, account
+ * The full-screen "something is happening" overlay, sign-in, sign-out, account
  * creation.
  *
  * Three concentric layers: a static ring, a sweeping arc on top of it, and the
@@ -22,7 +22,7 @@ interface LoadingScreenProps {
  *   clearance each side
  *
  * It used to be 36 + 36 + 32 + 12px of gaps = 116px of icons inside an 80px
- * badge and a 112px ring — so the appliances hung over the edge of the badge and
+ * badge and a 112px ring, so the appliances hung over the edge of the badge and
  * past the spinner, which read as a rendering bug rather than a logo. If these
  * icons change again, keep the row narrower than the badge.
  *
@@ -30,8 +30,7 @@ interface LoadingScreenProps {
  * slowed): the badge sits still instead of wobbling while the person waits.
  *
  * The live region wraps the message as well as the dots. It used to sit on the
- * dots alone, so "Signing you out..." — the only part that carries information —
- * was never announced, and an empty progress bar was all a screen reader got.
+ * dots alone, so "Signing you out...", the only part that carries information, * was never announced, and an empty progress bar was all a screen reader got.
  */
 export default function LoadingScreen({ message = "Please wait..." }: LoadingScreenProps) {
   const reduceMotion = useReducedMotion();

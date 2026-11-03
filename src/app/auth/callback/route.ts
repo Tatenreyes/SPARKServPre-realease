@@ -20,22 +20,21 @@ import {
  * Supabase emails a link that lands on its own domain; the browser is then sent
  * here, and this route does the part that must happen on the server:
  *
- *   1. `exchangeCodeForSession(code)` — the PKCE exchange. The code is useless
+ *   1. `exchangeCodeForSession(code)`, the PKCE exchange. The code is useless
  *      without the code-verifier cookie that `resetPasswordForEmail` wrote in
  *      the browser that requested the email, so a link forwarded to someone
  *      else's machine fails here rather than at the password form.
  *      (`token_hash` + `type=recovery` is the equivalent path for a project
- *      whose email template links straight at the app — see README §3.)
+ *      whose email template links straight at the app, see README §3.)
  *   2. It writes the session cookies onto the redirect response.
- *   3. Only on success does it mint the httpOnly recovery marker — a signed
+ *   3. Only on success does it mint the httpOnly recovery marker, a signed
  *      payload naming *this* user and *this* session (see
  *      `src/lib/auth/recovery-marker.ts`), so the authorization it grants dies
- *      with the session it was issued for — and redirect to /update-password.
+ *      with the session it was issued for, and redirect to /update-password.
  *
  * A refused or expired link never reaches /update-password: the visitor is
  * bounced to /forgot-password with a generic notice, and no marker cookie is
- * written. Nothing on this path logs the code, the token hash or the session —
- * the only output is the redirect.
+ * written. Nothing on this path logs the code, the token hash or the session, * the only output is the redirect.
  */
 export const dynamic = "force-dynamic";
 
@@ -84,8 +83,8 @@ export async function GET(request: NextRequest) {
       : await supabase.auth.verifyOtp({ type: "recovery", token_hash: plan.tokenHash });
 
   /**
-   * The marker is minted from what GoTrue returned for *this* exchange — never
-   * from anything in the query string — and names both the user and the session,
+   * The marker is minted from what GoTrue returned for *this* exchange, never
+   * from anything in the query string, and names both the user and the session,
    * so it is bound to this recovery and dies with it. `createRecoveryMarker`
    * returns null when it cannot be built (no signing secret, no user, no session
    * id), and a null marker is treated as a refused link below rather than as a

@@ -55,15 +55,23 @@ import type { ApplianceRow, AssignmentStatus } from "@/types/database";
 import type { TechnicianProfile } from "@/lib/technician-profile";
 
 /**
- * One control size for the whole form: 44px tall, 16px text on a phone.
+ * One control size and one colour recipe for the whole form: 44px tall, 16px text
+ * on a phone.
  *
- * 16px is not a style choice — iOS Safari zooms the entire viewport when a
+ * 16px is not a style choice, iOS Safari zooms the entire viewport when a
  * focused input is smaller than 16px, which on a form this long means the
  * customer is pinching back out after every field. It drops to 15px/14px from
  * `sm` up, where the zoom never happens.
+ *
+ * `text-ink` and `placeholder:text-ink/50`, deliberately NOT `text-white`, which
+ * is what this used to be. The field sits on `bg-surface`, which is #FFFFFF in light
+ * mode, so white text on it was invisible: a customer could not read what they were
+ * typing into the repair request unless their device happened to be in dark mode.
+ * Every colour here is a theme token, so one definition gives a readable field in
+ * both themes.
  */
 const FIELD =
-  "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-base text-white placeholder:text-white sm:text-sm";
+  "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-base text-ink placeholder:text-ink/50 transition-colors duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 sm:text-sm";
 
 /** Section identity, used for the collapsible state map. */
 type SectionKey = "appliance" | "problem" | "photos" | "service" | "summary";
@@ -72,7 +80,7 @@ type SectionKey = "appliance" | "problem" | "photos" | "service" | "summary";
  * Every section starts expanded, and there is deliberately no "collapse all".
  *
  * A collapsed section can still hold an empty `required` control, and a browser
- * cannot focus or scroll to one it cannot see — it abandons the submit with no
+ * cannot focus or scroll to one it cannot see, it abandons the submit with no
  * message at all. So collapsing is a reading aid the customer opts into, and both
  * the submit handler and the invalid-event handler below re-expand everything
  * before validation is allowed to speak.
@@ -88,7 +96,7 @@ const ALL_SECTIONS_OPEN: Record<SectionKey, boolean> = {
 /**
  * The appliance list and the brand choices now come from
  * `src/lib/appliance-brands.ts`, which derives the appliances from the canonical
- * issue catalogue. They used to be re-typed here — and the brand table here
+ * issue catalogue. They used to be re-typed here, and the brand table here
  * covered only three appliances, so every other appliance's Brand field offered
  * nothing but "Other" (see that module's header).
  */
@@ -109,7 +117,7 @@ export default function RequestRepairWizard() {
   const [offersExpiresAt, setOffersExpiresAt] = useState<string | null>(null);
   const [assignmentPending, setAssignmentPending] = useState(false);
   // `false` only when the API asked the database and it said nobody qualifies for this
-  // appliance — see `customerAssignmentCopy`. `null` means we do not know.
+  // appliance, see `customerAssignmentCopy`. `null` means we do not know.
   const [qualifiedTechnicianAvailable, setQualifiedTechnicianAvailable] = useState<
     boolean | null
   >(null);
@@ -120,7 +128,7 @@ export default function RequestRepairWizard() {
    *
    * Kept separate from `otherBrand` so choosing "Other" never destroys a name the
    * customer already typed, and so what gets stored is the real word rather than
-   * the literal "Other" — which is what every appliance outside the old
+   * the literal "Other", which is what every appliance outside the old
    * three-entry brand table ended up recording.
    */
   const [brand, setBrand] = useState("");
@@ -145,7 +153,7 @@ export default function RequestRepairWizard() {
    * must never silently discard an issue the customer chose themselves.
    */
   const [confirmedIssueId, setConfirmedIssueId] = useState<string | null>(null);
-  /** The customer rejected the current suggestion — do not nag them again. */
+  /** The customer rejected the current suggestion, do not nag them again. */
   const [suggestionDismissed, setSuggestionDismissed] = useState(false);
   /** What the customer reported after the checks. Optional, always. */
   const [troubleshootingOutcome, setTroubleshootingOutcome] =
@@ -158,7 +166,7 @@ export default function RequestRepairWizard() {
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   /**
    * The warranty acknowledgment (§13). Only required when the customer says the
-   * appliance IS under warranty, and it blocks submission until ticked — the
+   * appliance IS under warranty, and it blocks submission until ticked, the
    * phrasing is a statement of understanding, never a waiver of rights.
    */
   const [warrantyAcknowledged, setWarrantyAcknowledged] = useState(false);
@@ -168,7 +176,7 @@ export default function RequestRepairWizard() {
   /**
    * The customer's previous service location, reused rather than retyped (§16/§30).
    *
-   * Read from their own most recent request — there is no separate saved-address
+   * Read from their own most recent request, there is no separate saved-address
    * table in the schema, and inventing one would be a business-logic change. RLS
    * limits the query to rows the customer already owns, and both the written
    * address and the map pin are carried across, so a returning customer does not
@@ -209,7 +217,7 @@ export default function RequestRepairWizard() {
     warrantyStatus === "yes"
       ? warrantyAcknowledged
         ? "Under warranty (notice acknowledged)"
-        : "Under warranty — notice not yet acknowledged"
+        : "Under warranty, notice not yet acknowledged"
       : warrantyStatus === "no"
         ? "Not under warranty"
         : "Not sure";
@@ -224,13 +232,13 @@ export default function RequestRepairWizard() {
   /**
    * One source for the troubleshooting outcome, shared by the request-summary
    * section and the desktop rail. Empty when the customer never reached the
-   * checks — the summaries render their own placeholder for that.
+   * checks, the summaries render their own placeholder for that.
    */
   const outcomeText =
     troubleshootingOutcome === "resolved"
       ? "Customer reports it worked"
       : troubleshootingOutcome === "unresolved"
-        ? "Problem remains — technician needed"
+        ? "Problem remains, technician needed"
         : troubleshootingOutcome === "skipped"
           ? "Skipped"
           : "";
@@ -238,7 +246,7 @@ export default function RequestRepairWizard() {
   /**
    * Did troubleshooting solve it? Then there is nothing to dispatch, and the booking
    * half of this form is not rendered at all (sections 3-5 below): a fault that is gone
-   * needs no photos, no service address and no appointment — and creating the request
+   * needs no photos, no service address and no appointment, and creating the request
    * anyway would put a technician in the queue for work that no longer exists,
    * consuming a turn in the fairness rotation for a visit nobody needs.
    *
@@ -246,7 +254,7 @@ export default function RequestRepairWizard() {
    * hold a `required` control, and a browser cannot focus or scroll to one it cannot
    * see (see ALL_SECTIONS_OPEN).
    *
-   * `unresolved` and `skipped` both continue to the full form — trying the checks and
+   * `unresolved` and `skipped` both continue to the full form, trying the checks and
    * still having a fault is the ordinary outcome, not a failure.
    */
   const needsVisit = troubleshootingOutcome !== "resolved";
@@ -260,7 +268,7 @@ export default function RequestRepairWizard() {
    */
   const troubleshootingResolved = troubleshootingOutcome === "resolved";
 
-  /** Empty string (not "No preference") when unscheduled — the rail renders its
+  /** Empty string (not "No preference") when unscheduled, the rail renders its
    *  own placeholder for an untouched field. */
   const scheduleText = preferredDate
     ? `${new Date(`${preferredDate}T00:00:00`).toLocaleDateString("en-US", {
@@ -269,8 +277,8 @@ export default function RequestRepairWizard() {
         year: "numeric",
       })}${
         preferredStart && preferredEnd
-          ? `, ${preferredStart}–${preferredEnd} (PH time)`
-          : " — time to be agreed"
+          ? `, ${preferredStart} ${preferredEnd} (PH time)`
+          : ", time to be agreed"
       }`
     : "";
 
@@ -288,7 +296,7 @@ export default function RequestRepairWizard() {
   /** Explicitly selected by the customer, or a suggestion they confirmed. */
   const identifiedIssueId = selectedIssueId || confirmedIssueId || "";
   const identifiedIssue = getIssueById(applianceType, identifiedIssueId);
-  /** The guide for the identified issue — null when none exists. */
+  /** The guide for the identified issue, null when none exists. */
   const troubleshootingGuide = getTroubleshootingGuide(applianceType, identifiedIssueId);
 
   /**
@@ -384,7 +392,7 @@ export default function RequestRepairWizard() {
     setTroubleshootingOutcome(null);
   }, [applianceType]);
 
-  /** The customer picked an issue from the list — that IS the identification. */
+  /** The customer picked an issue from the list, that IS the identification. */
   function handleIssueSelect(issueId: string) {
     setSelectedIssueId(issueId);
     setConfirmedIssueId(null);
@@ -407,8 +415,8 @@ export default function RequestRepairWizard() {
   }
 
   /**
-   * Description edits invalidate a *detected* match — the confirmation described
-   * text that no longer exists — and the outcome that went with it. An issue the
+   * Description edits invalidate a *detected* match, the confirmation described
+   * text that no longer exists, and the outcome that went with it. An issue the
    * customer selected themselves is their own decision and is kept, and the
    * description itself is never rewritten.
    */
@@ -474,14 +482,13 @@ export default function RequestRepairWizard() {
 
     /**
      * Defence in depth for the resolved case. When troubleshooting fixed the fault the
-     * booking half of this form is not rendered, so its fields are empty by definition —
-     * and the appliance insert runs before the request POST, which would leave a stray
+     * booking half of this form is not rendered, so its fields are empty by definition, * and the appliance insert runs before the request POST, which would leave a stray
      * appliance row behind. The submit button is not reachable in that state; this makes
      * the guarantee hold for a programmatic submit as well.
      */
     if (!needsVisit) {
       setError(
-        "Nothing was booked — you told us the checks fixed the problem. If the fault is back, say so and we will continue."
+        "Nothing was booked, you told us the checks fixed the problem. If the fault is back, say so and we will continue."
       );
       setSubmitting(false);
       return;
@@ -491,7 +498,7 @@ export default function RequestRepairWizard() {
      * The warranty acknowledgment is a hard gate, and it is enforced here as well
      * as on the disabled button so a keyboard or programmatic submit cannot walk
      * past it. Wording matters: the customer is acknowledging that they were told
-     * non-authorised work may affect coverage — they are not waiving anything.
+     * non-authorised work may affect coverage, they are not waiving anything.
      */
     if (warrantyStatus === "yes" && !warrantyAcknowledged) {
       setError(
@@ -516,7 +523,7 @@ export default function RequestRepairWizard() {
     }
 
     // A pin that was placed but never confirmed is a deliberate state, not an
-    // oversight — say so instead of quietly submitting the request without it.
+    // oversight, say so instead of quietly submitting the request without it.
     if (locationUnconfirmed) {
       setError(
         "Confirm the location you pinned on the map (or clear the pin) before submitting your request."
@@ -569,7 +576,7 @@ export default function RequestRepairWizard() {
         applianceId = selectedExistingId;
       } else {
         // Two NOT NULL columns were missing from this payload, so "create a new
-        // appliance" could never succeed — the insert was refused before it ever
+        // appliance" could never succeed, the insert was refused before it ever
         // reached the API:
         //   * `customer_id` is also the RLS policy's WITH CHECK
         //     (`customer_id = auth.uid()`), so omitting it fails twice over:
@@ -609,7 +616,7 @@ export default function RequestRepairWizard() {
         body: JSON.stringify({
           appliance_id: applianceId,
           appliance_type: applianceType,
-          // Only an IDENTIFIED issue is persisted — one the customer chose, or a
+          // Only an IDENTIFIED issue is persisted, one the customer chose, or a
           // suggestion they explicitly confirmed. A candidate the system merely
           // detected is never written as though they had confirmed it.
           issue_category: identifiedIssue?.label ?? null,
@@ -645,7 +652,7 @@ export default function RequestRepairWizard() {
         // so a schema problem reads as "42703: column ... does not exist"
         // instead of an unexplained failure.
         const detail = json.detail?.message
-          ? ` — ${json.detail.code ?? "error"}: ${json.detail.message}`
+          ? `, ${json.detail.code ?? "error"}: ${json.detail.message}`
           : "";
         throw new Error((json.error ?? "Failed to submit request") + detail);
       }
@@ -713,7 +720,7 @@ export default function RequestRepairWizard() {
   /**
    * Troubleshooting solved it: no request was sent, nothing was booked, and no appliance
    * row was created. The customer's answers are still in state, so "it came back"
-   * restores the whole form exactly as they left it — which matters, because an
+   * restores the whole form exactly as they left it, which matters, because an
    * intermittent fault (a fridge that defrosted overnight) is a common reason to answer
    * "that fixed it". The wording therefore never claims the appliance was repaired.
    */
@@ -723,21 +730,21 @@ export default function RequestRepairWizard() {
         {/* `spark-signal-card` is not decoration: it is the opt-in that keeps this card's
             copy dark on the pale signal surface inside the reference palette (see
             globals.css). Without it the title inherits the palette's near-white `text-ink`
-            and disappears into the mint — the submitted card above carries it for exactly
+            and disappears into the mint, the submitted card above carries it for exactly
             the same reason. */}
         <div className="spark-signal-card rounded-2xl border border-line bg-signal-soft p-8 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-signal-500 text-white">
             <CheckCircle2 className="h-7 w-7" />
           </div>
           <h2 className="mt-4 font-display text-xl font-semibold text-ink">
-            Nothing to book — the checks did the trick
+            Nothing to book, the checks did the trick
           </h2>
           <p className="mt-2 text-sm text-muted">
             You told us the preliminary checks fixed it, so no repair request was sent and
             no technician has been booked. Nothing you entered has been lost.
           </p>
           <p className="mx-auto mt-3 max-w-lg text-xs leading-relaxed text-muted">
-            If the fault comes back — or it only seems better for now — say so and we will
+            If the fault comes back, or it only seems better for now, say so and we will
             pick up exactly where you left off.
           </p>
           <div className="mt-6 flex flex-col items-center justify-center gap-2 sm:flex-row">
@@ -746,7 +753,7 @@ export default function RequestRepairWizard() {
               onClick={() => setTroubleshootingOutcome("unresolved")}
               className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
             >
-              It came back — request a visit
+              It came back, request a visit
             </button>
             <button
               type="button"
@@ -774,7 +781,7 @@ export default function RequestRepairWizard() {
       {/* The route header owns the title; only the workflow note stays here so
           the form starts higher on the page. */}
       <p className="text-sm leading-relaxed text-muted">
-        One form, start to finish — nothing is submitted until you press the
+        One form, start to finish, nothing is submitted until you press the
         button at the end. We&apos;ll match you with a qualified technician.
       </p>
 
@@ -833,7 +840,7 @@ export default function RequestRepairWizard() {
                   ))}
                 </select>
                 <p className="mt-2 text-xs leading-relaxed text-muted">
-                  Its type, brand, model and warranty details are copied in — you
+                  Its type, brand, model and warranty details are copied in, you
                   only need to describe the new problem.
                 </p>
               </>
@@ -877,7 +884,7 @@ export default function RequestRepairWizard() {
                 Brand *
               </label>
               {/* Nothing to choose from until an appliance is picked, so the
-                  picker waits rather than showing an "Other"-only list — the very
+                  picker waits rather than showing an "Other"-only list, the very
                   symptom this change removes. A disabled control is also skipped
                   by the browser's validation, which is safe here because the
                   appliance itself is required and comes first. */}
@@ -1029,7 +1036,7 @@ export default function RequestRepairWizard() {
             </div>
 
             {/* Warranty notice (§13). This is an acknowledgment of information
-                given, NOT a waiver — the customer keeps every right they have,
+                given, NOT a waiver, the customer keeps every right they have,
                 and the wording and the checkbox both say so. */}
             <div className="rounded-xl border border-warn-ink/25 bg-warn-soft p-4">
               <div className="flex items-start gap-3">
@@ -1043,7 +1050,7 @@ export default function RequestRepairWizard() {
                     manufacturer, seller or other warranty. Using a service provider
                     that is not authorised by the warranty issuer may affect that
                     coverage, depending on the applicable warranty terms. Nothing here
-                    waives any right you have — it records that this was explained to
+                    waives any right you have, it records that this was explained to
                     you before you decided to proceed.
                   </p>
                 </div>
@@ -1095,13 +1102,13 @@ export default function RequestRepairWizard() {
           >
             What problem are you experiencing?
           </p>
-          {/* The one picker. This catalogue used to appear twice — as a <select> here and
-              again as six chips inside the troubleshooting panel — with a different set of
+          {/* The one picker. This catalogue used to appear twice, as a <select> here and
+              again as six chips inside the troubleshooting panel, with a different set of
               members in each ("Other" only here, "Not defrosting" only there). Chips rather
               than a select: five to ten issues fit two rows on a phone, and a tapped chip
               is a visible answer, where a collapsed native picker hides the catalogue
               behind a tap that shows nothing. (The appliance list in step 1 keeps its
-              <select> — that one runs past twenty entries.) */}
+              <select>, that one runs past twenty entries.) */}
           <div
             role="group"
             aria-labelledby="problem-category-label"
@@ -1143,13 +1150,13 @@ export default function RequestRepairWizard() {
             rows={5}
             required
             className={FIELD}
-            placeholder="Tell us what happened — when it started, any sounds, smells, error codes or recent changes."
+            placeholder="Tell us what happened, when it started, any sounds, smells, error codes or recent changes."
           />
         </div>
 
         {/* Inline troubleshooting: only ever for an issue that has actually been
             identified, never merely because an appliance was selected. The panel gets no
-            issue list of its own — the chips above are the one place a fault is chosen. */}
+            issue list of its own, the chips above are the one place a fault is chosen. */}
         <TroubleshootingPanel
           applianceType={applianceType}
           match={issueMatch}
@@ -1177,8 +1184,8 @@ export default function RequestRepairWizard() {
         onToggle={() => toggleSection("photos")}
       >
         {/* Two pickers rather than one. `capture="environment"` opens the rear
-            camera directly on a phone — which is the whole point of asking for
-            evidence at the machine — while the second opens the photo library for
+            camera directly on a phone, which is the whole point of asking for
+            evidence at the machine, while the second opens the photo library for
             anything already taken. Neither is `required`: a customer who cannot
             photograph the unit must still be able to submit. */}
         <div className="grid gap-3 sm:grid-cols-2">
@@ -1372,7 +1379,7 @@ export default function RequestRepairWizard() {
               Preferred time window{" "}
               <span className="font-normal text-muted">(optional)</span>
             </p>
-            {/* A range, so two pickers — and the end only offers times that can follow the
+            {/* A range, so two pickers, and the end only offers times that can follow the
                 start: `readRequestedWindow()` drops a window whose end is not strictly
                 later, silently, so an invalid pair would vanish without a word. */}
             <div className="grid gap-3 sm:grid-cols-2">
@@ -1400,7 +1407,7 @@ export default function RequestRepairWizard() {
 
         <p className="mt-2 text-xs leading-relaxed text-muted">
           Times are Philippine time (GMT+8). Leave the window blank if any time that day
-          works — only technicians free in your window are offered the job, and you
+          works, only technicians free in your window are offered the job, and you
           confirm the exact slot before the visit.
         </p>
 
@@ -1434,8 +1441,8 @@ export default function RequestRepairWizard() {
         className="xl:hidden"
       >
         <dl className="grid gap-3 sm:grid-cols-2">
-          <SummaryRow label="Appliance" value={applianceType || "—"} />
-          <SummaryRow label="Brand" value={effectiveBrand || "—"} />
+          <SummaryRow label="Appliance" value={applianceType || "N/A"} />
+          <SummaryRow label="Brand" value={effectiveBrand || "N/A"} />
           {modelNumber && <SummaryRow label="Model Number" value={modelNumber} />}
           {serialNumber && <SummaryRow label="Serial Number" value={serialNumber} />}
           <SummaryRow
@@ -1455,7 +1462,7 @@ export default function RequestRepairWizard() {
             label={
               serviceType === "pickup_return" ? "Pickup address" : "Service Address"
             }
-            value={serviceAddress || "—"}
+            value={serviceAddress || "N/A"}
           />
           <SummaryRow
             label="Map Location"
@@ -1463,8 +1470,8 @@ export default function RequestRepairWizard() {
               serviceCoordinates
                 ? formatCoordinates(serviceCoordinates)
                 : locationUnconfirmed
-                  ? "Pin not confirmed — confirm or clear it"
-                  : "No pin placed — using the written address"
+                  ? "Pin not confirmed, confirm or clear it"
+                  : "No pin placed, using the written address"
             }
           />
           <SummaryRow
@@ -1476,7 +1483,7 @@ export default function RequestRepairWizard() {
             value={
               photos.length
                 ? `${photos.length} attached`
-                : "None — optional"
+                : "None, optional"
             }
           />
         </dl>
@@ -1488,7 +1495,7 @@ export default function RequestRepairWizard() {
       </CollapsibleSection>
       )}
 
-          {/* The single desktop submission control — inline at the end of the
+          {/* The single desktop submission control, inline at the end of the
               main form column, sharing state with the phone bar below (each is
               gated to its own breakpoint, so only one can ever be pressed). */}
           <div className="hidden md:block">
@@ -1511,10 +1518,10 @@ export default function RequestRepairWizard() {
         {/* /main form column */}
 
         {/* Live request summary rail (desktop only, ≥1280px). Read-only and
-            built from the same state as the form above — no inputs and no
+            built from the same state as the form above, no inputs and no
             submit here, so it cannot become a second form. `sticky top-24`
             (96px) keeps it below the topbar while the form scrolls, and 96px is
-            the taller of the bar's two heights — 64px, or 64px plus the 32px
+            the taller of the bar's two heights, 64px, or 64px plus the 32px
             platform-announcement strip. */}
         <aside aria-label="Request summary" className="hidden xl:block">
           <div className="sticky top-24 space-y-4">
@@ -1595,8 +1602,7 @@ export default function RequestRepairWizard() {
         </aside>
       </div>
 
-      {/* Primary action. On a phone it is pinned to the bottom of the screen —
-          the form is long and the button should never be a scroll away. */}
+      {/* Primary action. On a phone it is pinned to the bottom of the screen, the form is long and the button should never be a scroll away. */}
       <div className="spark-sticky-action md:hidden">
         <button
           type="submit"
@@ -1651,12 +1657,12 @@ function LiveRow({
   return (
     <div className="flex items-center justify-between gap-3 py-2.5">
       <dt className="flex min-w-0 items-center gap-2 text-xs text-muted">
-        <Icon className="h-3.5 w-3.5 shrink-0 text-muted/80" aria-hidden="true" />
+        <Icon className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" />
         <span className="truncate">{label}</span>
       </dt>
       <dd
         className={`min-w-0 break-words text-right text-xs font-semibold ${
-          value ? "text-ink" : "text-muted/60"
+          value ? "text-ink" : "text-muted"
         }`}
       >
         {value || placeholder}

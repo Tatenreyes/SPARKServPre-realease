@@ -31,7 +31,7 @@ export default async function RepairHistoryPage() {
   // `bookings.estimate_id` names that exact version when the customer booked it
   // themselves, and an administrator-scheduled booking falls back to the request's
   // current approval. This is the half of the move that `/customer/estimates` gave up
-  // when the repair completed — the quote is not lost, it changed pages.
+  // when the repair completed, the quote is not lost, it changed pages.
   const historyBookingIds = (history ?? []).map((entry) => entry.booking_id);
   const { data: historyBookings } = historyBookingIds.length
     ? await supabase
@@ -53,7 +53,7 @@ export default async function RepairHistoryPage() {
 
   /**
    * The approved estimate a finished repair was agreed at, or `null` when there is
-   * none — a card then shows the final cost alone rather than inventing a quote.
+   * none, a card then shows the final cost alone rather than inventing a quote.
    */
   function approvedEstimateFor(bookingId: string): EstimateRow | null {
     const booking = historyBookingById.get(bookingId);
@@ -81,14 +81,14 @@ export default async function RepairHistoryPage() {
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">Repair history</h1>
-      <p className="mt-1 text-sm text-ink/65">Every repair you&apos;ve completed through SPARKServ.</p>
+      <p className="mt-1 text-sm text-ink/70">Every repair you&apos;ve completed through SPARKServ.</p>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SummaryCard icon={<Wrench className="h-4 w-4" />} label="Total Repairs" value={String(totalRepairs)} />
         <SummaryCard
           icon={<Star className="h-4 w-4" />}
           label="Avg. Rating"
-          value={avgRating != null ? `${avgRating.toFixed(1)}/5` : "—"}
+          value={avgRating != null ? `${avgRating.toFixed(1)}/5` : "N/A"}
         />
         <SummaryCard
           icon={<Wallet className="h-4 w-4" />}
@@ -98,30 +98,30 @@ export default async function RepairHistoryPage() {
         <SummaryCard
           icon={<CalendarClock className="h-4 w-4" />}
           label="Last Service"
-          value={lastService ? new Date(lastService).toLocaleDateString() : "—"}
+          value={lastService ? new Date(lastService).toLocaleDateString() : "N/A"}
         />
       </div>
 
       {!history?.length ? (
-        <p className="mt-8 text-sm text-ink/50">No completed repairs yet.</p>
+        <p className="mt-8 text-sm text-ink/70">No completed repairs yet.</p>
       ) : (
         <div className="mt-8 space-y-3">
           {history.map((h) => {
             const rating = ratingByBooking.get(h.booking_id);
             return (
-              <div key={h.id} className="rounded-card border border-ink/8 bg-surface p-4 shadow-card">
+              <div key={h.id} className="rounded-card border border-line bg-surface p-4 shadow-card">
                 <div className="flex items-center justify-between">
                   <p className="font-medium capitalize text-ink">
                     {h.appliance_type.replace(/_/g, " ")}
                   </p>
-                  <p className="text-xs text-ink/50">
+                  <p className="text-xs text-ink/70">
                     {new Date(h.completed_at).toLocaleDateString()}
                   </p>
                 </div>
                 {h.final_cost != null && (
-                  <p className="mt-1 text-sm text-ink/65">Cost: ₱{h.final_cost.toFixed(2)}</p>
+                  <p className="mt-1 text-sm text-ink/70">Cost: ₱{h.final_cost.toFixed(2)}</p>
                 )}
-                {h.summary && <p className="mt-1 text-sm text-ink/50">{h.summary}</p>}
+                {h.summary && <p className="mt-1 text-sm text-ink/70">{h.summary}</p>}
 
                 <ApprovedEstimate estimate={approvedEstimateFor(h.booking_id)} />
 
@@ -144,7 +144,7 @@ export default async function RepairHistoryPage() {
                       ))}
                     </span>
                     {rating.comment && (
-                      <p className="mt-1 text-xs text-ink/60">{rating.comment}</p>
+                      <p className="mt-1 text-xs text-ink/70">{rating.comment}</p>
                     )}
                   </div>
                 ) : (
@@ -171,7 +171,7 @@ export default async function RepairHistoryPage() {
  * This is where a completed repair's estimate lives now: it left
  * `/customer/estimates` the moment the repair finished, because a finished job has
  * nothing left to review and keeping the quote there made completed work look open.
- * Read-only by design — there is nothing to approve, decline or schedule here.
+ * Read-only by design, there is nothing to approve, decline or schedule here.
  */
 function ApprovedEstimate({ estimate }: { estimate: EstimateRow | null }) {
   if (!estimate) return null;
@@ -228,8 +228,8 @@ function SummaryCard({
   value: string;
 }) {
   return (
-    <div className="rounded-card border border-ink/8 bg-surface p-3 shadow-card">
-      <div className="flex items-center gap-1.5 text-ink/40">
+    <div className="rounded-card border border-line bg-surface p-3 shadow-card">
+      <div className="flex items-center gap-1.5 text-ink/70">
         {icon}
         <span className="text-xs">{label}</span>
       </div>

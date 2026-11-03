@@ -48,7 +48,7 @@ export default function RequestDetailClient({
 
   return (
     <div className="space-y-8">
-      <div className="rounded-card border border-ink/8 p-4">
+      <div className="rounded-card border border-line p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold capitalize text-ink">
             {request.appliance_type.replace(/_/, " ")} repair request
@@ -58,7 +58,7 @@ export default function RequestDetailClient({
         {request.issue_category && (
           <p className="mt-2 text-sm font-medium text-brand-ink">{request.issue_category.replace(/_/, " ")}</p>
         )}
-        <p className="mt-2 text-sm text-ink/65">{request.problem_description}</p>
+        <p className="mt-2 text-sm text-ink/70">{request.problem_description}</p>
         <RequestedWindow
           start={request.requested_window_start}
           end={request.requested_window_end}
@@ -99,7 +99,7 @@ export default function RequestDetailClient({
       <section>
         <h2 className="mb-3 text-lg font-semibold text-ink">Estimate</h2>
         {!currentEstimate ? (
-          <p className="text-sm text-ink/50">
+          <p className="text-sm text-ink/70">
             {request.assignment_status === "accepted"
               ? "Your technician hasn't sent an estimate yet."
               : "An estimate will appear here once a technician has accepted this request."}
@@ -159,7 +159,7 @@ function RequestedWindow({
   return (
     <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-ink/70">
       <CalendarClock className="h-3.5 w-3.5 shrink-0" />
-      {label ? <span>You asked for {label}</span> : <span>Any time works — you agree the slot with your technician</span>}
+      {label ? <span>You asked for {label}</span> : <span>Any time works, you agree the slot with your technician</span>}
     </p>
   );
 }

@@ -1,7 +1,7 @@
 /**
  * Shared skeleton for the server-rendered dashboards. Each role's
  * `loading.tsx` renders this so navigating between dashboard routes shows
- * structure instead of a blank flash — see
+ * structure instead of a blank flash, see
  * `design-system/sparkserv/pages/dashboard.md` ("use skeleton screens").
  *
  * The geometry mirrors the real dashboard (greeting band, stat row, then the

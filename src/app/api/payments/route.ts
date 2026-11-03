@@ -2,9 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 
-// POST /api/payments — customer submits a GCash payment reference for their own booking.
+// POST /api/payments, customer submits a GCash payment reference for their own booking.
 // Per re-defense feedback: only the customer can do this. Technicians never submit
-// payment proof — enforced here and by RLS.
+// payment proof, enforced here and by RLS.
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     // GCash references are digits (with occasional dashes/spaces). Validating
     // strictly matters here because the value is interpolated into a PostgREST
-    // filter below — a stray comma or parenthesis would otherwise let the
+    // filter below, a stray comma or parenthesis would otherwise let the
     // caller rewrite that query.
     const reference = String(gcash_reference).trim();
     if (!/^[A-Za-z0-9-]{6,32}$/.test(reference)) {
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     // The technician records `final_cost` when marking the repair complete. A
     // legacy booking may still have it null, so fall back to the accepted
-    // estimate — the same amount the customer dashboard shows — and persist it.
+    // estimate, the same amount the customer dashboard shows, and persist it.
     let amountDue = booking.final_cost;
     if (amountDue == null) {
       const { data: acceptedEstimate } = await supabase
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/payments?booking_id=... — customer sees their own, admin sees any
+// GET /api/payments?booking_id=..., customer sees their own, admin sees any
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();

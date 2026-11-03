@@ -8,16 +8,16 @@ type TrackingStep = {
   key: string;
   label: string;
   done: boolean;
-  /** ISO timestamp — only set for transitions the schema actually records. */
+  /** ISO timestamp, only set for transitions the schema actually records. */
   at?: string;
 };
 
 const DOT_DONE = "border-brand-500 bg-brand-500 text-white";
-const DOT_PENDING = "border-line bg-surface text-muted/80";
+const DOT_PENDING = "border-line bg-surface text-muted";
 
 function dotClass(step: TrackingStep, isCurrent: boolean) {
   if (step.done) return isCurrent ? `${DOT_DONE} ring-4 ring-line` : DOT_DONE;
-  if (isCurrent) return "border-brand-400 bg-surface text-brand-ink ring-4 ring-brand-50";
+  if (isCurrent) return "border-brand-400 bg-surface text-brand-ink ring-4 ring-brand-soft";
   return DOT_PENDING;
 }
 
@@ -39,13 +39,13 @@ function formatStamp(iso?: string) {
  * `service_requests` (created_at / status / assigned_technician_id), `estimates`
  * (created_at) and `bookings` (scheduled_at / updated_at) record *what* happened
  * but not *when* each transition happened. Steps we can date therefore show a
- * real timestamp and the others show none — this strip is how a customer judges
+ * real timestamp and the others show none, this strip is how a customer judges
  * how long they've been waiting, so a plausible-looking invented time would be
  * worse than a blank. A `service_request_status_history` table, written
  * alongside each status change, is what would let every step carry a true
  * timestamp; see `design-system/sparkserv/pages/dashboard.md`.
  *
- * The previous version was fully hardcoded — a bar frozen at step 3 with a
+ * The previous version was fully hardcoded, a bar frozen at step 3 with a
  * fixed "Sep 14, 10:24 AM" caption, identical for every customer regardless of
  * the state of their actual request.
  */
@@ -64,8 +64,8 @@ export function ServiceTracking({
    * Whether ANY technician currently covers this appliance, when the caller knows.
    *
    * `false` means the database has CONFIRMED that nobody does, which turns the
-   * last line from "next: technician assigned" — a promise this platform cannot
-   * keep — into the dead-end wording, with somewhere to go. `true` keeps the
+   * last line from "next: technician assigned", a promise this platform cannot
+   * keep, into the dead-end wording, with somewhere to go. `true` keeps the
    * normal line, and `null` (the default: the caller does not know) also keeps it,
    * because the strip must not claim a cause it has not confirmed.
    */
@@ -74,7 +74,7 @@ export function ServiceTracking({
   if (!request) {
     return (
       <div className="flex flex-col items-center justify-center px-5 py-10 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-soft text-muted/80">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-soft text-muted">
           <ClipboardList className="h-5 w-5" />
         </span>
         <p className="mt-3 text-sm font-medium text-ink">Nothing in progress</p>
@@ -97,7 +97,7 @@ export function ServiceTracking({
   // given: the strip only advances on versions that were actually submitted.
   const submitted = estimates.filter((row) => row.status !== "draft");
   const latestEstimate = submitted[0];
-  // The CURRENT approval — a version that was approved and then replaced by a
+  // The CURRENT approval, a version that was approved and then replaced by a
   // revision no longer authorises the work, so the step reopens.
   const acceptedEstimate = estimates.find((row) => row.status === "accepted");
   const bookingActive =
@@ -157,7 +157,7 @@ export function ServiceTracking({
    * The dead end, said out loud.
    *
    * An unassigned request whose appliance type has NO qualified technician is not
-   * "waiting for a technician to be assigned" — nothing is coming, and the
+   * "waiting for a technician to be assigned", nothing is coming, and the
    * customer needs to contact support rather than keep checking back. The wording
    * is the shared `customerAssignmentCopy`, so this strip, the request page and
    * the estimate card cannot drift apart.
@@ -226,12 +226,12 @@ export function ServiceTracking({
             </div>
             <p
               className={`mt-2.5 px-1 text-center text-[11px] font-medium leading-tight ${
-                step.done ? "text-ink" : "text-muted/80"
+                step.done ? "text-ink" : "text-muted"
               }`}
             >
               {step.label}
             </p>
-            <p className="mt-1 h-3 text-center text-[10px] text-muted/80">
+            <p className="mt-1 h-3 text-center text-[11px] text-muted">
               {formatStamp(step.at)}
             </p>
           </li>
@@ -243,7 +243,7 @@ export function ServiceTracking({
           <li key={step.key} className="flex gap-3">
             <div className="flex flex-col items-center">
               <span
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold ${dotClass(
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-[11px] font-bold ${dotClass(
                   step,
                   index === currentIndex
                 )}`}
@@ -258,12 +258,12 @@ export function ServiceTracking({
             </div>
             <div className="pb-4">
               <p
-                className={`text-xs font-medium ${step.done ? "text-ink" : "text-muted/80"}`}
+                className={`text-xs font-medium ${step.done ? "text-ink" : "text-muted"}`}
               >
                 {step.label}
               </p>
               {step.at && (
-                <p className="mt-0.5 text-[11px] text-muted/80">{formatStamp(step.at)}</p>
+                <p className="mt-0.5 text-[11px] text-muted">{formatStamp(step.at)}</p>
               )}
             </div>
           </li>
@@ -289,7 +289,7 @@ export function ServiceTracking({
           {cancelled
             ? "This request was cancelled. You can start a new inquiry any time."
             : completed
-              ? "All done — thanks for choosing SPARKServ."
+              ? "All done, thanks for choosing SPARKServ."
               : nextStep
                 ? `Next up: ${nextStep.label.toLowerCase()}.`
                 : ""}

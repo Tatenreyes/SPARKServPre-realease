@@ -7,7 +7,7 @@ const SECTIONS: PolicySection[] = [
   },
   {
     title: "Customers",
-    body: "Describe the appliance and the fault as accurately as you can — the assignment engine uses those details to decide which technicians are qualified, and an inaccurate description is the most common cause of a revised estimate on site. You must be able to receive the technician at the address you provide, and you approve the estimate before any work begins.",
+    body: "Describe the appliance and the fault as accurately as you can, the assignment engine uses those details to decide which technicians are qualified, and an inaccurate description is the most common cause of a revised estimate on site. You must be able to receive the technician at the address you provide, and you approve the estimate before any work begins.",
   },
   {
     title: "Technicians",
@@ -23,11 +23,11 @@ const SECTIONS: PolicySection[] = [
   },
   {
     title: "Cancellation and rescheduling",
-    body: "You may cancel a request or booking before work starts. Cancelling or rescheduling after a technician has accepted does not return them to the front of the rotation — their turn was consumed when they accepted, and it stays consumed.",
+    body: "You may cancel a request or booking before work starts. Cancelling or rescheduling after a technician has accepted does not return them to the front of the rotation, their turn was consumed when they accepted, and it stays consumed.",
   },
   {
     title: "Completion, inspection and payment",
-    body: "When the technician marks the repair complete, you inspect the appliance and confirm it is working before payment unlocks. If the fault is still present, report it instead of confirming — that opens a support case rather than a payment. Payment is submitted by the customer only, as a reference number, and is verified by an administrator before it is marked confirmed.",
+    body: "When the technician marks the repair complete, you inspect the appliance and confirm it is working before payment unlocks. If the fault is still present, report it instead of confirming, that opens a support case rather than a payment. Payment is submitted by the customer only, as a reference number, and is verified by an administrator before it is marked confirmed.",
   },
   {
     title: "Disputes",
@@ -39,7 +39,7 @@ const SECTIONS: PolicySection[] = [
   },
   {
     title: "Availability of the service",
-    body: "SPARKServ is provided as-is while it is under active development. Features may change, and repair work depends on technician availability in your area — a request that no eligible technician is free for will wait rather than be assigned.",
+    body: "SPARKServ is provided as-is while it is under active development. Features may change, and repair work depends on technician availability in your area, a request that no eligible technician is free for will wait rather than be assigned.",
   },
   {
     title: "Status of this document",
@@ -48,7 +48,7 @@ const SECTIONS: PolicySection[] = [
 ];
 
 export const metadata = {
-  title: "Terms of Service — SPARKServ",
+  title: "Terms of Service, SPARKServ",
   description: "The rules that apply to customers and technicians using SPARKServ.",
 };
 
@@ -57,7 +57,7 @@ export default function TermsOfServicePage() {
     <PolicyLayout
       eyebrow="Legal"
       title="Terms of Service"
-      intro="The rules both sides agree to when they use SPARKServ — what you commit to as a customer, what a technician commits to on accepting a job, and how assignment, estimates, inspection and payment work."
+      intro="The rules both sides agree to when they use SPARKServ, what you commit to as a customer, what a technician commits to on accepting a job, and how assignment, estimates, inspection and payment work."
       updated="29 September 2026"
       sections={SECTIONS}
     />

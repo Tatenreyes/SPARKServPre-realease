@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 
-// DELETE /api/appliances/:id — remove an appliance from the customer's inventory
+// DELETE /api/appliances/:id, remove an appliance from the customer's inventory
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: { id: string } }

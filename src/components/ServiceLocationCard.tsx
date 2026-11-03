@@ -46,7 +46,7 @@ export default function ServiceLocationCard({
     : null;
 
   return (
-    <section className={`rounded-card border border-ink/8 bg-surface p-4 shadow-card sm:p-5 ${className}`}>
+    <section className={`rounded-card border border-line bg-surface p-4 shadow-card sm:p-5 ${className}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold text-ink">
           <MapPin className="h-4 w-4 shrink-0 text-brand-ink" aria-hidden="true" />
@@ -86,7 +86,7 @@ export default function ServiceLocationCard({
               </div>
               {showDirections && (
                 <p className="mt-2 text-[11px] leading-relaxed text-muted">
-                  Directions open in Google Maps on your device — SPARKServ does not
+                  Directions open in Google Maps on your device, SPARKServ does not
                   calculate the route itself.
                 </p>
               )}

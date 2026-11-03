@@ -12,7 +12,7 @@
  * component only presents the result and reports the customer's choices upward.
  *
  * Two rules keep it from becoming a second form:
- *   * it owns **no issue list** — the chips in the wizard are the one place a fault is
+ *   * it owns **no issue list**, the chips in the wizard are the one place a fault is
  *     chosen, so the catalogue is never rendered twice, and
  *   * every state speaks through `AssistantBubble`, so the panel has one voice.
  */
@@ -72,7 +72,7 @@ export default function TroubleshootingPanel({
    *
    * Deliberately local and deliberately not persisted: it is reading progress, not a
    * record of anything. It resets when the identified issue changes, because a different
-   * fault means a different checklist — and carrying "2 of 3 done" across that boundary
+   * fault means a different checklist, and carrying "2 of 3 done" across that boundary
    * would be a lie about work the customer never did.
    */
   const [doneSteps, setDoneSteps] = useState<string[]>([]);
@@ -97,7 +97,7 @@ export default function TroubleshootingPanel({
         <p className="text-sm leading-relaxed text-ink">
           That sounds like{" "}
           <span className="font-semibold">{identifiedLabel}</span>. Most faults like this
-          are one of the checks below — worth a minute before you book a visit.
+          are one of the checks below, worth a minute before you book a visit.
         </p>
 
         {stepCount > 0 && (
@@ -181,13 +181,13 @@ export default function TroubleshootingPanel({
           {outcome === "unresolved" && (
             <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-warn-soft/60 px-3 py-2.5 text-xs leading-relaxed text-warn-ink">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              Noted — the problem remains. Continue below and a qualified technician will
+              Noted, the problem remains. Continue below and a qualified technician will
               take it from here, with these checks already ruled out.
             </p>
           )}
           {outcome === "skipped" && (
             <p className="mt-3 rounded-xl bg-soft/70 px-3 py-2.5 text-xs leading-relaxed text-muted">
-              Troubleshooting skipped — no outcome is required. Continue whenever you are
+              Troubleshooting skipped, no outcome is required. Continue whenever you are
               ready.
             </p>
           )}
@@ -206,8 +206,7 @@ export default function TroubleshootingPanel({
             That sounds like <span className="font-semibold">{label}</span>. Is that right?
           </p>
           <p className="mt-1 text-xs leading-relaxed text-muted">
-            We recognised “{match.matchedPhrase}” in your description. Nothing is assumed
-            — your description stays exactly as you wrote it.
+            We recognised “{match.matchedPhrase}” in your description. Nothing is assumed, your description stays exactly as you wrote it.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
@@ -261,8 +260,8 @@ export default function TroubleshootingPanel({
     <AssistantBubble label="Troubleshooting unavailable">
       <p className="text-xs leading-relaxed text-muted">
         {suggestionDismissed
-          ? "No problem — pick the closest issue from the list above and its checks will appear here."
-          : "We couldn't identify the exact problem from your description. Pick the closest issue from the list above and its checks will appear here — or continue without troubleshooting: your request can still be submitted, and a technician will diagnose it on site."}
+          ? "No problem, pick the closest issue from the list above and its checks will appear here."
+          : "We couldn't identify the exact problem from your description. Pick the closest issue from the list above and its checks will appear here, or continue without troubleshooting: your request can still be submitted, and a technician will diagnose it on site."}
       </p>
       <ContinueWithout onClick={onSkip} />
     </AssistantBubble>
@@ -274,7 +273,7 @@ export default function TroubleshootingPanel({
  *
  * ONE definition for every state, so the panel speaks with a single voice: whichever
  * branch renders, the customer sees the same avatar, the same name, and the reply in the
- * same shell. A bubble carries all of its content at once — never one turn at a time
+ * same shell. A bubble carries all of its content at once, never one turn at a time
  * (see branch 1, where every check is visible on arrival).
  */
 function AssistantBubble({

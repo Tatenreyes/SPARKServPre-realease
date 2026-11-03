@@ -48,8 +48,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "First name or last name is required" }, { status: 400 });
     }
 
-    // `users.name` is what the rest of the app displays — both dashboards, the
-    // technician queue, technician cards, the admin user list — while this form
+    // `users.name` is what the rest of the app displays, both dashboards, the
+    // technician queue, technician cards, the admin user list, while this form
     // edits the split first/last/middle fields. Writing only those would save the
     // new name and then keep showing the old one everywhere else, so `name` is
     // recomposed here. It is left out of the update entirely when there is

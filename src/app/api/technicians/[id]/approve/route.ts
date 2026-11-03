@@ -4,7 +4,7 @@ import { requireRole, AuthError } from "@/lib/auth";
 import { rematchWaitingRequests } from "@/lib/assignment";
 import { notify } from "@/lib/notifications";
 
-// PATCH /api/technicians/:id/approve — admin/super_admin approves a pending technician
+// PATCH /api/technicians/:id/approve, admin/super_admin approves a pending technician
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -17,7 +17,7 @@ export async function PATCH(
 
     // service-role client: approving a technician crosses role boundaries,
     // which is exactly the kind of action normal RLS policies are meant to block
-    // for everyone except an authenticated admin — enforced above via requireRole.
+    // for everyone except an authenticated admin, enforced above via requireRole.
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase
       .from("technicians")

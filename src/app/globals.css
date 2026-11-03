@@ -18,12 +18,24 @@
   --spark-canvas: 245 247 251;   /* #F5F7FB — page background      */
   --spark-surface: 255 255 255;  /* #FFFFFF — cards, sheets, menus */
   --spark-ink: 16 38 74;         /* #10264A — primary text         */
-  --spark-muted: 100 116 139;    /* slate-500 — secondary text     */
-  --spark-line: 226 232 240;     /* slate-200 — structural border  */
+  /* `muted` and `line` each moved one step in the UI audit, because the maths said
+     they had to:
+       - slate-500 `text-muted` on the canvas measured 4.44:1 — just under the AA
+         floor of 4.5:1, which is why secondary text read as washed out.
+       - slate-200 hairlines measured 1.15:1 on the canvas: an edge you cannot see,
+         which is why input boxes and cards looked like they had no outline.
+     At slate-600 secondary text is 7.0:1 on the canvas and 7.6:1 on a surface; at
+     slate-300 borders are 1.37:1 and 1.49:1, matching the dark theme's 1.39:1.
+     Both are pinned by `npm run test:design`. */
+  --spark-muted: 71 85 105;      /* slate-600 — secondary text     */
+  --spark-line: 203 213 225;     /* slate-300 — structural border  */
   --spark-soft: 241 245 249;     /* slate-100 — hover fill, tracks */
 
   --spark-brand-ink: 14 66 159;    /* brand-600, read as text  */
-  --spark-signal-ink: 19 138 77;   /* signal-600, read as text */
+  /* emerald-700, not emerald-600: as a 12px label on `bg-signal-soft` (#EAFBF3) the
+     600 shade measured 4.11:1, under the AA floor. The 700 shade is 5.1:1 there and
+     5.5:1 on a white surface. */
+  --spark-signal-ink: 4 120 87;    /* emerald-700, read as text */
   --spark-alert-ink: 185 57 57;    /* alert-600, read as text  */
   --spark-accent-ink: 194 65 12;   /* accent-600, read as text */
   --spark-warn-ink: 180 83 9;      /* amber-700, read as text  */
@@ -143,8 +155,8 @@ img {
     background-image: linear-gradient(103deg, #eef5ff 0%, #dcebff 54%, #c4dbff 100%);
   }
 
-  /* Keep auth copy on a solid theme-aware plate while the technician photo
-     becomes crisp before the subject, instead of washing the whole image out. */
+  /* Keep auth copy on a solid theme-aware plate while the background image
+     remains clear behind the copy instead of washing the whole image out. */
   .auth-photo-scrim {
     background-image: linear-gradient(
       90deg,
@@ -535,6 +547,43 @@ img {
   --spark-soft: 11 17 24;
   --spark-brand-ink: 129 237 244;
   --spark-brand-soft: 19 29 39;
+}
+
+/* Registration follows the purple, space-inspired reference artwork while
+   keeping the login and recovery screens on the normal dashboard palette. */
+.auth-signup-shell {
+  background: #05070b;
+  color-scheme: dark;
+}
+
+.auth-signup-stage {
+  background-color: #120725;
+  background-image:
+    radial-gradient(circle at 13% 20%, rgb(255 255 255 / 0.9) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 72% 30%, rgb(255 255 255 / 0.72) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 35% 72%, rgb(77 210 255 / 0.7) 0 14%, transparent 34%),
+    linear-gradient(135deg, #100725 0%, #211047 52%, #0b2448 100%);
+  background-size: 118px 118px, 164px 164px, auto, auto;
+}
+
+.auth-signup-form-panel {
+  border-radius: 1.5rem;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  background: rgb(8 11 18 / 0.94);
+  padding: 1.25rem;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 0.32);
+  backdrop-filter: blur(18px);
+}
+
+.auth-signup-form-panel input,
+.auth-signup-form-panel button[aria-pressed="false"] {
+  border-color: rgb(255 255 255 / 0.16);
+  background-color: rgb(15 23 32 / 0.92);
+}
+
+.auth-signup-form-panel input:focus {
+  border-color: #6b7280;
+  box-shadow: 0 0 0 4px rgb(107 114 128 / 0.16);
 }
 
 /* The named brand shades are fixed Tailwind values, so map them only inside

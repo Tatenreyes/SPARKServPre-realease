@@ -5,7 +5,7 @@ import type { LucideIcon } from "lucide-react";
  * Filled navy band for support/help entry points. Sits at the end of a content
  * column where a low-contrast grey panel used to disappear into the page.
  *
- * One of the only two gradient surfaces in the app — see `MASTER.md`.
+ * One of the only two gradient surfaces in the app, see `MASTER.md`.
  */
 export default function SupportBanner({
   icon: Icon,

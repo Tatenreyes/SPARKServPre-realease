@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, requireRole, AuthError } from "@/lib/auth";
 
-// GET /api/settings — anyone authenticated can read (RLS also allows public read)
+// GET /api/settings, anyone authenticated can read (RLS also allows public read)
 export async function GET() {
   try {
     const user = await getCurrentUser();
@@ -18,7 +18,7 @@ export async function GET() {
   }
 }
 
-// PATCH /api/settings — admin/super_admin updates one key
+// PATCH /api/settings, admin/super_admin updates one key
 export async function PATCH(request: NextRequest) {
   try {
     const user = await requireRole(["admin", "super_admin"]);

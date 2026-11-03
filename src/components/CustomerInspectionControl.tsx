@@ -24,7 +24,7 @@ export default function CustomerInspectionControl({
       const res = await fetch(`/api/bookings/${bookingId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        // Confirming advances the repair to the PAYMENT step — it does not close
+        // Confirming advances the repair to the PAYMENT step, it does not close
         // it. The booking API requires a written inspection note whenever the
         // CUSTOMER confirms, because it is the attestation archived to
         // service_history, so the quick confirm sends a clear default. An
@@ -75,9 +75,9 @@ export default function CustomerInspectionControl({
       <h3 className="font-display text-base font-semibold text-ink">
         Please check your appliance, then submit your payment
       </h3>
-      <p className="mt-1 text-sm text-ink/60">
+      <p className="mt-1 text-sm text-ink/70">
         Take a moment to confirm the repair actually fixed the problem. Confirming
-        opens the payment step — an administrator verifies your GCash reference
+        opens the payment step, an administrator verifies your GCash reference
         before the repair is marked complete.
       </p>
 
@@ -108,7 +108,7 @@ export default function CustomerInspectionControl({
             value={problemDescription}
             onChange={(e) => setProblemDescription(e.target.value)}
             placeholder="Describe what's still wrong..."
-            className="w-full rounded-lg border border-ink/15 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/30"
           />
           <div className="flex gap-2">
             <button
@@ -120,7 +120,7 @@ export default function CustomerInspectionControl({
             </button>
             <button
               onClick={() => setReportingProblem(false)}
-              className="rounded-full border border-ink/15 px-4 py-2 text-sm font-medium text-ink/70"
+              className="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink/70"
             >
               Cancel
             </button>

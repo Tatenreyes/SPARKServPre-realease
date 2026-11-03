@@ -22,7 +22,7 @@
  * `npm run build` must still report `ƒ /admin/payments`.
  *
  * NOT covered: the rendered React tree (there is no component runner in this
- * repository — see TESTING.md §4) and a real PostgREST failure.
+ * repository — see TESTING.md §5) and a real PostgREST failure.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

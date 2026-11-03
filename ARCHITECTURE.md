@@ -65,6 +65,19 @@ fabricated.
 `createServiceRoleClient()` lives in `src/lib/supabase/server.ts` and is imported
 only by server modules. Client components receive plain data as props.
 
+**And every server read is `no-store`.** Both clients in that file (and the
+middleware client in `src/lib/supabase/middleware.ts`) pass a `global.fetch` that
+sets `cache: "no-store"`. That is not decoration: Next.js stores a patched GET in
+its Data Cache with `revalidate: false` — one year — unless the fetch itself opts
+out, and `export const dynamic = "force-dynamic"` does **not** opt it out. The
+result was a payments queue frozen at 30 Oct 23:14 that kept reading "Pending
+Verification" for a payment confirmed at 23:14:36, and never showed one submitted
+on 3 Nov. The same shape affected the user list, booking lists and the role lookup
+behind `getCurrentUser()`, where a cached answer is a stale authorization
+decision. `scripts/tests/supabase-cache.test.mjs` (`npm run test:cache`) asserts
+the opt-out is present on every server client and on the two segments that must
+stay live.
+
 ## Rule 4 — an approval belongs to ONE version of one estimate
 
 A price the customer agreed to must never authorise work at a different price.
@@ -214,6 +227,34 @@ themselves are preliminary checks only — `scripts/tests/troubleshooting-guides
 fails if a step asks the customer to open a unit, touch wiring or handle
 refrigerant.
 
+## Rule 9 — a queue turn is never spent on a request that already has an owner
+
+Accepting a request consumes that technician's turn and moves them to the END of
+that appliance's rotation (`consume_queue_turn`), and it happens at ACCEPTANCE —
+before an estimate exists. So an offer made for a request that cannot become a
+booking does not just waste a notification, it costs somebody their place in the
+line.
+
+Two things follow, both from step 20 (`supabase/migration_queue_offer_guards.sql`):
+
+* `assign_technician_to_request()` refuses a request that already has an owner
+  (`quoted` with `assigned_technician_id` set) and answers `unchanged` /
+  `already_assigned`. A `quoted` request keeps its technician — a declined
+  estimate asks *that* technician for a revision, and a cancelled booking reopens
+  the request with the same technician — so a walk there can only spend a turn and
+  duplicate the offer history. On the live project exactly that happened:
+  `7d095e43` (created 12 Sep) was re-offered and accepted on 3 Nov, moving a
+  technician from #3 to #4 and producing nothing.
+* the position a screen prints is measured AFTER the last acceptance, so
+  `technician_queue_snapshot()` exposes `last_assigned_at` and the UI says which
+  it is (`queueTurnNote()` in `src/lib/queue.ts`, the "last turn consumed" column
+  on `/admin/technician-queue`). A bare `#3` on a technician who has just been
+  given work reads like a contradiction, which is what was reported.
+
+`npm run audit:queue-turns` lists the turns already spent on a request with no
+estimate and no booking, and the requests still left walkable with an owner, so
+the residual state is reviewed rather than hidden.
+
 ## Module map
 
 | Concern | File |
@@ -244,6 +285,7 @@ refrigerant.
 | Inline match / confirm / guide / outcome UI | `src/components/TroubleshootingPanel.tsx` |
 | Issue + outcome columns and their constraint | `supabase/migration_troubleshooting.sql` |
 | Offer release on cancellation + pre-walk safety net | `supabase/migration_offer_lifecycle.sql` |
+| Never re-offer a request that already has an owner; the turn a position was measured after | `supabase/migration_queue_offer_guards.sql`, `src/lib/queue.ts` (`queueTurnNote`), `scripts/audit-queue-turns.mjs` (`npm run audit:queue-turns`) |
 | Estimate rows, versions, decisions, booking guard | `supabase/migration_estimate_status.sql` + `supabase/migration_estimate_workflow.sql` |
 | Booking transitions, RLS enforcement, payment-verified completion | `supabase/migration_booking_payment_status.sql` + `supabase/migration_rls_workflow_enforcement.sql` |
 | Atomic booking, one live booking per request, no overlapping appointment | `supabase/migration_atomic_booking.sql` |

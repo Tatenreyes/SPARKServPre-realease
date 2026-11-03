@@ -1,13 +1,13 @@
 /**
  * The app's password rule, defined once.
  *
- * The registration form has always carried it — `minLength={6}` plus the
- * "Must be at least 6 characters" hint — and Supabase's own default minimum is
+ * The registration form has always carried it, `minLength={6}` plus the
+ * "Must be at least 6 characters" hint, and Supabase's own default minimum is
  * 6 as well. The reset form has to apply the *same* rule: a customer who signed
  * up with a 6-character password must not be told by a different screen of the
  * same product that their new one is too short.
  *
- * Raising the minimum is a two-place change — `MIN_PASSWORD_LENGTH` here **and**
+ * Raising the minimum is a two-place change, `MIN_PASSWORD_LENGTH` here **and**
  * Authentication → Providers → Email → Password requirements in the Supabase
  * dashboard. The server keeps its own copy; if the two disagree, the server
  * wins and `updateUser` comes back as a `weak_password` error, which the reset
@@ -21,7 +21,7 @@
 export const MIN_PASSWORD_LENGTH = 6;
 
 /**
- * bcrypt — what Supabase Auth uses — only reads the first 72 bytes of a
+ * bcrypt, what Supabase Auth uses, only reads the first 72 bytes of a
  * password, and GoTrue refuses anything longer outright. Without this bound the
  * field would accept a longer password and the server would reject it, so the
  * length is capped where the user can still see why.

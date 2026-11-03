@@ -17,7 +17,7 @@ import { useCallback, useEffect, useState } from "react";
  * (`sessionStorage`, not `localStorage`: an announcement is a moment in time, not
  * a preference.)
  *
- * A failed request leaves the message empty and the strip absent — a missing
+ * A failed request leaves the message empty and the strip absent, a missing
  * announcement must never take the topbar down.
  */
 const DISMISSED_KEY = "sparkserv:announcement-dismissed";

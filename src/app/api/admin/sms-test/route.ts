@@ -4,14 +4,14 @@ import { requireRole, AuthError } from "@/lib/auth";
 import { sendSms, SemaphoreError } from "@/lib/sms";
 
 /**
- * POST /api/admin/sms-test — administrator-only SMS test.
+ * POST /api/admin/sms-test, administrator-only SMS test.
  *
  * Sends a FIXED test message to the administrator's own phone number. An
  * optional `phone` in the body overrides the saved number and is persisted to
  * the administrator's account. The Semaphore API key never leaves the server:
  * it is read from `SEMAPHORE_API_KEY` inside `src/lib/sms.ts`.
  *
- * Delivery is never claimed here — the response reports Semaphore's own status
+ * Delivery is never claimed here, the response reports Semaphore's own status
  * ("Queued" | "Pending" | "Sent") verbatim.
  */
 

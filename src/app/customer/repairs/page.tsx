@@ -15,8 +15,7 @@ import {
  * A phone tab bar holds four destinations, so each tab needs one level of depth
  * behind it. This is that level for repairs: every repair destination the app
  * has, described in one line, in the order a customer actually meets them
- * (start → watch → pay → look back). All of them point at the existing pages —
- * this is a directory, not a second implementation, so there is one source of
+ * (start → watch → pay → look back). All of them point at the existing pages, * this is a directory, not a second implementation, so there is one source of
  * truth per screen.
  */
 export default function RepairsHubPage() {

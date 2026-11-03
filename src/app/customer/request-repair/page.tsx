@@ -17,7 +17,7 @@ export default function RequestRepairPage() {
         <span className="text-ink/70 font-medium">Request a Repair</span>
       </nav>
       <h1 className="mt-1 font-display text-2xl font-semibold text-ink">Request a Repair</h1>
-      <p className="mt-1 text-sm text-ink/65">
+      <p className="mt-1 text-sm text-ink/70">
         Tell us about your appliance and the issue. We&apos;ll help you get it fixed.
       </p>
       <div className="mt-6">

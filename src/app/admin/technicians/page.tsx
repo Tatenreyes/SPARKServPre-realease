@@ -55,7 +55,7 @@ export default async function AdminTechniciansPage() {
     <div>
       <h1 className="mb-6 text-2xl font-bold text-ink">Technicians</h1>
       {!technicians?.length ? (
-        <p className="text-sm text-ink/50">No technician accounts yet.</p>
+        <p className="text-sm text-ink/70">No technician accounts yet.</p>
       ) : (
         <div className="space-y-3">
           {technicians.map((t) => {
@@ -63,12 +63,12 @@ export default async function AdminTechniciansPage() {
             return (
               <div
                 key={t.id}
-                className="flex flex-col items-start gap-3 rounded-card border border-ink/8 p-4 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col items-start gap-3 rounded-card border border-line p-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0">
                   <p className="font-medium text-ink">{u?.name ?? "Unknown"}</p>
-                  <p className="break-all text-xs text-ink/50">{u?.email}</p>
-                  <p className="mt-1 text-xs text-ink/35">
+                  <p className="break-all text-xs text-ink/70">{u?.email}</p>
+                  <p className="mt-1 text-xs text-ink/70">
                     {t.experience_years} yrs experience · rating {t.rating.toFixed(1)}
                   </p>
                 </div>

@@ -5,7 +5,7 @@
  *   npm run test:notifications
  *
  * These read the five routes as text — there is no route runner in this repository
- * (TESTING.md §4), so the wiring is what can be checked here. What each route does
+ * (TESTING.md §5), so the wiring is what can be checked here. What each route does
  * with the database is covered by its own suite.
  *
  * WHY THIS FILE EXISTS. `notify()` existed and six call sites used it, but a

@@ -14,7 +14,7 @@ import {
  *
  *   1. the marker cookie, which only `/auth/callback` writes and only after a
  *      recovery link was exchanged for a session;
- *   2. the user the auth server says the session belongs to (`getUser()` — the
+ *   2. the user the auth server says the session belongs to (`getUser()`, the
  *      same validated call the middleware and `src/lib/auth.ts` use); and
  *   3. the `session_id` of that same session, read from the access token
  *      `getUser()` just approved.

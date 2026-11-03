@@ -26,7 +26,7 @@ const NOTIFICATION_TAB: Record<UserRole, string | null> = {
  * The phone's primary navigation.
  *
  * Four destinations, thumb-height, pinned to the bottom of the viewport. It is
- * the mobile counterpart of the sidebar — not a compressed copy of it: the
+ * the mobile counterpart of the sidebar, not a compressed copy of it: the
  * sidebar carries *every* destination, this carries the four a person reaches
  * for constantly, and everything else stays one tap deeper through a section hub
  * or the drawer behind the hamburger.
@@ -43,7 +43,7 @@ const NOTIFICATION_TAB: Record<UserRole, string | null> = {
  *      it survives both a colour-blind reader and a screen reader.
  *   3. **Safe-area aware.** The bar's own bottom padding comes from
  *      `env(safe-area-inset-bottom)` in `globals.css`, and the content column is
- *      given matching clearance by `DashboardShell` — a `fixed` bar contributes
+ *      given matching clearance by `DashboardShell`, a `fixed` bar contributes
  *      no height to the document, so without that the last card sits underneath
  *      it and cannot be scrolled clear.
  */
@@ -71,7 +71,7 @@ export default function MobileBottomNav({ role }: { role: UserRole }) {
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`spark-tap relative flex h-[56px] flex-col items-center justify-center gap-1 px-1 pt-1.5 text-[11px] leading-none transition-colors duration-200 ${
+                className={`spark-tap relative flex h-[56px] flex-col items-center justify-center gap-1 px-1 pt-1.5 text-xs leading-none transition-colors duration-200 ${
                   active
                     ? "font-bold text-brand-ink"
                     : "font-semibold text-muted hover:text-ink"
@@ -87,7 +87,7 @@ export default function MobileBottomNav({ role }: { role: UserRole }) {
                 <span className="relative flex h-[22px] w-[22px] items-center justify-center">
                   <Icon className="h-[22px] w-[22px]" aria-hidden="true" />
                   {badge > 0 && (
-                    <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-alert-500 px-1 text-[10px] font-semibold text-white">
+                    <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-alert-500 px-1 text-xs font-semibold text-white">
                       {badge > 9 ? "9+" : badge}
                     </span>
                   )}

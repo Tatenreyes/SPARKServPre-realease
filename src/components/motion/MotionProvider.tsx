@@ -7,7 +7,7 @@ import { MotionConfig } from "motion/react";
  *
  * `reducedMotion="user"` is the whole reason this exists. The global
  * `prefers-reduced-motion` rule in `globals.css` only shortens CSS transitions
- * and keyframes — it has no effect on Motion, which drives values from
+ * and keyframes, it has no effect on Motion, which drives values from
  * JavaScript and writes them to the element's own style. Without this config a
  * motion-sensitive user gets a still page everywhere except the one part built
  * with Motion, which is exactly the part most likely to make them ill.
@@ -19,8 +19,7 @@ import { MotionConfig } from "motion/react";
  *
  * Mounted inside `DashboardShell` rather than the root layout on purpose: the
  * marketing pages already import Motion themselves, and putting the provider in
- * the root would add the Motion runtime to every route that does not animate —
- * a real cost in First Load JS for no behaviour at all.
+ * the root would add the Motion runtime to every route that does not animate, * a real cost in First Load JS for no behaviour at all.
  */
 export default function MotionProvider({ children }: { children: React.ReactNode }) {
   return <MotionConfig reducedMotion="user">{children}</MotionConfig>;

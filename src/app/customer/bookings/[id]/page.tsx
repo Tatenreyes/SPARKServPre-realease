@@ -58,7 +58,7 @@ export default async function CustomerBookingDetailPage({
 
   // Who is coming: the published profile, built from the real ratings plus the
   // technician's own record. The cached `technicians.rating` column has no trigger
-  // maintaining it, so the average is derived from the `ratings` rows — and a
+  // maintaining it, so the average is derived from the `ratings` rows, and a
   // technician with no reviews shows no rating rather than a permanent zero.
   const { data: technicianRatings } = await supabase
     .from("ratings")
@@ -79,7 +79,7 @@ export default async function CustomerBookingDetailPage({
 
   // What the customer owes. The technician records `final_cost` when finishing
   // the job; legacy bookings may not have it, so fall back to the accepted
-  // estimate — the same amount the payments API will accept.
+  // estimate, the same amount the payments API will accept.
   const { data: acceptedEstimate } = await supabase
     .from("estimates")
     .select("estimated_cost")
@@ -98,7 +98,7 @@ export default async function CustomerBookingDetailPage({
           <h1 className="text-xl font-bold text-ink">
             Booking with {technicianUser?.name ?? "your technician"}
           </h1>
-          <p className="text-sm text-ink/50">
+          <p className="text-sm text-ink/70">
             Scheduled: {new Date(booking.scheduled_at).toLocaleString()}
           </p>
         </div>
@@ -107,10 +107,10 @@ export default async function CustomerBookingDetailPage({
 
       {/* Who is coming. This is the moment a customer decides whether to trust the
           visit, so the card carries the photo, the verification the queue itself
-          applies, the rating from real reviews and the technician's record — and no
+          applies, the rating from real reviews and the technician's record, and no
           contact details, which stay in the booking thread. */}
       {technicianProfile && (
-        <section className="rounded-card border border-ink/8 bg-surface p-5 shadow-card">
+        <section className="rounded-card border border-line bg-surface p-5 shadow-card">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
             Your technician
           </p>
@@ -121,7 +121,7 @@ export default async function CustomerBookingDetailPage({
       {/* The job order is the record the customer keeps: the appliance, the work
           performed, the parts, the amount and the verified reference, on one
           printable page. It exists only once the repair is closed, so the link
-          appears only then — the receipt route explains itself otherwise. */}
+          appears only then, the receipt route explains itself otherwise. */}
       {booking.status === "completed" && (
         <Link
           href={`/customer/bookings/${booking.id}/receipt`}
@@ -133,12 +133,12 @@ export default async function CustomerBookingDetailPage({
             </span>
             <span className="min-w-0">
               <span className="block truncate font-medium text-ink">View your job order</span>
-              <span className="block text-sm text-ink/50">
-                The record of this repair — printable and keepable
+              <span className="block text-sm text-ink/70">
+                The record of this repair, printable and keepable
               </span>
             </span>
           </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-ink/35" aria-hidden="true" />
+          <ChevronRight className="h-4 w-4 shrink-0 text-ink/70" aria-hidden="true" />
         </Link>
       )}
 
@@ -153,7 +153,7 @@ export default async function CustomerBookingDetailPage({
           <h3 className="font-display text-base font-semibold text-ink">
             This appointment was cancelled
           </h3>
-          <p className="mt-1 text-sm text-ink/60">
+          <p className="mt-1 text-sm text-ink/70">
             Your approved estimate and your technician are unchanged, so you can pick
             another time whenever you are ready.
           </p>
@@ -195,11 +195,11 @@ export default async function CustomerBookingDetailPage({
       {/* Messaging lives under Messages, not on this page. The thread used to be
           embedded here, below the payment and rating cards, which put a conversation
           inside a booking workflow and duplicated a destination the sidebar already
-          has. This button is the way to it — the conversation itself, with its own
+          has. This button is the way to it, the conversation itself, with its own
           composer and real-time updates, is at /customer/messages/<booking>. */}
       <Link
         href={`/customer/messages/${booking.id}`}
-        className="flex items-center justify-between gap-3 rounded-card border border-ink/8 bg-surface p-4 shadow-card transition hover:border-brand-300"
+        className="flex items-center justify-between gap-3 rounded-card border border-line bg-surface p-4 shadow-card transition hover:border-brand-300"
       >
         <span className="flex min-w-0 items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-ink">
@@ -209,10 +209,10 @@ export default async function CustomerBookingDetailPage({
             <span className="block truncate font-medium text-ink">
               Message {technicianUser?.name ?? "your technician"}
             </span>
-            <span className="block text-sm text-ink/50">Open the conversation</span>
+            <span className="block text-sm text-ink/70">Open the conversation</span>
           </span>
         </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-ink/35" aria-hidden="true" />
+        <ChevronRight className="h-4 w-4 shrink-0 text-ink/70" aria-hidden="true" />
       </Link>
     </div>
   );

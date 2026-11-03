@@ -21,8 +21,7 @@ interface AuthFormProps {
  * making the whole site dynamic; with it removed the boundary is load-bearing.
  *
  * It mirrors the form's box so the swap does not shift the layout: same
- * `max-w-[420px]` column, same heading block, then `rows` input-sized rows —
- * three for login, more for the taller registration form.
+ * `max-w-[420px]` column, same heading block, then `rows` input-sized rows, * three for login, more for the taller registration form.
  */
 export function AuthFormSkeleton({ rows = 3 }: { rows?: number }) {
   return (
@@ -139,22 +138,22 @@ export default function AuthForm({ mode }: AuthFormProps) {
     <>
       {loading && <LoadingScreen message={mode === "login" ? "Signing you in..." : "Creating your account..."} />}
       <div className="w-full max-w-[420px]">
-        <div className="mb-8">
+        <div className={mode === "register" ? "mb-4" : "mb-8"}>
           <h1 className="font-display text-2xl font-bold text-ink leading-tight">
-            {mode === "login" ? "Welcome back" : "Create your account"}
+            {mode === "login" ? "Welcome back" : "SIGN UP"}
           </h1>
-          <p className="mt-2 text-sm text-ink/60 leading-relaxed">
+          <p className="mt-2 text-sm text-ink/70 leading-relaxed">
             {mode === "login"
               ? "Log in to manage your service requests and track repairs."
               : "Sign up to get started with SPARKServ today."}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className={mode === "register" ? "space-y-3" : "space-y-5"}>
           {mode === "register" && (
             <div className="space-y-1.5">
               <label htmlFor={nameId} className="flex items-center gap-2 text-sm font-semibold text-ink/80">
-                <User className="h-4 w-4 text-ink/40" />
+                <User className="h-4 w-4 text-ink/70" />
                 Full name
               </label>
               <input
@@ -163,7 +162,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/30 transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
+                className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/50 transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
                 placeholder="Juan Dela Cruz"
               />
             </div>
@@ -171,7 +170,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
           <div className="space-y-1.5">
             <label htmlFor={emailId} className="flex items-center gap-2 text-sm font-semibold text-ink/80">
-              <Mail className="h-4 w-4 text-ink/40" />
+              <Mail className="h-4 w-4 text-ink/70" />
               Email address
             </label>
             <input
@@ -181,7 +180,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/30 transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
+              className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/50 transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
               placeholder="Enter your email"
             />
           </div>
@@ -191,7 +190,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 is login-only, and the password field itself is unchanged. */}
             <div className="flex items-center justify-between gap-3">
               <label htmlFor={passwordId} className="flex items-center gap-2 text-sm font-semibold text-ink/80">
-                <Lock className="h-4 w-4 text-ink/40" />
+                <Lock className="h-4 w-4 text-ink/70" />
                 Password
               </label>
               {mode === "login" && (
@@ -212,20 +211,20 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 minLength={MIN_PASSWORD_LENGTH}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-ink/10 bg-surface px-3.5 py-2.5 pr-10 text-sm text-ink placeholder:text-ink/30 transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
+                className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 pr-10 text-sm text-ink placeholder:text-ink/50 transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
                 placeholder="Enter your password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/30 hover:text-ink/60 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/70 hover:text-ink transition-colors"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             {mode === "register" && (
-              <p className="text-xs text-ink/40">{PASSWORD_HINT}</p>
+              <p className="text-xs text-ink/70">{PASSWORD_HINT}</p>
             )}
           </div>
 
@@ -237,14 +236,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   type="button"
                   aria-pressed={role === "customer"}
                   onClick={() => setRole("customer")}
-                  className={`flex flex-col items-center justify-center gap-2.5 rounded-xl border-2 p-4 transition-all duration-200 ${
+                  className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 p-3 transition-all duration-200 ${
                     role === "customer"
                       ? "border-brand-500 bg-brand-soft shadow-sm"
-                      : "border-ink/10 bg-surface hover:border-ink/20"
+                      : "border-line bg-surface hover:border-ink/20"
                   }`}
                 >
                   <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                    role === "customer" ? "bg-brand-500 text-white" : "bg-ink/5 text-ink/50"
+                    role === "customer" ? "bg-brand-500 text-white" : "bg-ink/5 text-ink/70"
                   }`}>
                     <UserRoundCog className="h-5 w-5" />
                   </div>
@@ -252,7 +251,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     <p className={`text-sm font-semibold ${role === "customer" ? "text-ink" : "text-ink/70"}`}>
                       Customer
                     </p>
-                    <p className="text-xs text-ink/50">Looking for repairs</p>
+                    <p className="text-xs text-ink/70">Looking for repairs</p>
                   </div>
                 </button>
 
@@ -260,14 +259,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   type="button"
                   aria-pressed={role === "technician"}
                   onClick={() => setRole("technician")}
-                  className={`flex flex-col items-center justify-center gap-2.5 rounded-xl border-2 p-4 transition-all duration-200 ${
+                  className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 p-3 transition-all duration-200 ${
                     role === "technician"
                       ? "border-brand-500 bg-brand-soft shadow-sm"
-                      : "border-ink/10 bg-surface hover:border-ink/20"
+                      : "border-line bg-surface hover:border-ink/20"
                   }`}
                 >
                   <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                    role === "technician" ? "bg-brand-500 text-white" : "bg-ink/5 text-ink/50"
+                    role === "technician" ? "bg-brand-500 text-white" : "bg-ink/5 text-ink/70"
                   }`}>
                     <Wrench className="h-5 w-5" />
                   </div>
@@ -275,7 +274,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     <p className={`text-sm font-semibold ${role === "technician" ? "text-ink" : "text-ink/70"}`}>
                       Technician
                     </p>
-                    <p className="text-xs text-ink/50">Offering repairs</p>
+                    <p className="text-xs text-ink/70">Offering repairs</p>
                   </div>
                 </button>
               </div>
@@ -293,7 +292,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           )}
 
           {mode === "register" && (
-            <div className="space-y-3 rounded-xl border border-ink/8 bg-surface p-4">
+            <div className="space-y-2 rounded-xl border border-line bg-surface p-3">
               <label className="flex items-start gap-3 cursor-pointer group">
                 <div className="relative mt-0.5">
                   <input
@@ -311,7 +310,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   <Link
                     href={role === "technician" ? "/policies/technician" : "/policies/customer"}
                     target="_blank"
-                    className="font-semibold text-brand-ink hover:text-brand-ink underline underline-offset-2"
+                    className="font-semibold text-brand-ink underline underline-offset-2"
                   >
                     {role === "technician" ? "Technician Policies" : "Customer Policies"}
                   </Link>
@@ -334,7 +333,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   <Link
                     href="/policies/privacy"
                     target="_blank"
-                    className="font-semibold text-brand-ink hover:text-brand-ink underline underline-offset-2"
+                    className="font-semibold text-brand-ink underline underline-offset-2"
                   >
                     Privacy Policy
                   </Link>
@@ -375,18 +374,18 @@ export default function AuthForm({ mode }: AuthFormProps) {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-ink/60">
+        <p className="mt-4 text-center text-sm text-ink/70">
           {mode === "login" ? (
             <>
               Don&apos;t have an account?{" "}
-              <Link href="/register" className="font-semibold text-brand-ink hover:text-brand-ink underline underline-offset-2 transition-colors">
+              <Link href="/register" className="font-semibold text-brand-ink underline underline-offset-2 transition-colors">
                 Sign up
               </Link>
             </>
           ) : (
             <>
               Already have an account?{" "}
-              <Link href="/login" className="font-semibold text-brand-ink hover:text-brand-ink underline underline-offset-2 transition-colors">
+              <Link href="/login" className="font-semibold text-brand-ink underline underline-offset-2 transition-colors">
                 Log in
               </Link>
             </>

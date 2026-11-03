@@ -7,7 +7,7 @@ import MobileNotificationsList from "@/components/mobile/MobileNotificationsList
  * The customer's full notification history.
  *
  * The bell in the topbar shows the latest few in a dropdown; this is where the
- * rest live. Capped at 50 (newest first) rather than unbounded — a phone should
+ * rest live. Capped at 50 (newest first) rather than unbounded, a phone should
  * never be asked to lay out a year of notifications in one pass.
  */
 export default async function CustomerNotificationsPage() {
@@ -31,7 +31,7 @@ export default async function CustomerNotificationsPage() {
         </h1>
         <p className="mt-1.5 text-sm leading-relaxed text-muted">
           Anything that needs a decision is also listed in your Action centre on the
-          dashboard — notifications are the record, not the only way to find out.
+          dashboard, notifications are the record, not the only way to find out.
         </p>
       </div>
 

@@ -63,7 +63,7 @@ export function QuickActions() {
               {action.hint}
             </span>
           </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted/60 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-brand-ink" />
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-brand-ink" />
         </Link>
       ))}
     </div>

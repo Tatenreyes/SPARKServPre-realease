@@ -15,7 +15,7 @@
  * handler refuses as a second line of defence. `unresolved` and `skipped` continue to
  * the full form: trying the checks and still having a fault is the ordinary outcome.
  *
- * The wizard is a client component with no runner in this repository (TESTING.md §4),
+ * The wizard is a client component with no runner in this repository (TESTING.md §5),
  * so this file reads it as text, like the other contract suites.
  */
 import test from "node:test";

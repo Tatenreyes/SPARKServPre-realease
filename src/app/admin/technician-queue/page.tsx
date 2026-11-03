@@ -22,14 +22,14 @@ import { History, ListOrdered, ShieldCheck } from "lucide-react";
  *
  * This replaces a view that recomputed the rotation in the browser from
  * `last_assigned_at` and then split technicians into "Available now" and
- * "Currently booked" — i.e. it treated a future appointment as unavailability,
+ * "Currently booked", i.e. it treated a future appointment as unavailability,
  * which is precisely the bug the new model removes. Everything here now comes
  * from `technician_queue_snapshot()`: real positions, real operational status,
  * real next bookings, plus the audit trail that explains every skip.
  *
  * The administrator's own JWT is used on purpose: `technician_queue_snapshot`
  * and `admin_queue_override` both authorise on `is_admin()`, so a service-role
- * client (which has no `auth.uid()`) would be refused — and an override with no
+ * client (which has no `auth.uid()`) would be refused, and an override with no
  * identity behind it would produce a useless audit row.
  */
 const STATUS_FILTERS: { key: string; label: string; statuses: OperationalStatus[] }[] = [
@@ -127,10 +127,13 @@ export default async function AdminTechnicianQueuePage({
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-semibold text-ink">Technician queue monitoring</h1>
-        <p className="mt-1 max-w-3xl text-sm text-ink/65">
+        <p className="mt-1 max-w-3xl text-sm text-ink/70">
           Queue position is fairness; operational status is availability; the schedule is the actual
-          appointments. A technician with a future booking stays in the rotation — they are skipped
-          only for a request whose requested time actually clashes.
+          appointments. A technician with a future booking stays in the rotation, they are skipped
+          only for a request whose requested time actually clashes. Accepting a request consumes that
+          technician&apos;s turn and moves them to the end of that appliance&apos;s rotation, so a
+          position is where their last accepted job left them, which is why the audit trail and the
+          &quot;last turn consumed&quot; column matter more than the number on its own.
         </p>
       </div>
 
@@ -165,7 +168,7 @@ export default async function AdminTechnicianQueuePage({
 
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted/80">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
             Appliance queue
           </span>
           <FilterLink href={queueHref(null, statusKey)} active={!selectedQueue} label="All" />
@@ -180,7 +183,7 @@ export default async function AdminTechnicianQueuePage({
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted/80">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
             Status
           </span>
           {STATUS_FILTERS.map((filter) => (
@@ -210,7 +213,7 @@ export default async function AdminTechnicianQueuePage({
         return (
           <section
             key={queue.applianceType}
-            className="rounded-card border border-ink/8 bg-surface p-5 shadow-card"
+            className="rounded-card border border-line bg-surface p-5 shadow-card"
           >
             <header className="flex flex-wrap items-end justify-between gap-2">
               <div>
@@ -239,6 +242,7 @@ export default async function AdminTechnicianQueuePage({
                       <th className={TH}>Status</th>
                       <th className={TH}>Next booking</th>
                       <th className={TH}>Current job</th>
+                      <th className={TH}>Last turn consumed</th>
                       <th className={TH}>Offer</th>
                     </tr>
                   </thead>
@@ -262,7 +266,7 @@ export default async function AdminTechnicianQueuePage({
               <p className="mt-2 text-[11px] leading-relaxed text-muted">
                 Manual rotation changes are deliberately awkward: you must give a reason, and the
                 change is written to the queue audit trail with your account, the old position and the
-                new position. Never use this to hand work to a preferred technician — the rotation is
+                new position. Never use this to hand work to a preferred technician, the rotation is
                 a fairness mechanism.
               </p>
               <div className="mt-3 space-y-2">
@@ -282,7 +286,7 @@ export default async function AdminTechnicianQueuePage({
         );
       })}
       <div className="grid gap-6 xl:grid-cols-2">
-        <section className="rounded-card border border-ink/8 bg-surface p-5 shadow-card">
+        <section className="rounded-card border border-line bg-surface p-5 shadow-card">
           <header className="flex items-center gap-2">
             <History className="h-4 w-4 text-brand-ink" />
             <h2 className="font-display text-base font-semibold text-ink">
@@ -307,29 +311,29 @@ export default async function AdminTechnicianQueuePage({
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs font-semibold text-ink">
                         {nameById.get(event.technician_id ?? "") ?? "System"}
-                        <span className="ml-2 font-mono text-[10px] font-normal text-muted/80">
-                          {event.appliance_type ?? "—"}
+                        <span className="ml-2 font-mono text-[11px] font-normal text-muted">
+                          {event.appliance_type ?? "N/A"}
                         </span>
                       </p>
-                      <span className="text-[10px] text-muted/80">
+                      <span className="text-[11px] text-muted">
                         {formatQueueTime(event.created_at)}
                       </span>
                     </div>
                     <p className="mt-1 text-[11px] text-muted">
                       {skipLabel(event.action)} · stays at #
-                      {event.new_position ?? event.old_position ?? "—"}
+                      {event.new_position ?? event.old_position ?? "N/A"}
                     </p>
                     {event.reason && (
                       <p className="mt-0.5 text-[11px] text-muted">{event.reason}</p>
                     )}
                     {request && (
-                      <p className="mt-0.5 text-[10px] text-muted/80">
+                      <p className="mt-0.5 text-[11px] text-muted">
                         Request #{request.id.slice(0, 8)} · requested{" "}
                         {request.requested_window_start
                           ? formatQueueTime(request.requested_window_start)
                           : "no fixed window"}
                         {request.requested_window_end
-                          ? ` – ${formatQueueTime(request.requested_window_end)}`
+                          ? `, ${formatQueueTime(request.requested_window_end)}`
                           : ""}
                       </p>
                     )}
@@ -344,13 +348,13 @@ export default async function AdminTechnicianQueuePage({
           )}
         </section>
 
-        <section className="rounded-card border border-ink/8 bg-surface p-5 shadow-card">
+        <section className="rounded-card border border-line bg-surface p-5 shadow-card">
           <header className="flex items-center gap-2">
             <ListOrdered className="h-4 w-4 text-brand-ink" />
             <h2 className="font-display text-base font-semibold text-ink">Offer activity</h2>
           </header>
           <p className="mt-1 text-[11px] leading-relaxed text-muted">
-            Offers expire automatically — the sweep runs every five minutes. An expired offer is
+            Offers expire automatically, the sweep runs every five minutes. An expired offer is
             passed on and the technician&apos;s queue position is untouched.
           </p>
           {offerEvents.length ? (
@@ -369,7 +373,7 @@ export default async function AdminTechnicianQueuePage({
                         {actionLabel(event.action)} ·{" "}
                         {nameById.get(event.technician_id ?? "") ?? "unassigned"}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-muted/80">
+                      <p className="mt-0.5 text-[11px] text-muted">
                         {event.repair_request_id
                           ? `Request #${event.repair_request_id.slice(0, 8)}`
                           : "No request"}
@@ -378,7 +382,7 @@ export default async function AdminTechnicianQueuePage({
                     </div>
                     <div className="flex items-center gap-2">
                       {request && <StatusBadge status={request.assignment_status} size="sm" />}
-                      <span className="text-[10px] text-muted/80">
+                      <span className="text-[11px] text-muted">
                         {formatQueueTime(event.created_at)}
                       </span>
                     </div>
@@ -394,7 +398,7 @@ export default async function AdminTechnicianQueuePage({
         </section>
       </div>
 
-      <section className="rounded-card border border-ink/8 bg-surface p-5 shadow-card">
+      <section className="rounded-card border border-line bg-surface p-5 shadow-card">
         <header className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-brand-ink" />
           <h2 className="font-display text-base font-semibold text-ink">Queue history</h2>
@@ -426,16 +430,16 @@ export default async function AdminTechnicianQueuePage({
                       {actionLabel(event.action)}
                     </td>
                     <td className="py-2.5 pr-4 align-top text-xs text-muted">
-                      {nameById.get(event.technician_id ?? "") ?? "—"}
+                      {nameById.get(event.technician_id ?? "") ?? "N/A"}
                     </td>
                     <td className="py-2.5 pr-4 align-top font-mono text-[11px] text-muted">
-                      {event.appliance_type ?? "—"}
+                      {event.appliance_type ?? "N/A"}
                     </td>
                     <td className="whitespace-nowrap py-2.5 pr-4 align-top text-xs text-muted">
                       {positionChange(event)}
                     </td>
                     <td className="py-2.5 pr-4 align-top text-xs text-muted">
-                      {event.reason ?? "—"}
+                      {event.reason ?? "N/A"}
                     </td>
                     <td className="whitespace-nowrap py-2.5 align-top text-xs text-muted">
                       {event.actor_id ? "Administrator" : "System"}
@@ -462,7 +466,7 @@ const TH =
 
 function AdminStat({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="rounded-card border border-ink/8 bg-surface p-3 shadow-card">
+    <div className="rounded-card border border-line bg-surface p-3 shadow-card">
       <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
         {label}
       </p>
@@ -496,7 +500,7 @@ function FilterLink({
       {label}
       {badge && (
         <span
-          className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+          className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
             active ? "bg-white/20 text-white" : "bg-soft text-muted"
           }`}
         >
@@ -509,29 +513,28 @@ function FilterLink({
 
 /**
  * One queue row. Admin sees everything the snapshot exposes: position,
- * operational status, next booking, current job and whether an offer is out —
- * but never customer details, which do not belong in a queue monitor.
+ * operational status, next booking, current job and whether an offer is out, * but never customer details, which do not belong in a queue monitor.
  */
 function AdminQueueRow({ entry }: { entry: QueueEntry }) {
   const meta = operationalStatusMeta(entry.operationalStatus);
   return (
     <tr
-      className={entry.isMemberActive ? "hover:bg-soft/70" : "bg-soft/60 text-muted/80"}
+      className={entry.isMemberActive ? "hover:bg-soft/70" : "bg-soft/60 text-muted"}
     >
       <td className="py-3 pr-4 align-middle">
         <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-soft px-2 text-xs font-bold text-muted">
-          {entry.position ? `#${entry.position}` : "—"}
+          {entry.position ? `#${entry.position}` : "N/A"}
         </span>
       </td>
       <td className="py-3 pr-4 align-middle">
         <span className="font-medium text-ink">{entry.name}</span>
         {entry.isNextInQueue && (
-          <span className="ml-2 rounded-full border border-line bg-signal-soft px-2 py-0.5 text-[10px] font-semibold text-signal-ink">
+          <span className="ml-2 rounded-full border border-line bg-signal-soft px-2 py-0.5 text-[11px] font-semibold text-signal-ink">
             Next turn
           </span>
         )}
         {!entry.isMemberActive && (
-          <span className="ml-2 rounded-full bg-line px-2 py-0.5 text-[10px] font-semibold text-muted">
+          <span className="ml-2 rounded-full bg-line px-2 py-0.5 text-[11px] font-semibold text-muted">
             Out of rotation
           </span>
         )}
@@ -539,7 +542,7 @@ function AdminQueueRow({ entry }: { entry: QueueEntry }) {
       <td className="py-3 pr-4 align-middle">
         <span
           title={meta.hint}
-          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] ${
+          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${
             TONE_CHIP[meta.tone] ?? TONE_CHIP.neutral
           }`}
         >
@@ -547,18 +550,24 @@ function AdminQueueRow({ entry }: { entry: QueueEntry }) {
         </span>
       </td>
       <td className="whitespace-nowrap py-3 pr-4 align-middle text-xs text-muted">
-        {entry.nextBookingAt ? formatQueueTime(entry.nextBookingAt) : "—"}
+        {entry.nextBookingAt ? formatQueueTime(entry.nextBookingAt) : "N/A"}
       </td>
       <td className="whitespace-nowrap py-3 pr-4 align-middle text-xs text-muted">
-        {entry.currentJobUntil ? `Until ${formatQueueTime(entry.currentJobUntil)}` : "—"}
+        {entry.currentJobUntil ? `Until ${formatQueueTime(entry.currentJobUntil)}` : "N/A"}
+      </td>
+      {/* A position is measured AFTER an acceptance, so this column is what stops
+          "#3" from reading as "two people were ahead of him when he got the work".
+          N/A means they have never accepted a request in this queue. */}
+      <td className="whitespace-nowrap py-3 pr-4 align-middle text-xs text-muted">
+        {entry.lastAssignedAt ? formatQueueTime(entry.lastAssignedAt) : "Never"}
       </td>
       <td className="whitespace-nowrap py-3 align-middle text-xs text-muted">
         {entry.activeOfferRequestId ? (
-          <span className="rounded-full border border-line bg-warn-soft px-2 py-0.5 text-[10px] font-semibold text-warn-ink">
+          <span className="rounded-full border border-line bg-warn-soft px-2 py-0.5 text-[11px] font-semibold text-warn-ink">
             {entry.offersExpiresAt ? `Expires ${formatQueueTime(entry.offersExpiresAt)}` : "Offered"}
           </span>
         ) : (
-          "—"
+          "N/A"
         )}
       </td>
     </tr>
@@ -567,8 +576,8 @@ function AdminQueueRow({ entry }: { entry: QueueEntry }) {
 
 /** Reads as a sentence, so "why did nothing change" is answerable at a glance. */
 function positionChange(event: TechnicianQueueEventRow) {
-  if (event.old_position === null && event.new_position === null) return "—";
-  if (event.old_position === event.new_position) return `#${event.new_position ?? "—"} (unchanged)`;
+  if (event.old_position === null && event.new_position === null) return "N/A";
+  if (event.old_position === event.new_position) return `#${event.new_position ?? "N/A"} (unchanged)`;
   if (event.old_position === null) return `→ #${event.new_position}`;
   if (event.new_position === null) return `#${event.old_position} → removed`;
   return `#${event.old_position} → #${event.new_position}`;
@@ -579,11 +588,11 @@ const ACTION_LABELS: Record<string, string> = {
   TURN_CONSUMED: "Turn consumed",
   MOVED_TO_END: "Moved to end",
   POSITION_CHANGED: "Position changed",
-  SKIPPED_DUE_TO_SCHEDULE: "Skipped — schedule conflict",
-  SKIPPED_DUE_TO_CAPACITY: "Skipped — at capacity",
-  SKIPPED_DUE_TO_UNAVAILABLE: "Skipped — unavailable",
-  SKIPPED_DUE_TO_SERVICE_AREA: "Skipped — outside service area",
-  SKIPPED_DUE_TO_ACTIVE_OFFER: "Skipped — already reviewing an offer",
+  SKIPPED_DUE_TO_SCHEDULE: "Skipped, schedule conflict",
+  SKIPPED_DUE_TO_CAPACITY: "Skipped, at capacity",
+  SKIPPED_DUE_TO_UNAVAILABLE: "Skipped, unavailable",
+  SKIPPED_DUE_TO_SERVICE_AREA: "Skipped, outside service area",
+  SKIPPED_DUE_TO_ACTIVE_OFFER: "Skipped, already reviewing an offer",
   OFFERED: "Offer sent",
   ACCEPTED: "Offer accepted",
   DECLINED: "Offer declined",

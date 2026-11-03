@@ -9,7 +9,7 @@ export interface PolicySection {
  * Shared shell for every `/policies/*` page.
  *
  * The policy routes were the only marketing-adjacent pages that rendered
- * without the site `Footer` and without any page chrome — they dropped the
+ * without the site `Footer` and without any page chrome, they dropped the
  * reader straight onto a bare column of paragraphs with no way back into the
  * product. They now share one layout so a new policy page cannot drift from the
  * others, and the two links in the footer point at real pages instead of both

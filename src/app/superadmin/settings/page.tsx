@@ -10,7 +10,7 @@ export default async function SuperAdminSettingsPage() {
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">System settings</h1>
-      <p className="mt-1 text-sm text-ink/65">
+      <p className="mt-1 text-sm text-ink/70">
         Platform-wide controls. Changes apply immediately to every user.
       </p>
       <SystemSettingsClient

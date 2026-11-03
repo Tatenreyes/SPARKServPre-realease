@@ -1,7 +1,7 @@
 import type { BookingStatus } from "@/types/database";
 
 /**
- * The statuses in which a booking is still LIVE work — one definition, shared.
+ * The statuses in which a booking is still LIVE work, one definition, shared.
  *
  * "Active" is a decision, not a query: a repair that finished physically is not
  * finished as a transaction. It still needs the customer's payment reference and
@@ -11,12 +11,12 @@ import type { BookingStatus } from "@/types/database";
  * This module exists because that decision had three copies: `/admin/dashboard`
  * (all four statuses), `/admin/job-monitoring` (all four, inline) and
  * `/admin/progress` (only `pending` + `in_progress`). The first two agreed, the
- * third did not, so the same tile label — "Active Jobs" — showed two different
+ * third did not, so the same tile label, "Active Jobs", showed two different
  * numbers on two pages of the same workspace. A status list is exactly the kind
  * of thing that drifts when it is copied, so it lives here once.
  *
  * Deliberately NOT the same question as "does this booking hold a technician
- * slot" — that predicate is `booking_status_holds_slot()` in the database
+ * slot", that predicate is `booking_status_holds_slot()` in the database
  * (step 18) and names the same four statuses for a different reason. If either
  * set changes, check the other.
  */

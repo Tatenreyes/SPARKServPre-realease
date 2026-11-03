@@ -4,7 +4,7 @@ import type { OperationalStatus, TechnicianQueueSnapshotRow } from "@/types/data
  * Client-safe queue vocabulary and view helpers.
  *
  * Everything here is presentation only: the authoritative queue decision
- * (position, eligibility, availability, capacity) is made in Postgres — see
+ * (position, eligibility, availability, capacity) is made in Postgres, see
  * `src/lib/assignment.ts` and QUEUE-SYSTEM.md. Nothing in this file may be used
  * to decide who gets work.
  */
@@ -101,7 +101,7 @@ export const OPERATIONAL_STATUS_META: Record<
   SCHEDULED: {
     label: "Scheduled",
     tone: "warn",
-    hint: "Has a future appointment. Still in the queue — only a real clash skips them.",
+    hint: "Has a future appointment. Still in the queue, only a real clash skips them.",
   },
   TEMPORARILY_UNAVAILABLE: {
     label: "Unavailable",
@@ -130,11 +130,11 @@ export function operationalStatusMeta(status: OperationalStatus | string) {
   );
 }
 
-/** "Today, 3:00 PM" / "Jan 30, 9:00 AM" / "—" */
+/** "Today, 3:00 PM" / "Jan 30, 9:00 AM" / "N/A" */
 export function formatQueueTime(value: string | null | undefined): string {
-  if (!value) return "—";
+  if (!value) return "N/A";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "N/A";
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
@@ -164,6 +164,11 @@ export type QueueEntry = {
   currentJobUntil: string | null;
   activeOfferRequestId: string | null;
   offersExpiresAt: string | null;
+  /**
+   * When this technician's turn was last consumed in this queue (step 20). A
+   * position is measured AFTER an acceptance, so this is what makes it readable.
+   */
+  lastAssignedAt: string | null;
 };
 
 export type ApplianceQueue = {
@@ -216,6 +221,9 @@ export function buildApplianceQueues(rows: TechnicianQueueSnapshotRow[]): Applia
           currentJobUntil: row.current_job_until,
           activeOfferRequestId: row.active_offer_request_id,
           offersExpiresAt: row.offers_expires_at,
+          // Absent on a database that has not applied step 20 yet, so this
+          // degrades to null and the note simply is not drawn.
+          lastAssignedAt: row.last_assigned_at ?? null,
         }));
 
       const active = entries.filter((entry) => entry.isMemberActive);
@@ -237,19 +245,45 @@ export function buildApplianceQueues(rows: TechnicianQueueSnapshotRow[]): Applia
 
 /**
  * The sentence a technician should read instead of "you're next in line, so
- * you're getting the next job" — position is fairness, not a job guarantee.
+ * you're getting the next job", position is fairness, not a job guarantee.
  */
 export function myQueueStanding(queue: ApplianceQueue): string {
   if (queue.myPosition === null) {
     return "You are not part of this rotation right now. Add the appliance to your specializations to join it.";
   }
   if (queue.myPosition === 1) {
-    return "Your turn is next when you are eligible and available for a matching request — you can still be skipped if the requested time clashes with your schedule or exceeds your workload.";
+    return "Your turn is next when you are eligible and available for a matching request, you can still be skipped if the requested time clashes with your schedule or exceeds your workload.";
   }
   if (queue.myPosition === 2) {
     return "Your turn is approaching: you move up when the technician ahead of you accepts a request.";
   }
-  return "You keep this position until you accept a request — accepting consumes your turn and moves you to the end of the rotation.";
+  return "You keep this position until you accept a request, accepting consumes your turn and moves you to the end of the rotation.";
+}
+
+/**
+ * Why a position reads the way it does, when the answer is "because you just took
+ * a job".
+ *
+ * Accepting a request consumes that technician's turn and moves them to the END of
+ * the rotation, so `myPosition` is a snapshot taken AFTER their last acceptance.
+ * The number therefore looks like a contradiction to the person reading it: a
+ * technician who accepted two jobs reads as `#3` and reasonably asks why they are
+ * getting work when two people are ahead of them. Observed on the live project
+ * (a technician read `#3` for the appliance he had just taken a job in, and `#4`
+ * for the other), so the screen says the missing half instead of printing a bare
+ * number.
+ *
+ * Returns null when there is nothing to explain: not a member, no position, or no
+ * acceptance yet (a first-turn technician has no turn to have consumed).
+ */
+export function queueTurnNote(queue: ApplianceQueue): string | null {
+  const mine = queue.myEntry;
+  if (!mine || !mine.isMemberActive || mine.position === null) return null;
+  if (!mine.lastAssignedAt) return null;
+
+  return `Your turn was last consumed ${formatQueueTime(
+    mine.lastAssignedAt
+  )}. Accepting a request moves you to the end of this rotation, so this position is where that job left you.`;
 }
 
 /**
@@ -287,21 +321,21 @@ export function customerAssignmentCopy(
       if (coverage?.qualifiedTechnicianAvailable === false) {
         return {
           title: "No technician covers this appliance yet",
-          body: "Your request is saved, but no approved technician services this appliance type at the moment, so it cannot be matched yet. Please contact support — we will tell you as soon as somebody can take it. There is nothing to wait for on this page.",
+          body: "Your request is saved, but no approved technician services this appliance type at the moment, so it cannot be matched yet. Please contact support, we will tell you as soon as somebody can take it. There is nothing to wait for on this page.",
         };
       }
 
       // Deliberately does NOT claim a cause. This state is reached TWO ways: every
       // qualified technician is booked or at capacity for the slot, OR no approved
       // technician covers the appliance type at all. A technician who is not approved
-      // never enters the rotation — `technician_eligibility_failure()` answers
+      // never enters the rotation, `technician_eligibility_failure()` answers
       // `not_available` for them, and `not_in_queue` when they have no ACTIVE row in
-      // `technician_queue_state` — so a request for an appliance nobody approved
+      // `technician_queue_state`, so a request for an appliance nobody approved
       // covers sits here for ever. When the caller does not know which case this is,
       // "every qualified technician is booked" is a false reassurance.
       return {
         title: "Waiting for an eligible technician",
-        body: "We have not matched a qualified technician to this request yet. It stays in line, and we will match you as soon as one becomes available for this appliance and the time you asked for — so you can leave this page. If it is urgent, contact support and we will follow it up.",
+        body: "We have not matched a qualified technician to this request yet. It stays in line, and we will match you as soon as one becomes available for this appliance and the time you asked for, so you can leave this page. If it is urgent, contact support and we will follow it up.",
       };
     }
     case "accepted":

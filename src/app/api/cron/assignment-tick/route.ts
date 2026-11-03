@@ -8,9 +8,9 @@ export const dynamic = "force-dynamic";
  * GET /api/cron/assignment-tick
  *
  * Scheduled assignment maintenance. Runs two sweeps:
- *   1. expireStaleOffers()     — lapses ignored offers and re-offers the
+ *   1. expireStaleOffers(), lapses ignored offers and re-offers the
  *                                request to the next technician in the queue.
- *   2. rematchWaitingRequests() — retries requests that had nobody qualified,
+ *   2. rematchWaitingRequests(), retries requests that had nobody qualified,
  *                                which is what makes "waiting" temporary
  *                                rather than terminal.
  *
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     // Both sweeps are single Postgres transactions: each lapsed offer is marked
     // in the audit trail, the request is re-offered to the next eligible
     // technician, and the technician who ignored the offer KEEPS their queue
-    // position (they were never removed — see QUEUE-SYSTEM.md).
+    // position (they were never removed, see QUEUE-SYSTEM.md).
     const expiredOffers = await expireStaleOffers(supabase);
     await rematchWaitingRequests(supabase);
 

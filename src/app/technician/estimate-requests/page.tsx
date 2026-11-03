@@ -7,7 +7,11 @@ import EstimateForm from "@/components/EstimateForm";
 import OfferResponseControl from "@/components/OfferResponseControl";
 import ServiceLocationCard from "@/components/ServiceLocationCard";
 import { Clock, Send, CheckCircle2, Wallet, CalendarClock, ShieldCheck, MessageSquareWarning } from "lucide-react";
-import { isOpenEstimateStatus } from "@/lib/estimate-costs";
+import {
+  isOpenEstimateStatus,
+  requestNeedsQuote,
+  CLOSED_REQUEST_STATUSES,
+} from "@/lib/estimate-costs";
 import type { EstimateRow, TechnicianPendingOfferRow } from "@/types/database";
 
 export default async function PendingAssignmentsPage() {
@@ -23,25 +27,33 @@ export default async function PendingAssignmentsPage() {
   // the RPC returns only the fields needed to decide (appliance, problem,
   // photos, requested window, expiry) and NOT the customer's address or
   // coordinates. The precise service location is disclosed only after the
-  // assignment is confirmed — see supabase/migration_service_location.sql.
+  // assignment is confirmed, see supabase/migration_service_location.sql.
   let offeredRequests: TechnicianPendingOfferRow[] = [];
   let offersUnavailable = false;
   try {
     offeredRequests = await getTechnicianPendingOffers(supabase, user!.id);
   } catch (error) {
-    // Never render a technician a blank "no offers" screen — say so instead.
+    // Never render a technician a blank "no offers" screen, say so instead.
     offersUnavailable = true;
     console.error("Could not read pending offers", error);
   }
 
   // Requests this technician has already ACCEPTED. These are readable in full
-  // (RLS allows the assigned technician), so the service location — address,
-  // pin and a "Get directions" link — is shown here.
+  // (RLS allows the assigned technician), so the service location, address,
+  // pin and a "Get directions" link, is shown here.
+  //
+  // CLOSED REQUESTS ARE FILTERED OUT IN SQL, from the same `CLOSED_REQUEST_STATUSES`
+  // list the predicate below answers from, so the query and the rule cannot drift —
+  // the pattern `/customer/repairs/requests` already uses. A completed or cancelled
+  // request is not a pending assignment: it belongs in My jobs, and
+  // `submit_estimate()` refuses it with `request_closed` (HTTP 409), so listing it
+  // here offered a form whose submit was guaranteed to fail.
   const { data: acceptedRequests } = await supabase
     .from("service_requests")
     .select("*")
     .eq("assigned_technician_id", user!.id)
     .eq("assignment_status", "accepted")
+    .not("status", "in", `(${CLOSED_REQUEST_STATUSES.join(",")})`)
     .order("created_at", { ascending: false });
 
   const { data: myEstimates } = await supabase
@@ -54,7 +66,7 @@ export default async function PendingAssignmentsPage() {
 
   /** The live version of each request (draft / awaiting decision / revision asked). */
   const liveByRequest = new Map<string, EstimateRow>();
-  /** Every earlier version, newest first — the history a revision must not destroy. */
+  /** Every earlier version, newest first, the history a revision must not destroy. */
   const historyByRequest = new Map<string, EstimateRow[]>();
   for (const estimate of estimates) {
     if (isOpenEstimateStatus(estimate.status)) {
@@ -70,21 +82,32 @@ export default async function PendingAssignmentsPage() {
   }
 
   /**
-   * Which accepted requests still need a quote from this technician:
-   *   * none yet,
-   *   * a draft they have not sent,
-   *   * a version the customer asked to change,
-   *   * a version the customer DECLINED — a declined row is not "live", so the
-   *     request lands here again and the technician can re-quote it. The declined
-   *     version stays declined in the history; the new one is a new version.
-   * A version that is simply awaiting the customer's decision is NOT in this list
-   * (there is nothing for the technician to do until they answer).
+   * Which accepted requests still need a quote from this technician.
+   *
+   * The rule itself is `requestNeedsQuote()` in `@/lib/estimate-costs`, a pure function
+   * so the real behaviour is tested rather than asserted from the source text. The two
+   * cases it was written for, both of which used to land in this list:
+   *
+   *   * a CLOSED request (completed or cancelled) — the repair is over, the archive
+   *     holds the record, and `submit_estimate()` refuses it. My jobs is where a
+   *     finished repair belongs;
+   *   * a request whose estimate was APPROVED. `isOpenEstimateStatus` is only
+   *     `draft | pending | revision_requested`, so an accepted version is not live and
+   *     `liveByRequest` has no entry for it. Reading that absence as "nothing sent yet"
+   *     put booked, in-progress and completed repairs back on this screen with a form
+   *     that could only fail.
    */
-  const needsEstimate = (acceptedRequests ?? []).filter((request) => {
-    const current = liveByRequest.get(request.id);
-    if (!current) return true;
-    return current.status === "draft" || current.status === "revision_requested";
-  });
+  const needsQuote = (acceptedRequests ?? []).filter((request) =>
+    requestNeedsQuote({
+      requestStatus: request.status,
+      liveEstimateStatus: liveByRequest.get(request.id)?.status ?? null,
+      // Any ACCEPTED version counts, not just the newest: an approval is the reason
+      // there is nothing left to send.
+      hasApprovedEstimate: (historyByRequest.get(request.id) ?? []).some(
+        (estimate) => estimate.status === "accepted"
+      ),
+    })
+  );
 
   const estimatesSent = estimates.filter((e) => e.status !== "draft").length;
   const estimatesAccepted = estimates.filter((e) => e.status === "accepted").length;
@@ -95,8 +118,8 @@ export default async function PendingAssignmentsPage() {
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">Pending assignments</h1>
-      <p className="mt-1 text-sm text-ink/65">
-        SPARKServ&apos;s rotation queue offers you jobs in turn — accept or reject what&apos;s offered.
+      <p className="mt-1 text-sm text-ink/70">
+        SPARKServ&apos;s rotation queue offers you jobs in turn, accept or reject what&apos;s offered.
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -110,11 +133,11 @@ export default async function PendingAssignmentsPage() {
         <h2 className="mb-3 font-display text-lg font-semibold text-ink">Offered to you</h2>
         {offersUnavailable ? (
           <p className="rounded-card border border-line bg-soft/60 px-4 py-3 text-sm text-ink/70">
-            Your offers could not be loaded right now. Refresh in a moment — an
+            Your offers could not be loaded right now. Refresh in a moment, an
             offer you cannot see is still yours until it lapses.
           </p>
         ) : !offeredRequests.length ? (
-          <p className="text-sm text-ink/50">No pending offers right now.</p>
+          <p className="text-sm text-ink/70">No pending offers right now.</p>
         ) : (
           <div className="space-y-3">
             {offeredRequests.map((r) => {
@@ -124,14 +147,14 @@ export default async function PendingAssignmentsPage() {
                 r.offers_expires_at && new Date(r.offers_expires_at).getTime() <= Date.now()
               );
               return (
-                <div key={r.id} className="rounded-card border border-ink/8 bg-surface p-4 shadow-card">
+                <div key={r.id} className="rounded-card border border-line bg-surface p-4 shadow-card">
                   <div className="flex items-center justify-between">
                     <p className="font-medium capitalize text-ink">
                       {r.appliance_type.replace("_", " ")}
                     </p>
                     <StatusBadge status={r.status} />
                   </div>
-                  <p className="mt-1 text-sm text-ink/65">{r.problem_description}</p>
+                  <p className="mt-1 text-sm text-ink/70">{r.problem_description}</p>
                   <RequestedWindow
                     start={r.requested_window_start}
                     end={r.requested_window_end}
@@ -140,7 +163,7 @@ export default async function PendingAssignmentsPage() {
                   {/* The customer's exact address and map pin are withheld until
                       you accept: an offer you have not taken up must not reveal
                       where the customer lives. */}
-                  <p className="mt-2 flex items-start gap-1.5 text-xs text-ink/45">
+                  <p className="mt-2 flex items-start gap-1.5 text-xs text-ink/70">
                     <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                     The service address and map pin are shared with you once you
                     accept this job.
@@ -157,23 +180,23 @@ export default async function PendingAssignmentsPage() {
         )}
       </section>
 
-      {needsEstimate.length > 0 && (
+      {needsQuote.length > 0 && (
         <section className="mt-8">
           <h2 className="mb-3 font-display text-lg font-semibold text-ink">
-            Accepted — send an estimate
+            Accepted, send an estimate
           </h2>
           <div className="space-y-3">
-            {needsEstimate.map((r) => {
+            {needsQuote.map((r) => {
               const current = liveByRequest.get(r.id) ?? null;
               return (
-                <div key={r.id} className="rounded-card border border-ink/8 bg-surface p-4 shadow-card">
+                <div key={r.id} className="rounded-card border border-line bg-surface p-4 shadow-card">
                   <div className="flex items-center justify-between">
                     <p className="font-medium capitalize text-ink">
                       {r.appliance_type.replace("_", " ")}
                     </p>
                     <StatusBadge status={r.status} />
                   </div>
-                  <p className="mt-1 text-sm text-ink/65">{r.problem_description}</p>
+                  <p className="mt-1 text-sm text-ink/70">{r.problem_description}</p>
                   <RequestedWindow
                     start={r.requested_window_start}
                     end={r.requested_window_end}
@@ -188,7 +211,7 @@ export default async function PendingAssignmentsPage() {
                       longitude={r.longitude}
                       title="Service location"
                       showDirections
-                      emptyMessage="This customer did not record a service location — contact them from the job page."
+                      emptyMessage="This customer did not record a service location, contact them from the job page."
                     />
                   </div>
 
@@ -222,7 +245,7 @@ export default async function PendingAssignmentsPage() {
 
 /**
  * The window the customer asked for, shown on both the offer and the accepted
- * card. When they gave no time preference it says so explicitly — a technician
+ * card. When they gave no time preference it says so explicitly, a technician
  * should not have to guess whether "no time shown" means "all day" or "nobody
  * asked", because the queue treated those two cases very differently.
  */
@@ -239,7 +262,7 @@ function RequestedWindow({
   return (
     <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-ink/70">
       <CalendarClock className="h-3.5 w-3.5 shrink-0" />
-      {label ? <span>Wants {label} (PH time)</span> : <span>No time preference stated — agree a slot</span>}
+      {label ? <span>Wants {label} (PH time)</span> : <span>No time preference stated, agree a slot</span>}
     </p>
   );
 }
@@ -254,8 +277,8 @@ function StatCard({
   value: string;
 }) {
   return (
-    <div className="rounded-card border border-ink/8 bg-surface p-3 shadow-card">
-      <div className="flex items-center gap-1.5 text-ink/40">
+    <div className="rounded-card border border-line bg-surface p-3 shadow-card">
+      <div className="flex items-center gap-1.5 text-ink/70">
         {icon}
         <span className="text-xs">{label}</span>
       </div>

@@ -36,8 +36,8 @@ export default function UserManagementClient({ initialUsers }: { initialUsers: U
 
   return (
     <div className="mt-6">
-      <div className="mb-3 flex items-center gap-2 rounded-lg border border-ink/15 bg-surface px-3 py-2">
-        <Search className="h-4 w-4 text-ink/35" />
+      <div className="mb-3 flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2">
+        <Search className="h-4 w-4 text-ink/70" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -46,9 +46,9 @@ export default function UserManagementClient({ initialUsers }: { initialUsers: U
         />
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-ink/8 bg-surface shadow-card">
+      <div className="overflow-x-auto rounded-card border border-line bg-surface shadow-card">
         <table className="min-w-[680px] w-full text-left text-sm">
-          <thead className="border-b border-ink/8 bg-canvas text-xs uppercase tracking-wide text-ink/40">
+          <thead className="border-b border-line bg-canvas text-xs uppercase tracking-wide text-ink/70">
             <tr>
               <th className="px-4 py-3 font-medium">User</th>
               <th className="px-4 py-3 font-medium">Role</th>
@@ -60,7 +60,7 @@ export default function UserManagementClient({ initialUsers }: { initialUsers: U
           <tbody>
             {!filtered.length ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-sm text-ink/40">
+                <td colSpan={5} className="px-4 py-6 text-center text-sm text-ink/70">
                   No users found.
                 </td>
               </tr>
@@ -69,7 +69,7 @@ export default function UserManagementClient({ initialUsers }: { initialUsers: U
                 <tr key={u.id} className="border-b border-ink/5 last:border-0">
                   <td className="px-4 py-3">
                     <p className="font-medium text-ink">{u.name}</p>
-                    <p className="text-xs text-ink/40">{u.email}</p>
+                    <p className="text-xs text-ink/70">{u.email}</p>
                   </td>
                   <td className="px-4 py-3">
                     <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold capitalize text-brand-ink">
@@ -87,14 +87,14 @@ export default function UserManagementClient({ initialUsers }: { initialUsers: U
                       {u.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-ink/50">
+                  <td className="px-4 py-3 text-xs text-ink/70">
                     {new Date(u.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
                     <button
                       onClick={() => toggleStatus(u)}
                       disabled={busyId === u.id}
-                      className="text-xs font-semibold text-brand-ink hover:text-brand-ink disabled:opacity-50"
+                      className="text-xs font-semibold text-brand-ink hover:underline disabled:opacity-50"
                     >
                       {busyId === u.id ? "..." : u.is_active ? "Deactivate" : "Activate"}
                     </button>

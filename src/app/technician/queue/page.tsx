@@ -14,7 +14,7 @@ import ScheduleTimeline, { type ScheduleItem } from "@/components/ScheduleTimeli
 import { CalendarClock, Info, ListOrdered } from "lucide-react";
 
 /**
- * Queue & Schedule — the technician's honest view of the rotation.
+ * Queue & Schedule, the technician's honest view of the rotation.
  *
  * Two things this page deliberately does:
  *
@@ -25,7 +25,7 @@ import { CalendarClock, Info, ListOrdered } from "lucide-react";
  *  2. It keeps queue position and schedule apart. Position is fairness
  *     (spec §1/§2); the schedule panel is the actual appointments (spec §3).
  *     A future booking never hides someone from the rotation, so this page never
- *     computes an availability flag of its own — that decision belongs to
+ *     computes an availability flag of its own, that decision belongs to
  *     Postgres, per request and per requested time window.
  */
 export default async function TechnicianQueuePage({
@@ -107,7 +107,7 @@ export default async function TechnicianQueuePage({
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-semibold text-ink">Queue &amp; schedule</h1>
-        <p className="mt-1 max-w-3xl text-sm text-ink/65">
+        <p className="mt-1 max-w-3xl text-sm text-ink/70">
           Your position in each appliance rotation, the technicians you are rotating with, and the
           appointments already on your calendar.
         </p>
@@ -121,12 +121,12 @@ export default async function TechnicianQueuePage({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <QueueStat
           label="Your best position"
-          value={bestPosition ? `#${bestPosition}` : "—"}
+          value={bestPosition ? `#${bestPosition}` : "N/A"}
           hint={leadQueue ? leadQueue.label : "Not in a rotation"}
         />
         <QueueStat
           label="Your status"
-          value={myStatusMeta?.label ?? "—"}
+          value={myStatusMeta?.label ?? "N/A"}
           hint={myStatusMeta?.hint ?? "Operational status"}
         />
         <QueueStat
@@ -163,18 +163,18 @@ export default async function TechnicianQueuePage({
               href={`/technician/queue?queue=${encodeURIComponent(queue.applianceType)}`}
               active={selected === queue.applianceType}
               label={queue.label}
-              badge={queue.myPosition ? `#${queue.myPosition}` : "—"}
+              badge={queue.myPosition ? `#${queue.myPosition}` : "N/A"}
             />
           ))}
         </div>
       )}
       {!queues.length && !queueError && (
         <div className="rounded-card border border-dashed border-ink/20 bg-surface px-6 py-10 text-center">
-          <ListOrdered className="mx-auto h-6 w-6 text-muted/80" />
+          <ListOrdered className="mx-auto h-6 w-6 text-muted" />
           <p className="mt-3 text-sm font-medium text-ink">You are not in any rotation yet</p>
           <p className="mx-auto mt-1 max-w-md text-xs text-muted">
             Queues are per appliance type. Add an appliance to your specializations and you join that
-            rotation — at the end of the line, so the rotation stays fair.
+            rotation, at the end of the line, so the rotation stays fair.
           </p>
           <Link
             href="/technician/profile"
@@ -188,7 +188,7 @@ export default async function TechnicianQueuePage({
       {visibleQueues.map((queue) => (
         <section
           key={queue.applianceType}
-          className="rounded-card border border-ink/8 bg-surface p-5 shadow-card"
+          className="rounded-card border border-line bg-surface p-5 shadow-card"
         >
           <QueueCard queue={queue} />
           <div className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-3">
@@ -208,7 +208,7 @@ export default async function TechnicianQueuePage({
       ))}
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-card border border-ink/8 bg-surface p-5 shadow-card">
+        <section className="rounded-card border border-line bg-surface p-5 shadow-card">
           <header className="flex items-center gap-2">
             <CalendarClock className="h-4 w-4 text-brand-ink" />
             <h2 className="font-display text-base font-semibold text-ink">Upcoming schedule</h2>
@@ -227,7 +227,7 @@ export default async function TechnicianQueuePage({
           )}
           <p className="mt-4 text-[11px] leading-relaxed text-muted">
             This list is your real availability. A visit on 30 January does not make you unavailable
-            on 24 January — we only skip you for a specific request whose time actually clashes.
+            on 24 January, we only skip you for a specific request whose time actually clashes.
           </p>
         </section>
 
@@ -238,7 +238,7 @@ export default async function TechnicianQueuePage({
           </header>
           <dl className="mt-3 space-y-2.5 text-xs leading-relaxed text-muted">
             <RotationFact term="Queue position">
-              Fairness. It decides who is <em>considered</em> first — nothing else. Ratings,
+              Fairness. It decides who is <em>considered</em> first, nothing else. Ratings,
               experience and completed jobs never move you.
             </RotationFact>
             <RotationFact term="Eligibility">
@@ -247,7 +247,7 @@ export default async function TechnicianQueuePage({
             </RotationFact>
             <RotationFact term="Availability">
               Whether the requested time fits your schedule. Checked per request, against the actual
-              window the customer asked for — never against a future booking date.
+              window the customer asked for, never against a future booking date.
             </RotationFact>
             <RotationFact term="Capacity">
               Your workload ceiling (hours per day, concurrent jobs, jobs per day). A request that
@@ -272,7 +272,7 @@ export default async function TechnicianQueuePage({
 /** Small stat tile, matching the dashboard stat cards. */
 function QueueStat({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="rounded-card border border-ink/8 bg-surface p-3 shadow-card">
+    <div className="rounded-card border border-line bg-surface p-3 shadow-card">
       <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
         {label}
       </p>
@@ -306,7 +306,7 @@ function TabLink({
     >
       {label}
       <span
-        className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+        className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
           active ? "bg-white/20 text-white" : "bg-soft text-muted"
         }`}
       >
@@ -319,7 +319,7 @@ function TabLink({
 function MiniFact({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted/80">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">{label}</p>
       <p className="mt-1 text-sm font-semibold text-ink">{value}</p>
     </div>
   );
@@ -334,7 +334,7 @@ function RotationFact({ term, children }: { term: string; children: React.ReactN
   );
 }
 
-/** "Technician C (#1)" — who the engine will consider first for this queue. */
+/** "Technician C (#1)", who the engine will consider first for this queue. */
 function nextTurnLabel(queue: ApplianceQueue): string {
   if (queue.nextTurnPosition === null) return "Nobody in the rotation";
   const holder = queue.entries.find((entry) => entry.position === queue.nextTurnPosition);

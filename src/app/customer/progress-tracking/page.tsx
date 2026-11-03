@@ -40,7 +40,7 @@ export default async function ProgressTrackingPage() {
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">Progress tracking</h1>
-      <p className="mt-1 text-sm text-ink/65">Track your repair visits and progress.</p>
+      <p className="mt-1 text-sm text-ink/70">Track your repair visits and progress.</p>
 
       <ProgressTrackingClient
         bookings={bookings ?? []}

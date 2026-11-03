@@ -5,13 +5,12 @@
  *
  * The CURRENT version of each request is shown in full (the shared
  * EstimateReviewCard), and every earlier version is available underneath it as
- * history — a revision never destroys what was already reviewed.
+ * history, a revision never destroys what was already reviewed.
  *
  * Drafts cannot appear here: RLS hides `draft` rows from customers, and the page
  * only asks for what it may read.
  */
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import EstimateReviewCard from "@/components/EstimateReviewCard";
 import { isCompletedRequestStatus, isOpenEstimateStatus } from "@/lib/estimate-costs";
@@ -66,7 +65,7 @@ export default function EstimatesClient({
 
   if (!visible.length) {
     return (
-      <p className="mt-6 text-sm text-ink/50">
+      <p className="mt-6 text-sm text-ink/70">
         No estimates yet. Your technician sends one after accepting your request.
       </p>
     );
@@ -84,7 +83,7 @@ export default function EstimatesClient({
     return (
       <div key={requestId}>
         {/* The card refreshes the server component itself after a decision, so no
-            local copy of the list is kept — that is what stops a stale row from
+            local copy of the list is kept, that is what stops a stale row from
             offering a second decision. */}
         <EstimateReviewCard
           estimate={current}
@@ -109,17 +108,11 @@ export default function EstimatesClient({
 
   if (!groups.length) {
     return (
-      <p className="mt-6 text-sm text-ink/50">
-        Nothing to review. Your finished repairs and the estimates they were approved at
-        are in{" "}
-        <Link
-          href="/customer/repair-history"
-          className="font-semibold text-brand-ink hover:underline"
-        >
-          Repair history
-        </Link>
-        .
-      </p>
+      <div className="mt-12 flex min-h-32 items-center justify-center text-center">
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-ink/70">
+          Nothing to review
+        </p>
+      </div>
     );
   }
 

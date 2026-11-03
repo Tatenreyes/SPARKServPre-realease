@@ -14,6 +14,14 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // Same opt-out as `src/lib/supabase/server.ts`, and it matters most here:
+      // the role and `system_settings` lookups this middleware runs decide
+      // whether a request is allowed through, so a cached answer is a stale
+      // authorization decision. Next.js stores a patched GET for a year unless
+      // the request itself asks for `no-store`.
+      global: {
+        fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }),
+      },
       cookies: {
         get(name: string) {
           return request.cookies.get(name)?.value;

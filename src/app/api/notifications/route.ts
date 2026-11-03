@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 
-// GET /api/notifications — list the caller's own notifications
+// GET /api/notifications, list the caller's own notifications
 export async function GET() {
   try {
     const user = await getCurrentUser();
@@ -24,7 +24,7 @@ export async function GET() {
   }
 }
 
-// PATCH /api/notifications — mark one (by id) or all (by { all: true }) as read
+// PATCH /api/notifications, mark one (by id) or all (by { all: true }) as read
 export async function PATCH(request: NextRequest) {
   try {
     const user = await getCurrentUser();

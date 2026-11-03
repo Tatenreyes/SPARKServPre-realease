@@ -13,7 +13,7 @@ import { RecentRepairTable } from "@/components/RecentRepairTable";
  * a phone: a long-standing customer can accumulate hundreds of requests, and
  * shipping all of them to render ten is the single easiest way to make the
  * mobile app feel slow. The count is a separate `head: true` query so PostgREST
- * returns no rows for it — the same pattern the admin dashboard already uses.
+ * returns no rows for it, the same pattern the admin dashboard already uses.
  */
 const PAGE_SIZE = 10;
 
@@ -33,7 +33,7 @@ export default async function MyRepairRequestsPage({
    * `?status=active` is the view the dashboard's "Active repairs" tile opens, so the
    * number on the tile and the list behind it agree.
    *
-   * The filter goes into BOTH queries — the page and its count — because a count that
+   * The filter goes into BOTH queries, the page and its count, because a count that
    * ignored it would give the pager the wrong number of pages. The statuses come from
    * `CLOSED_REQUEST_STATUSES`, the same list `isClosedRequestStatus()` answers from,
    * so the SQL filter and every client-side check stay one rule.
@@ -79,7 +79,7 @@ export default async function MyRepairRequestsPage({
         <p className="mt-1.5 text-sm leading-relaxed text-muted">
           {total === 0
             ? onlyActive
-              ? "Nothing is waiting — every request you have submitted is finished or cancelled."
+              ? "Nothing is waiting, every request you have submitted is finished or cancelled."
               : "Every request you submit will be listed here."
             : `${total} ${onlyActive ? "active " : ""}request${total === 1 ? "" : "s"} · newest first`}
         </p>
@@ -153,7 +153,7 @@ function PageLink({
 
   if (disabled) {
     return (
-      <span className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-line px-4 text-sm font-semibold text-muted/50">
+      <span className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-line px-4 text-sm font-semibold text-muted">
         {icon}
         {label}
       </span>

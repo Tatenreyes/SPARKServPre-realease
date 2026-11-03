@@ -12,8 +12,8 @@ import StatusBadge from "@/components/StatusBadge";
  * Messages and bookings are separate destinations in the sidebar, and they were not:
  * the thread only existed at the bottom of the BOOKING page, so every row in the
  * Messages list dropped the customer into a page about paying, inspecting and rating
- * their repair. The conversation is still the same `messages` row — it is scoped to a
- * booking by design (`messages.booking_id` is NOT NULL) — it simply has a page of its
+ * their repair. The conversation is still the same `messages` row, it is scoped to a
+ * booking by design (`messages.booking_id` is NOT NULL), it simply has a page of its
  * own, with the booking left one click away for anyone who wants the job around it.
  */
 export default async function CustomerConversationPage({
@@ -62,7 +62,7 @@ export default async function CustomerConversationPage({
           <h1 className="font-display text-xl font-semibold text-ink">
             {technician?.name ?? "Your technician"}
           </h1>
-          <p className="mt-0.5 text-sm capitalize text-ink/50">
+          <p className="mt-0.5 text-sm capitalize text-ink/70">
             {request?.appliance_type?.replace(/_/g, " ") ?? "Your job"} ·{" "}
             {new Date(booking.scheduled_at).toLocaleString()}
           </p>

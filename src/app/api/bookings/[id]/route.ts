@@ -13,7 +13,7 @@ const VALID_STATUSES: BookingStatus[] = [
   "cancelled",
 ];
 
-// PATCH /api/bookings/:id — drive the repair lifecycle.
+// PATCH /api/bookings/:id, drive the repair lifecycle.
 //
 //   pending → in_progress → awaiting_inspection   (technician, or staff)
 //   pending → cancelled                            (the customer, before work
@@ -21,7 +21,7 @@ const VALID_STATUSES: BookingStatus[] = [
 //   awaiting_inspection → awaiting_payment         (the CUSTOMER only: their
 //                                                   written sign-off, with the
 //                                                   inspection note)
-//   awaiting_payment → completed                   (NOT here — an administrator
+//   awaiting_payment → completed                   (NOT here, an administrator
 //                                                   verifying the payment, via
 //                                                   confirm_payment())
 //
@@ -69,7 +69,7 @@ export async function PATCH(
           ((booking.status === "pending" && status === "in_progress") ||
             (booking.status === "in_progress" && status === "awaiting_inspection"))) ||
         // The customer attests their own inspection, which advances the repair to
-        // the payment step — it does not complete it. Cancelling their own booking
+        // the payment step, it does not complete it. Cancelling their own booking
         // is allowed only while it is still `pending` (before work starts); after
         // that they use support or an administrator.
         (isCustomer &&
@@ -112,7 +112,7 @@ export async function PATCH(
     // Confirming a satisfactory inspection is the customer attesting that the
     // repair actually works. Requiring a written confirmation makes an accidental
     // click recoverable and gives the archived service_history row something
-    // meaningful to say. The confirmation advances to the payment step — it does
+    // meaningful to say. The confirmation advances to the payment step, it does
     // not complete the repair; an administrator's payment verification does that.
     if (status === "awaiting_payment" && isCustomer && !String(inspection_note ?? "").trim()) {
       return NextResponse.json(
@@ -153,7 +153,7 @@ export async function PATCH(
     // Cancelling does NOT release the technician's slot here any more. Step 18's
     // AFTER UPDATE trigger on `bookings` (`release_slot_after_booking_cancel`) does
     // it inside the same transaction as this status change, so the counter cannot
-    // drift when a second call fails — and a cancellation written anywhere else
+    // drift when a second call fails, and a cancellation written anywhere else
     // (an administrator, a service-role script) releases too. See
     // supabase/migration_cancel_release.sql.
 
@@ -193,8 +193,8 @@ export async function PATCH(
 // the same transaction as the cancellation, for every writer. See
 // supabase/migration_cancel_release.sql.
 //
-// Completion never lived here either: it runs inside `confirm_payment()` — the same
-// transaction that verifies the payment — so a repair can never be closed without a
+// Completion never lived here either: it runs inside `confirm_payment()`, the same
+// transaction that verifies the payment, so a repair can never be closed without a
 // verified payment, and a half-failed completion is impossible. See
 // `supabase/migration_rls_workflow_enforcement.sql`.
 
@@ -251,7 +251,7 @@ async function notifyStatusChange(
 /**
  * The words for one transition, from the recipient's side of it.
  *
- * `null` for a status with nothing worth saying — a notification that only reports
+ * `null` for a status with nothing worth saying, a notification that only reports
  * "your status changed" is noise, and the notification list is meant to stay a list
  * of next steps.
  */

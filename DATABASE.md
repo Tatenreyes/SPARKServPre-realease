@@ -24,6 +24,7 @@
 | `supabase/migration_booking_eligibility.sql` | **Step 17.** A booking requires an assigned technician who is still QUALIFIED for the request's appliance type: `technician_qualification_failure()`, `appliance_has_qualified_technician()`, and the re-declared `create_booking_atomic()` / `technician_eligibility_failure()`. |
 | `supabase/migration_cancel_release.sql` | **Step 18.** A cancellation releases the technician's slot and refreshes their operational status in the same transaction, for every writer: the `release_slot_after_booking_cancel` AFTER UPDATE trigger on `bookings`, plus the `booking_status_holds_slot()` predicate. |
 | `supabase/migration_service_warranty.sql` | **Step 19.** A completed repair records the workmanship warranty it carries: `service_history.warranty_days` / `warranty_until`, the `service_warranty_days()` reader and the `stamp_service_warranty` BEFORE INSERT trigger. The job order prints a warranty date only when a row carries one — the system records the period and does not administer claims. |
+| `supabase/migration_queue_offer_guards.sql` | **Step 20.** Two queue corrections, both from the same incident (a technician read `#3` in the appliance he had just been given work in, and the audit showed one of his turns had been spent on a request that could never become a job). `technician_queue_snapshot()` gains `last_assigned_at`, so the screen can say the position is where the last acceptance left him; `assign_technician_to_request()` refuses a request that already has an owner (`already_assigned`), so a walk can no longer spend a turn on one. The file also writes the `queue_offer_guards_version` marker `npm run db:check` probes. |
 
 | `supabase/migration_technician_queue.sql` | Historical, superseded by `schema.sql` + the redesign. Do not apply it on top of them. |
 | `migration_appliances_tickets.sql`, `migration_appliance_centric_flow.sql`, `migration_notifications.sql`, `migration_profile_photos.sql`, `migration_security_hardening.sql`, `migration_system_settings.sql`, `migration_visits_payments.sql`, `migration_fix_technician_signup.sql` | Pre-queue history: applied on the live project already, and folded into `schema.sql` for fresh installs. Not part of the upgrade path below. |
@@ -107,6 +108,26 @@ added, the setting insert does nothing when the key already exists (so a tuned v
 never reset), and the trigger is dropped before it is created. It deliberately does
 **not** re-declare `confirm_payment()`: stamping the row is the archive table's own
 invariant, so it covers every writer rather than one function.
+
+Step 20 is the queue turn guard and **is not applied yet** — `npm run db:check` lists
+`supabase/migration_queue_offer_guards.sql` under PENDING until it is. Apply it in the
+SQL Editor after step 19, one file at a time, then re-run the check (the file's marker
+row, `queue_offer_guards_version`, is the probe: both functions it replaces exist since
+steps 4 and 14, so their presence cannot prove this file ran). It needs no preflight —
+it changes no data and adds no constraint — and no ordering beyond the two files it
+re-declares functions from:
+
+```
+20. supabase/migration_queue_offer_guards.sql
+```
+
+It is safe to re-run: the snapshot is dropped before it is re-created (its OUT
+signature gains a column, which `create or replace` cannot do), the walk is a plain
+`create or replace`, and the permission block only revokes and grants. What it does
+**not** do is undo a turn already spent, or repair the request that caused it — that is
+`npm run audit:queue-turns`, which lists every `TURN_CONSUMED` whose request has no
+estimate and no booking, and every request still left in a walkable state with an owner
+attached, so a human decides per case.
 
 One thing `db:check` **cannot** confirm: the `stamp_service_warranty` trigger. A
 `returns trigger` function is not callable as an RPC, so it never appears in the

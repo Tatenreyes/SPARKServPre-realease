@@ -8,7 +8,7 @@ import type { Database } from "@/types/database";
  * platform's service timezone (the `queue_service_timezone` setting, read by
  * public.service_timezone() in SQL). A customer picking "Jan 24, 09:00" must
  * therefore mean 09:00 *in Manila*, not 09:00 wherever their browser happens to
- * be — otherwise the same request would be evaluated differently depending on
+ * be, otherwise the same request would be evaluated differently depending on
  * who submitted it.
  */
 
@@ -79,7 +79,7 @@ export function zonedToUtc(date: string, time: string, timeZone: string): Date |
 }
 
 /**
- * Renders a stored requested window for a human, in the service timezone — the
+ * Renders a stored requested window for a human, in the service timezone, the
  * same clock the customer typed into and the same one the queue evaluated
  * against. Used on the technician's offer card: accepting a job without knowing
  * when the customer wants it is how appointments get missed.
@@ -107,7 +107,7 @@ export function formatRequestedWindow(
   const startTime = new Intl.DateTimeFormat("en-US", timeOpts).format(startDate);
   const endTime = new Intl.DateTimeFormat("en-US", timeOpts).format(endDate);
 
-  return sameDay ? `${dateLabel} · ${startTime} – ${endTime}` : `${dateLabel} ${startTime} → ${endTime}`;
+  return sameDay ? `${dateLabel} · ${startTime}, ${endTime}` : `${dateLabel} ${startTime} → ${endTime}`;
 }
 
 /**
@@ -117,7 +117,7 @@ export function formatRequestedWindow(
  * `requested_window_end`) or the wizard's plain date + time inputs
  * (`preferred_date`, `preferred_start_time`, `preferred_end_time`), which are
  * interpreted in the service timezone. A date with no times is NOT treated as a
- * whole-day booking — that would make every existing appointment that day a
+ * whole-day booking, that would make every existing appointment that day a
  * conflict, which is exactly the behaviour the redesign removes.
  */
 export async function readRequestedWindow(

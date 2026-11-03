@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Trash2 } from "lucide-react";
 
 /**
- * "Remove this request" — for a request that never went anywhere.
+ * "Remove this request", for a request that never went anywhere.
  *
  * The SERVER owns the rule. `DELETE /api/service-requests/:id` refuses the moment
  * anything real depends on the request (an accepted technician, a prepared
  * estimate, an appointment, a completed repair) and answers with the reason, so
- * this control never has to guess why — it shows what the server said. The
+ * this control never has to guess why, it shows what the server said. The
  * callers additionally hide it outright for the states the customer can see for
  * themselves, so the button is not offered where it can only fail.
  *
@@ -74,7 +74,7 @@ export default function RemoveRequestControl({
               type="button"
               onClick={() => setConfirming(false)}
               disabled={removing}
-              className="rounded-lg border border-ink/15 px-2.5 py-1 text-[11px] font-medium text-ink/70 disabled:opacity-50"
+              className="rounded-lg border border-line px-2.5 py-1 text-[11px] font-medium text-ink/70 disabled:opacity-50"
             >
               Keep
             </button>
@@ -118,7 +118,7 @@ export default function RemoveRequestControl({
           </p>
           <p className="mt-1 text-[11px] leading-relaxed text-alert-ink/80">
             This cannot be undone. If you only need a different time or technician,
-            contact support instead — removing the request starts again from scratch.
+            contact support instead, removing the request starts again from scratch.
           </p>
           <div className="mt-2.5 flex flex-wrap gap-2">
             <button
@@ -133,7 +133,7 @@ export default function RemoveRequestControl({
               type="button"
               onClick={() => setConfirming(false)}
               disabled={removing}
-              className="rounded-full border border-ink/15 px-4 py-2 text-sm font-medium text-ink/70 disabled:opacity-50"
+              className="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink/70 disabled:opacity-50"
             >
               Keep my request
             </button>

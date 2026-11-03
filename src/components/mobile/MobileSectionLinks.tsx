@@ -14,8 +14,8 @@ export type SectionLink = {
  * A section hub: the list of destinations behind one bottom-navigation tab.
  *
  * The bottom bar carries four tabs, so everything else has to be reachable one
- * level down. Rather than re-showing the full sidebar — which is what makes a
- * phone feel like a shrunken website — each tab opens a short, described list of
+ * level down. Rather than re-showing the full sidebar, which is what makes a
+ * phone feel like a shrunken website, each tab opens a short, described list of
  * the things that actually live in that section.
  *
  * Rows, not tiles: a row is a full-width 56px target a thumb can hit without
@@ -63,12 +63,12 @@ export default function MobileSectionLinks({
                   </span>
                 </span>
                 {link.meta && (
-                  <span className="shrink-0 rounded-full border border-line bg-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">
+                  <span className="shrink-0 rounded-full border border-line bg-soft px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted">
                     {link.meta}
                   </span>
                 )}
                 <ChevronRight
-                  className="h-4 w-4 shrink-0 text-muted/60"
+                  className="h-4 w-4 shrink-0 text-muted"
                   aria-hidden="true"
                 />
               </Link>

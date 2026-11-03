@@ -9,7 +9,7 @@ export default async function AdminJobMonitoringPage() {
   const supabase = createServiceRoleClient();
 
   // Every read below is guarded by `requireRows()`: a failed SELECT raises
-  // instead of rendering as "No bookings yet." — see src/lib/query-rows.ts.
+  // instead of rendering as "No bookings yet.", see src/lib/query-rows.ts.
   const bookingsResult = await supabase
     .from("bookings")
     .select("*")
@@ -52,22 +52,22 @@ export default async function AdminJobMonitoringPage() {
   const completedCount = bookings.filter((b) => b.status === "completed").length;
   const avgRating = ratings.length
     ? (ratings.reduce((s, r) => s + r.rating, 0) / ratings.length).toFixed(1)
-    : "—";
+    : "N/A";
 
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">Job monitoring &amp; QA</h1>
-      <p className="mt-1 text-sm text-ink/65">Real-time tracking and quality assurance for all repair jobs.</p>
+      <p className="mt-1 text-sm text-ink/70">Real-time tracking and quality assurance for all repair jobs.</p>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard label="Active Jobs" value={activeCount} />
         <StatCard label="Completed" value={completedCount} />
-        <StatCard label="Avg. Customer Rating" value={avgRating === "—" ? avgRating : `${avgRating}/5`} />
+        <StatCard label="Avg. Customer Rating" value={avgRating === "N/A" ? avgRating : `${avgRating}/5`} />
       </div>
 
-      <div className="mt-8 overflow-x-auto rounded-card border border-ink/8 bg-surface shadow-card">
+      <div className="mt-8 overflow-x-auto rounded-card border border-line bg-surface shadow-card">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-ink/8 bg-canvas text-xs uppercase tracking-wide text-ink/40">
+          <thead className="border-b border-line bg-canvas text-xs uppercase tracking-wide text-ink/70">
             <tr>
               <th className="px-4 py-3 font-medium">Job ID</th>
               <th className="px-4 py-3 font-medium">Customer</th>
@@ -82,7 +82,7 @@ export default async function AdminJobMonitoringPage() {
           <tbody>
             {!bookings.length ? (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-sm text-ink/40">
+                <td colSpan={8} className="px-4 py-6 text-center text-sm text-ink/70">
                   No bookings yet.
                 </td>
               </tr>
@@ -99,24 +99,24 @@ export default async function AdminJobMonitoringPage() {
                   : null;
                 return (
                   <tr key={b.id} className="border-b border-ink/5 last:border-0">
-                    <td className="px-4 py-3 font-mono text-xs text-ink/50">
+                    <td className="px-4 py-3 font-mono text-xs text-ink/70">
                       {b.id.slice(0, 8)}
                     </td>
-                    <td className="px-4 py-3 text-ink/70">{userMap.get(b.customer_id) ?? "—"}</td>
+                    <td className="px-4 py-3 text-ink/70">{userMap.get(b.customer_id) ?? "N/A"}</td>
                     <td className="px-4 py-3 capitalize text-ink/70">
-                      {r?.appliance_type.replace("_", " ") ?? "—"}
+                      {r?.appliance_type.replace("_", " ") ?? "N/A"}
                     </td>
-                    <td className="px-4 py-3 text-ink/70">{userMap.get(b.technician_id) ?? "—"}</td>
+                    <td className="px-4 py-3 text-ink/70">{userMap.get(b.technician_id) ?? "N/A"}</td>
                     <td className="px-4 py-3 text-ink/70">
-                      {b.final_cost != null ? `₱${b.final_cost.toFixed(2)}` : "—"}
+                      {b.final_cost != null ? `₱${b.final_cost.toFixed(2)}` : "N/A"}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={b.status} />
                     </td>
-                    <td className="px-4 py-3 text-xs text-ink/50">
-                      <span className="block max-w-[16rem] break-words">{r?.location ?? "—"}</span>
+                    <td className="px-4 py-3 text-xs text-ink/70">
+                      <span className="block max-w-[16rem] break-words">{r?.location ?? "N/A"}</span>
                       {r?.latitude != null && r?.longitude != null && (
-                        <span className="mt-0.5 block font-mono text-[10px] text-ink/35">
+                        <span className="mt-0.5 block font-mono text-[11px] text-ink/70">
                           {r.latitude.toFixed(6)}, {r.longitude.toFixed(6)}
                         </span>
                       )}
@@ -133,8 +133,8 @@ export default async function AdminJobMonitoringPage() {
                         </a>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-xs text-ink/50">
-                      {rating != null ? `★ ${rating}/5` : "—"}
+                    <td className="px-4 py-3 text-xs text-ink/70">
+                      {rating != null ? `★ ${rating}/5` : "N/A"}
                     </td>
                   </tr>
                 );
@@ -149,9 +149,9 @@ export default async function AdminJobMonitoringPage() {
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-card border border-ink/8 bg-surface p-3 shadow-card">
+    <div className="rounded-card border border-line bg-surface p-3 shadow-card">
       <p className="font-display text-lg font-semibold text-ink">{value}</p>
-      <p className="mt-0.5 text-xs text-ink/50">{label}</p>
+      <p className="mt-0.5 text-xs text-ink/70">{label}</p>
     </div>
   );
 }

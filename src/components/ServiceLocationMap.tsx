@@ -10,7 +10,7 @@
  *   * a skeleton while the Leaflet chunk downloads, and
  *   * a plain, non-blocking notice if the map never loads.
  *
- * A map failure must never take the repair form down with it — the customer can
+ * A map failure must never take the repair form down with it, the customer can
  * still type their address, and the request still submits.
  */
 
@@ -57,7 +57,7 @@ export default function ServiceLocationMap({
         <MapPinOff className="h-5 w-5 text-muted" aria-hidden="true" />
         <p className="text-sm font-medium text-ink">The map could not be loaded</p>
         <p className="max-w-sm text-xs leading-relaxed text-muted">
-          You can still enter your address above and submit your request — the
+          You can still enter your address above and submit your request, the
           assigned technician will use the written address for directions.
         </p>
         <button

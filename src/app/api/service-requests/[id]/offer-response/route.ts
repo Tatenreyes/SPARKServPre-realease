@@ -4,7 +4,7 @@ import { getCurrentUser, AuthError } from "@/lib/auth";
 import { respondToOffer } from "@/lib/assignment";
 import { notify } from "@/lib/notifications";
 
-// POST /api/service-requests/:id/offer-response — technician accepts or rejects
+// POST /api/service-requests/:id/offer-response, technician accepts or rejects
 // the request currently offered to them.
 //
 // Both paths run inside ONE Postgres transaction (respond_to_offer):
@@ -18,7 +18,7 @@ import { notify } from "@/lib/notifications";
 //             the next eligible technician in the same transaction.
 //
 // Skipping/declining never removes anyone from the queue, and completing a job
-// never re-rotates it — see QUEUE-SYSTEM.md.
+// never re-rotates it, see QUEUE-SYSTEM.md.
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -47,7 +47,7 @@ export async function POST(
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
     }
 
-    // Only the technician the request is actually offered to may respond — the
+    // Only the technician the request is actually offered to may respond, the
     // function re-checks this under the row lock (defence in depth).
     if (
       serviceRequest.assigned_technician_id !== user.id ||

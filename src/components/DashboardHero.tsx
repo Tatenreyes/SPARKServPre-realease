@@ -43,7 +43,7 @@ export default function DashboardHero({
               `from-[#DFEBFF]` pale-blue wash while the copy itself used
               `text-ink` / `text-muted`; those invert with the theme, so in dark
               mode the band went near-black, the copy went near-white, and the
-              fixed pale plate left light text on a light background — the whole
+              fixed pale plate left light text on a light background, the whole
               greeting, subtitle and stat row disappeared. The photo is
               arbitrary, so the plate has to be the thing that adapts. */}
           <div
@@ -102,7 +102,7 @@ export default function DashboardHero({
               technician hero carries a photograph on the right, and a CTA
               floating over it is a contrast lottery.
 
-              On a phone they stack full width — a hero is the first thing on the
+              On a phone they stack full width, a hero is the first thing on the
               page, so its buttons are the primary entry point, and two buttons
               sharing a 360px line leaves each one too narrow to label properly.
               At `sm` they return to the inline row. */}

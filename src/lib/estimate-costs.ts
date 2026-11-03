@@ -1,5 +1,5 @@
 /**
- * Estimate money rules — the ONE place the total is defined.
+ * Estimate money rules, the ONE place the total is defined.
  *
  * Imported by the technician's form (live total preview) and by the API route
  * (validation before the database function sees it), so the number on the button
@@ -9,7 +9,7 @@
  * Pure and dependency-free: no React, no Supabase, no server-only imports.
  */
 
-/** Two decimal places — the currency's minor unit, matching numeric(10,2). */
+/** Two decimal places, the currency's minor unit, matching numeric(10,2). */
 export const MONEY_DECIMALS = 2;
 
 /** Largest single line the database will accept (numeric(10,2)). */
@@ -60,7 +60,7 @@ function isUsableAmount(value: number): boolean {
 }
 
 /**
- * The total, derived from the itemized lines — never taken from the client.
+ * The total, derived from the itemized lines, never taken from the client.
  * `parts` may be 0 (plenty of repairs need no parts at all).
  */
 export function computeEstimateTotal(amounts: Partial<EstimateAmounts>): number {
@@ -108,7 +108,7 @@ export function validateEstimate(input: {
     return {
       ok: false,
       code: "scope_required",
-      message: "Describe the work you propose to do — the customer is approving that scope.",
+      message: "Describe the work you propose to do, the customer is approving that scope.",
     };
   }
 
@@ -150,7 +150,7 @@ export function validateEstimate(input: {
   return { ok: true, amounts: { labor, parts, other }, total };
 }
 
-/** ₱1,234.50 — one formatter, so every screen shows money the same way. */
+/** ₱1,234.50, one formatter, so every screen shows money the same way. */
 export function formatMoney(value: number | null | undefined): string {
   const amount = typeof value === "number" && Number.isFinite(value) ? value : 0;
   return `₱${amount.toLocaleString("en-PH", {
@@ -203,19 +203,18 @@ export function isBookableEstimate(estimate: {
  * Whether a REQUEST can still receive an appointment.
  *
  * An approved estimate is not enough on its own: the repair it belongs to has a
- * lifecycle, and `quoted` is the only state a new booking may be created from —
- * the estimate is approved and the technician has accepted, but no live appointment
+ * lifecycle, and `quoted` is the only state a new booking may be created from, * the estimate is approved and the technician has accepted, but no live appointment
  * exists yet. Every other state either already has one or has closed the request:
  *
- *   * `booked` / `in_progress` — the appointment exists, the repair is under way;
- *   * `completed`              — the repair is finished;
- *   * `cancelled`              — the request is final;
- *   * `open`                   — no approved estimate to book against.
+ *   * `booked` / `in_progress`, the appointment exists, the repair is under way;
+ *   * `completed`, the repair is finished;
+ *   * `cancelled`, the request is final;
+ *   * `open`, no approved estimate to book against.
  *
  * Asking the REQUEST also answers the booking question, which is why this does not
  * need the booking row: a cancelled appointment reopens its request to `quoted`
  * (supabase/migration_cancel_release.sql), so the same repair can be booked again
- * at another time — and only then.
+ * at another time, and only then.
  *
  * `undefined`/`null` mean the caller did not supply the status: it is left alone and
  * the server stays the authority, exactly like `assignment_status`.
@@ -236,13 +235,62 @@ export function canBookFromRequest(status: string | null | undefined): boolean {
 export const CLOSED_REQUEST_STATUSES = ["completed", "cancelled"] as const;
 
 /**
- * True when the request behind an estimate is over — completed or cancelled.
+ * True when the request behind an estimate is over, completed or cancelled.
  *
  * Such an estimate is the approved RECORD of what was agreed, not something awaiting
  * a decision or an appointment, so a customer screen must offer neither.
  */
 export function isClosedRequestStatus(status: string | null | undefined): boolean {
   return CLOSED_REQUEST_STATUSES.some((closed) => closed === status);
+}
+
+/**
+ * Does an ACCEPTED request still need a quote from the technician?
+ *
+ * This is the rule behind the "Accepted, send an estimate" list on
+ * `/technician/estimate-requests`. It is a function rather than an inline filter so
+ * the real rule can be tested directly (see `scripts/tests/estimate-costs.test.mjs`),
+ * because the version that lived inside the page had a defect no test could reach.
+ *
+ * YES when:
+ *   * no version has ever been sent (`liveEstimateStatus` null, nothing approved), or
+ *   * the live version is a `draft` the technician has not sent, or
+ *   * the customer asked for a revision, or
+ *   * the customer DECLINED — a declined version is not live, so the request comes
+ *     back here to be re-quoted as a new version.
+ *
+ * NO when:
+ *   * the request is CLOSED (completed or cancelled). The repair is over, the archive
+ *     holds the record, and `submit_estimate()` refuses it with `request_closed` —
+ *     so listing it offered a form whose submit was guaranteed to fail. Finished
+ *     work belongs in My jobs and on Past jobs, not in a to-do list;
+ *   * a version is simply AWAITING the customer's decision — there is nothing for the
+ *     technician to do until they answer;
+ *   * a version was already APPROVED. This is the case the old inline filter got
+ *     wrong: `isOpenEstimateStatus` is only `draft | pending | revision_requested`, so
+ *     an accepted version is not "live", and treating a missing live version as
+ *     "nothing sent yet" put booked, in-progress and completed repairs back on the
+ *     screen with a form that could only fail.
+ *
+ * Note the asymmetry, which is deliberate: a REJECTED version is a re-quote, an
+ * APPROVED one is not.
+ */
+export function requestNeedsQuote(params: {
+  requestStatus: string | null | undefined;
+  /** The status of the open version, or null when there is none. */
+  liveEstimateStatus: string | null | undefined;
+  /** Whether ANY version of this request was accepted. */
+  hasApprovedEstimate: boolean;
+}): boolean {
+  if (isClosedRequestStatus(params.requestStatus)) return false;
+
+  if (params.liveEstimateStatus) {
+    return (
+      params.liveEstimateStatus === "draft" || params.liveEstimateStatus === "revision_requested"
+    );
+  }
+
+  return !params.hasApprovedEstimate;
 }
 
 /**
@@ -253,7 +301,7 @@ export function isClosedRequestStatus(status: string | null | undefined): boolea
  * that still want a decision is what made finished work look like an open one.
  *
  * A CANCELLED request is deliberately not included. Nothing was repaired, so Service
- * history has no row to carry the quote — the estimate is the only record of what was
+ * history has no row to carry the quote, the estimate is the only record of what was
  * proposed, so it stays where the customer can still read it.
  */
 export function isCompletedRequestStatus(status: string | null | undefined): boolean {

@@ -13,7 +13,7 @@ interface UserInfo {
 const STATUS_OPTIONS: TicketStatus[] = ["open", "in_progress", "resolved", "closed"];
 
 const PRIORITY_COLOR: Record<TicketPriority, string> = {
-  low: "bg-ink/5 text-ink/50",
+  low: "bg-ink/5 text-ink/70",
   medium: "bg-brand-soft text-brand-ink",
   high: "bg-brand-soft text-brand-ink",
   critical: "bg-alert-soft text-alert-ink",
@@ -56,8 +56,8 @@ export default function AdminSupportTicketsClient({
 
   return (
     <div className="mt-6">
-      <div className="mb-3 flex items-center gap-2 rounded-lg border border-ink/15 bg-surface px-3 py-2">
-        <Search className="h-4 w-4 text-ink/35" />
+      <div className="mb-3 flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2">
+        <Search className="h-4 w-4 text-ink/70" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -66,9 +66,9 @@ export default function AdminSupportTicketsClient({
         />
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-ink/8 bg-surface shadow-card">
+      <div className="overflow-x-auto rounded-card border border-line bg-surface shadow-card">
         <table className="min-w-[720px] w-full text-left text-sm">
-          <thead className="border-b border-ink/8 bg-canvas text-xs uppercase tracking-wide text-ink/40">
+          <thead className="border-b border-line bg-canvas text-xs uppercase tracking-wide text-ink/70">
             <tr>
               <th className="px-4 py-3 font-medium">Ticket</th>
               <th className="px-4 py-3 font-medium">Customer</th>
@@ -79,7 +79,7 @@ export default function AdminSupportTicketsClient({
           <tbody>
             {!filtered.length ? (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-ink/40">
+                <td colSpan={4} className="px-4 py-6 text-center text-sm text-ink/70">
                   No tickets found.
                 </td>
               </tr>
@@ -90,16 +90,16 @@ export default function AdminSupportTicketsClient({
                   <tr key={t.id} className="border-b border-ink/5 last:border-0">
                     <td className="px-4 py-3">
                       <p className="font-medium text-ink">{t.subject}</p>
-                      <p className="mt-0.5 text-xs text-ink/35">
+                      <p className="mt-0.5 text-xs text-ink/70">
                         {new Date(t.created_at).toLocaleDateString()}
                       </p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-ink/70">{u?.name ?? "—"}</p>
-                      <p className="text-xs text-ink/40">{u?.email}</p>
+                      <p className="text-ink/70">{u?.name ?? "N/A"}</p>
+                      <p className="text-xs text-ink/70">{u?.email}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-xs capitalize text-ink/60">{t.type.replace("_", " ")}</p>
+                      <p className="text-xs capitalize text-ink/70">{t.type.replace("_", " ")}</p>
                       <span
                         className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${PRIORITY_COLOR[t.priority]}`}
                       >
@@ -111,7 +111,7 @@ export default function AdminSupportTicketsClient({
                         value={t.status}
                         disabled={busyId === t.id}
                         onChange={(e) => updateStatus(t.id, e.target.value as TicketStatus)}
-                        className="rounded-lg border border-ink/15 px-2 py-1 text-xs capitalize"
+                        className="rounded-lg border border-line px-2 py-1 text-xs capitalize"
                       >
                         {STATUS_OPTIONS.map((s) => (
                           <option key={s} value={s} className="capitalize">

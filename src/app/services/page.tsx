@@ -76,7 +76,7 @@ export default function ServicesPage() {
             variants={staggerContainer(0.1)}
             className="mx-auto max-w-3xl text-center"
           >
-            <motion.span variants={fadeUp} className="text-[10px] font-bold uppercase tracking-[0.16em] text-spark-300">
+            <motion.span variants={fadeUp} className="text-[11px] font-bold uppercase tracking-[0.16em] text-spark-300">
               Our Services
             </motion.span>
             <motion.h1 variants={fadeUp} className="mt-4 max-w-2xl text-4xl font-semibold leading-tight md:text-6xl">
@@ -132,7 +132,7 @@ export default function ServicesPage() {
             variants={staggerContainer(0.1)}
           >
             <div className="text-center max-w-2xl mx-auto mb-14">
-              <motion.span variants={fadeUp} className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-ink">
+              <motion.span variants={fadeUp} className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-ink">
                 How It Works
               </motion.span>
               <motion.h2 variants={fadeUp} className="mt-3 text-3xl font-bold text-ink sm:text-4xl">
@@ -167,7 +167,7 @@ export default function ServicesPage() {
           variants={staggerContainer(0.1)}
         >
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <motion.span variants={fadeUp} className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-ink">
+            <motion.span variants={fadeUp} className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-ink">
               All Services
             </motion.span>
             <motion.h2 variants={fadeUp} className="mt-3 text-3xl font-bold text-ink sm:text-4xl">

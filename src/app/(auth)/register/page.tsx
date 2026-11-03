@@ -3,7 +3,7 @@ import AuthForm, { AuthFormSkeleton } from "@/components/AuthForm";
 import AuthShell from "@/components/AuthShell";
 
 export const metadata = {
-  title: "Create an account — SPARKServ",
+  title: "Create an account, SPARKServ",
   description: "Create a SPARKServ account to file a repair request or offer repair work.",
 };
 
@@ -12,8 +12,13 @@ export default function RegisterPage() {
     <AuthShell
       headline="Join SPARKServ"
       subhead="Request appliance repairs or apply to join the technician network in Cagayan de Oro."
+      backgroundImage="/images/signup-appliance-space.png"
+      backgroundImageAlt="Appliances available for SPARKServ repair"
+      backgroundImageFit="cover"
+      backgroundImageScrim={false}
+      panelStyle="signup"
     >
-      {/* Same Suspense requirement as /login — see the note there. The register
+      {/* Same Suspense requirement as /login, see the note there. The register
           form is taller than the login form (name, role selector, two consent
           rows), so the skeleton is given more rows to keep the swap from
           shifting the page. */}

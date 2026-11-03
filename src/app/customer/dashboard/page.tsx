@@ -90,7 +90,7 @@ export default async function CustomerDashboard() {
     : { data: [] };
 
   // The request the tracking strip follows: the newest LIVE one. There is deliberately
-  // no fallback to a finished request — "Service tracking" means what is happening now,
+  // no fallback to a finished request, "Service tracking" means what is happening now,
   // and a completed or cancelled repair belongs to Service history. The fallback that
   // used to be here drew a full seven-step rail for a closed job, under a heading that
   // claimed to be tracking it.
@@ -128,8 +128,8 @@ export default async function CustomerDashboard() {
   );
 
   // Coverage is asked only for the one state that has no rail to carry the answer: a
-  // live request nobody has taken. Asking about a request that is already moving — or
-  // finished — would be a wasted round trip.
+  // live request nobody has taken. Asking about a request that is already moving, or
+  // finished, would be a wasted round trip.
   const trackedCoverage =
     trackedRequest && !trackedHasProgress && !trackedRequest.assigned_technician_id
       ? await applianceCoverage(trackedRequest.appliance_type)
@@ -138,7 +138,7 @@ export default async function CustomerDashboard() {
   /**
    * The dead end, on the dashboard: nobody covers this appliance, so there is nothing
    * to wait for. Same shared wording as the request page and the strip, so the three
-   * cannot drift apart — and it replaces the rail rather than sitting beside it.
+   * cannot drift apart, and it replaces the rail rather than sitting beside it.
    */
   const coverageNotice =
     trackedRequest && !trackedHasProgress && trackedCoverage === false
@@ -148,7 +148,7 @@ export default async function CustomerDashboard() {
   /**
    * The Action centre.
    *
-   * Every card here is a decision the customer owns — approve a cost, confirm a
+   * Every card here is a decision the customer owns, approve a cost, confirm a
    * date, inspect the work, settle a balance. Nothing is invented: each item is
    * read from the request, estimate, booking and payment rows already fetched
    * above, so the list cannot disagree with the pages it links to. If the list is
@@ -216,7 +216,7 @@ export default async function CustomerDashboard() {
     actions.push({
       id: `inspection-${booking.id}`,
       kind: "inspection",
-      title: "Repair finished — please inspect",
+      title: "Repair finished, please inspect",
       subject: applianceOf(booking.service_request_id),
       detail: "Check the appliance works before the repair is completed and billed.",
       cta: "Inspect appliance",
@@ -249,7 +249,7 @@ export default async function CustomerDashboard() {
   }
 
   // 5. A booking completed before the payment step was required, with nothing paid
-  //    against it yet — the legacy path, still surfaced so it is not forgotten.
+  //    against it yet, the legacy path, still surfaced so it is not forgotten.
   for (const booking of bookings ?? []) {
     if (booking.status !== "completed") continue;
     if (settledBookingIds.has(booking.id)) continue;
@@ -268,7 +268,7 @@ export default async function CustomerDashboard() {
       subject: applianceOf(booking.service_request_id),
       amount: booking.final_cost ?? acceptedEstimate?.estimated_cost,
       detail:
-        "The repair is complete but no verified payment is on file. Upload your GCash reference and we'll verify it — payment is confirmed only after an administrator checks it.",
+        "The repair is complete but no verified payment is on file. Upload your GCash reference and we'll verify it, payment is confirmed only after an administrator checks it.",
       cta: "Review payment",
       href: `/customer/bookings/${booking.id}`,
     });
@@ -308,7 +308,7 @@ export default async function CustomerDashboard() {
           {
             label: "Active repairs",
             value: activeRequests.length,
-            // The list of this customer's requests — NOT `/customer/service-request`,
+            // The list of this customer's requests, NOT `/customer/service-request`,
             // which is a legacy alias that redirects to the new-request wizard, so
             // the tile used to open a blank "service inquiry" form. `?status=active`
             // is the same view this tile counts, so the number and the list agree.
@@ -399,7 +399,7 @@ export default async function CustomerDashboard() {
         <div className="space-y-5 md:space-y-0 md:contents">
           {/* The rail exists only when there is progress to show. A request that is
               still waiting for a technician, or one that is already finished, has
-              nothing for a seven-step tracker to report — and drawing step 1 of 7 for
+              nothing for a seven-step tracker to report, and drawing step 1 of 7 for
               it is what made an untouched request look like work in flight. */}
           {trackedHasProgress && trackedRequest && (
             <DashboardPanel
@@ -415,7 +415,7 @@ export default async function CustomerDashboard() {
                 </Link>
               }
             >
-              {/* Bound to the real request/booking/estimate rows — this strip used
+              {/* Bound to the real request/booking/estimate rows, this strip used
                   to be a hardcoded bar with a fixed caption. */}
               <ServiceTracking
                 request={trackedRequest}

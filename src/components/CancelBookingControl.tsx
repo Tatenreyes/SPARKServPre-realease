@@ -47,14 +47,14 @@ export default function CancelBookingControl({
   }
 
   return (
-    <div className="rounded-card border border-ink/8 bg-surface p-5 shadow-card">
+    <div className="rounded-card border border-line bg-surface p-5 shadow-card">
       <h3 className="font-display text-base font-semibold text-ink">
         Need a different time?
       </h3>
-      <p className="mt-1 text-sm text-ink/60">
+      <p className="mt-1 text-sm text-ink/70">
         You can cancel this appointment until the technician starts the repair. Your
         approved estimate and your technician are kept, so you can book another time
-        straight away — no new request and no cancellation fee.
+        straight away, no new request and no cancellation fee.
       </p>
 
       {error && <p className="mt-2 text-sm text-alert-ink">{error}</p>}
@@ -83,7 +83,7 @@ export default function CancelBookingControl({
             <button
               onClick={() => setConfirming(false)}
               disabled={submitting}
-              className="rounded-full border border-ink/15 px-4 py-2 text-sm font-medium text-ink/70"
+              className="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink/70"
             >
               Keep the appointment
             </button>

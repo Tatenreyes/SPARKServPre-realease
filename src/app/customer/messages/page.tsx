@@ -55,10 +55,10 @@ export default async function CustomerMessagesPage() {
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">Messages</h1>
-      <p className="mt-1 text-sm text-ink/65">Conversations with your technicians, by job.</p>
+      <p className="mt-1 text-sm text-ink/70">Conversations with your technicians, by job.</p>
 
       {!bookings?.length ? (
-        <p className="mt-8 text-sm text-ink/50">No conversations yet — they start once you book a technician.</p>
+        <p className="mt-8 text-sm text-ink/70">No conversations yet, they start once you book a technician.</p>
       ) : (
         <div className="mt-6 space-y-2">
           {conversations.map((b) => {
@@ -68,7 +68,7 @@ export default async function CustomerMessagesPage() {
               <Link
                 key={b.id}
                 href={`/customer/messages/${b.id}`}
-                className="flex items-start gap-3 rounded-card border border-ink/8 bg-surface p-4 shadow-card transition hover:border-brand-300"
+                className="flex items-start gap-3 rounded-card border border-line bg-surface p-4 shadow-card transition hover:border-brand-300"
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-ink">
                   <MessageSquare className="h-4 w-4" />
@@ -77,17 +77,17 @@ export default async function CustomerMessagesPage() {
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate font-medium text-ink">
                       {technicianMap.get(b.technician_id) ?? "Technician"} ·{" "}
-                      <span className="capitalize text-ink/50">
+                      <span className="capitalize text-ink/70">
                         {req?.appliance_type.replace("_", " ") ?? "Job"}
                       </span>
                     </p>
                     {latest && (
-                      <p className="shrink-0 text-xs text-ink/35">
+                      <p className="shrink-0 text-xs text-ink/70">
                         {new Date(latest.created_at).toLocaleDateString()}
                       </p>
                     )}
                   </div>
-                  <p className="mt-0.5 truncate text-sm text-ink/50">
+                  <p className="mt-0.5 truncate text-sm text-ink/70">
                     {latest ? latest.content : "No messages yet"}
                   </p>
                 </div>

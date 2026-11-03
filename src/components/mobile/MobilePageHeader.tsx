@@ -5,15 +5,14 @@ import { ArrowRight } from "lucide-react";
  * The top of an internal page, as a header rather than a hand-built block.
  *
  * This is the markup the admin and super admin dashboards were each writing out
- * for themselves — eyebrow, heading, one-line description, primary action — with
+ * for themselves, eyebrow, heading, one-line description, primary action, with
  * the differences between them being accidents rather than decisions. On a phone
  * the shared version is laid out as a card-like stack with the action as a
  * full-width 44px button under the copy, which is where a thumb can reach it;
  * from `md` up it returns to the inline title-left / action-right arrangement
  * those pages already had, so nothing on a desktop changes.
  *
- * The action is optional because not every page has a single obvious next step —
- * a page with two equal actions should not be given a header button, it should
+ * The action is optional because not every page has a single obvious next step, * a page with two equal actions should not be given a header button, it should
  * get a real section further down.
  */
 export default function MobilePageHeader({

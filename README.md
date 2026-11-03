@@ -165,7 +165,7 @@ every recovery link ends on "This link can't be used" rather than being accepted
 without a signature; and the binding uses the `session_id` claim of the access
 token Supabase issues, which every current project includes (if a project ever
 stopped issuing it, recovery would fail closed the same way — the manual pass in
-`TESTING.md` §4 catches it immediately).
+`TESTING.md` §5 catches it immediately).
 
 ### Upgrading an existing database
 

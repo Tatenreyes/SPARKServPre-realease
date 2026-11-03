@@ -58,7 +58,7 @@ export default async function SuperAdminDashboard() {
 
   // Real request volume: every request whose `created_at` falls in the window,
   // bucketed by day. This replaced a hardcoded `[30, 44, 39, 56, 48, 63, 72]`
-  // with invented "May 1 … May 28" labels — a chart that no deployment could
+  // with invented "May 1 … May 28" labels, a chart that no deployment could
   // make true, sitting on the screen an administrator reads as platform metrics.
   const windowStart = new Date();
   windowStart.setHours(0, 0, 0, 0);
@@ -102,7 +102,7 @@ export default async function SuperAdminDashboard() {
       />
 
       {/* Six tiles: a 2x2 grid on a phone rather than six stacked, and six
-          columns from `xl` up — see `DashboardStatGroup`. */}
+          columns from `xl` up, see `DashboardStatGroup`. */}
       <DashboardStatGroup
         desktopColumns={6}
         items={[
@@ -126,7 +126,7 @@ export default async function SuperAdminDashboard() {
               values={requestTrend}
               caption={`New repair requests per day over the last ${TREND_DAYS} days: ${requestTrend.join(", ")}. Total ${requestsInWindow}.`}
             />
-            <div className="mt-3 flex justify-between text-[10px] text-muted/80">
+            <div className="mt-3 flex justify-between text-[11px] text-muted">
               {axisLabels(requestBuckets).map((label) => (
                 <span key={label}>{label}</span>
               ))}
@@ -140,7 +140,7 @@ export default async function SuperAdminDashboard() {
         </DashboardPanel>
 
         {/* This panel used to read "Server status: Online / Database: Normal /
-            Storage: 60%" — three invented readings rendered with a green success
+            Storage: 60%", three invented readings rendered with a green success
             chip, none of which the application can actually observe. It now
             shows values that are read from `system_settings`, so every line is
             something the platform genuinely knows. */}
@@ -201,7 +201,7 @@ export default async function SuperAdminDashboard() {
                       <p className="mt-0.5 truncate text-xs text-muted">
                         {request.location ? `Location: ${request.location}` : "No location recorded"}
                       </p>
-                      <p className="mt-1 text-[11px] text-muted/80">{timeAgo(request.created_at)}</p>
+                      <p className="mt-1 text-[11px] text-muted">{timeAgo(request.created_at)}</p>
                     </div>
                     <Link
                       href={`/admin/job-monitoring`}
@@ -255,7 +255,7 @@ export default async function SuperAdminDashboard() {
       <DashboardPanel
         title="SMS notifications"
         icon={MessageSquareText}
-        description="Verify your Semaphore SMS integration — sends a test message to the phone number saved on your own account."
+        description="Verify your Semaphore SMS integration, sends a test message to the phone number saved on your own account."
       >
         <AdminSmsTest phone={admin?.phone ?? null} />
       </DashboardPanel>
@@ -313,7 +313,7 @@ function ConfigLine({
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3">
       <span className="text-sm text-muted">{label}</span>
-      <span className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold ${CONFIG_TONE_CLASS[tone]}`}>
+      <span className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold ${CONFIG_TONE_CLASS[tone]}`}>
         {value}
       </span>
     </div>
@@ -340,7 +340,7 @@ function ToolCard({ href, title, body }: { href: string; title: string; body: st
     >
       <p className="font-display text-sm font-semibold text-ink group-hover:text-brand-ink">{title}</p>
       <p className="mt-2 text-xs leading-6 text-muted">{body}</p>
-      <ArrowRight className="mt-4 h-4 w-4 text-muted/80 transition group-hover:translate-x-1 group-hover:text-brand-ink" />
+      <ArrowRight className="mt-4 h-4 w-4 text-muted transition group-hover:translate-x-1 group-hover:text-brand-ink" />
     </Link>
   );
 }
