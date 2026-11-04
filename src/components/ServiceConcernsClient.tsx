@@ -13,16 +13,21 @@ const TYPE_OPTIONS: { value: TicketType; label: string }[] = [
 ];
 
 /**
+ * The customer's own SERVICE CONCERNS, and the form that raises one.
+ *
+ * The product noun is "concern"; the table is still `support_tickets` (see
+ * DATABASE.md) — a concern is anything raised that is not a repair job.
+ *
  * Deep links used by the mobile Support hub.
  *
  * "Warranty concern" and "Feedback" are not separate destinations, they are the
- * same support form with the type and an opening line already chosen. Two extra
- * routes would have been two extra pages to keep in sync with one API; a preset
- * gives the customer the same head start without inventing a parallel workflow.
+ * same form with the type and an opening line already chosen. Two extra routes
+ * would have been two extra pages to keep in sync with one API; a preset gives the
+ * customer the same head start without inventing a parallel workflow.
  */
-export type SupportPreset = "warranty" | "feedback";
+export type ConcernPreset = "warranty" | "feedback";
 
-const PRESETS: Record<SupportPreset, { type: TicketType; subject: string }> = {
+const PRESETS: Record<ConcernPreset, { type: TicketType; subject: string }> = {
   warranty: { type: "technical_issue", subject: "Warranty concern, " },
   feedback: { type: "other", subject: "Feedback, " },
 };
@@ -46,13 +51,13 @@ const PRIORITY_COLOR: Record<TicketPriority, string> = {
   critical: "bg-alert-soft text-alert-ink",
 };
 
-export default function SupportTicketsClient({
+export default function ServiceConcernsClient({
   initialTickets,
   preset,
 }: {
   initialTickets: SupportTicketRow[];
   /** Opens the form with a topic already chosen, see the mobile Support hub. */
-  preset?: SupportPreset;
+  preset?: ConcernPreset;
 }) {
   const [tickets, setTickets] = useState(initialTickets);
   const [showForm, setShowForm] = useState(Boolean(preset));
@@ -105,7 +110,7 @@ export default function SupportTicketsClient({
           className="mb-4 inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-xl bg-brand-500 px-4 text-sm font-semibold text-white transition duration-200 hover:bg-brand-600"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
-          New ticket
+          New concern
         </button>
       ) : (
         <form
@@ -130,7 +135,7 @@ export default function SupportTicketsClient({
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="ticket-type" className="mb-1 block text-sm font-medium text-ink/80">
-                Ticket type
+                Concern type
               </label>
               <select
                 id="ticket-type"
@@ -187,7 +192,7 @@ export default function SupportTicketsClient({
               disabled={submitting}
               className="inline-flex h-11 cursor-pointer items-center rounded-xl bg-brand-500 px-5 text-sm font-semibold text-white transition duration-200 hover:bg-brand-600 disabled:opacity-50"
             >
-              {submitting ? "Sending..." : "Submit ticket"}
+              {submitting ? "Sending..." : "Submit concern"}
             </button>
             <button
               type="button"
@@ -206,8 +211,8 @@ export default function SupportTicketsClient({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search tickets by subject..."
-            aria-label="Search tickets"
+            placeholder="Search concerns by subject..."
+            aria-label="Search concerns"
             className="w-full bg-transparent text-base outline-none sm:text-sm"
           />
         </div>
@@ -215,11 +220,11 @@ export default function SupportTicketsClient({
 
       {!filtered.length ? (
         <div className="rounded-card border border-dashed border-line px-5 py-10 text-center">
-          <p className="text-sm font-medium text-ink">No tickets yet</p>
+          <p className="text-sm font-medium text-ink">No concerns yet</p>
           <p className="mt-1 text-xs leading-relaxed text-muted">
             {search
               ? "Nothing matches that search."
-              : "Open a ticket and our team will reply here."}
+              : "Raise a concern and our team will reply here."}
           </p>
         </div>
       ) : (

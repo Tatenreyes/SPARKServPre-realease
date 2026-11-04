@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import EstimatesClient from "@/components/EstimatesClient";
 
 export default async function MyEstimatesPage() {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   const { data: requests } = await supabase
     .from("service_requests")
     .select("id, appliance_type, problem_description, assignment_status, status")
-    .eq("customer_id", user!.id);
+    .eq("customer_id", user.id);
 
   const requestIds = (requests ?? []).map((r) => r.id);
   const requestMap = new Map((requests ?? []).map((r) => [r.id, r]));

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { formatMoney, isBookableEstimate } from "@/lib/estimate-costs";
 import type { EstimateRow } from "@/types/database";
 import { Wrench, Wallet, Star, ShieldCheck, CalendarX2, ArrowRight } from "lucide-react";
@@ -32,13 +32,13 @@ import { Wrench, Wallet, Star, ShieldCheck, CalendarX2, ArrowRight } from "lucid
  * update, so there is not a single control on this page.
  */
 export default async function PastJobsPage() {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   const { data: history } = await supabase
     .from("service_history")
     .select("*")
-    .eq("technician_id", user!.id)
+    .eq("technician_id", user.id)
     .order("completed_at", { ascending: false });
 
   const bookingIds = (history ?? []).map((entry) => entry.booking_id);
@@ -78,7 +78,7 @@ export default async function PastJobsPage() {
   const { data: cancelled } = await supabase
     .from("bookings")
     .select("id, service_request_id, scheduled_at")
-    .eq("technician_id", user!.id)
+    .eq("technician_id", user.id)
     .eq("status", "cancelled")
     .order("scheduled_at", { ascending: false });
 

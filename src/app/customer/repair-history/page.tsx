@@ -1,24 +1,24 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { formatMoney, isBookableEstimate } from "@/lib/estimate-costs";
 import type { EstimateRow } from "@/types/database";
 import { Wrench, Star, Wallet, CalendarClock } from "lucide-react";
 
 export default async function RepairHistoryPage() {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   const { data: history } = await supabase
     .from("service_history")
     .select("*")
-    .eq("customer_id", user!.id)
+    .eq("customer_id", user.id)
     .order("completed_at", { ascending: false });
 
   const { data: ratings } = await supabase
     .from("ratings")
     .select("booking_id, rating, comment")
-    .eq("customer_id", user!.id);
+    .eq("customer_id", user.id);
 
   const ratingByBooking = new Map(
     (ratings ?? []).map((rating) => [rating.booking_id, rating])

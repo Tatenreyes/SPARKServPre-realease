@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
-import SupportTicketsClient, { type SupportPreset } from "@/components/SupportTicketsClient";
+import { requireUser } from "@/lib/auth";
+import ServiceConcernsClient, { type ConcernPreset } from "@/components/ServiceConcernsClient";
 import MobileSectionLinks from "@/components/mobile/MobileSectionLinks";
 import { Headset, MessageSquareText, ShieldQuestion, Sparkles } from "lucide-react";
 
@@ -22,17 +22,17 @@ export default async function SupportTicketsPage({
 }: {
   searchParams?: { topic?: string };
 }) {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   const { data: tickets } = await supabase
     .from("support_tickets")
     .select("*")
-    .eq("user_id", user!.id)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   const topic = searchParams?.topic;
-  const preset: SupportPreset | undefined =
+  const preset: ConcernPreset | undefined =
     topic === "warranty" || topic === "feedback" ? topic : undefined;
 
   return (
@@ -58,8 +58,8 @@ export default async function SupportTicketsPage({
           },
           {
             href: "/customer/support",
-            label: "Support tickets",
-            hint: "Account and platform problems",
+            label: "Service concerns",
+            hint: "Complaints and account problems",
             icon: Headset,
           },
           {
@@ -79,12 +79,12 @@ export default async function SupportTicketsPage({
 
       <section className="rounded-card border border-line bg-surface px-4 pb-5 pt-4 shadow-[0_1px_2px_rgba(16,38,74,0.04)] sm:px-5">
         <h2 className="font-display text-[15px] font-semibold text-ink">
-          Your tickets
+          Your concerns
         </h2>
         <p className="mt-0.5 text-xs leading-relaxed text-muted">
-          Every ticket you have opened, with its current status.
+          Every concern you have raised, with its current status.
         </p>
-        <SupportTicketsClient initialTickets={tickets ?? []} preset={preset} />
+        <ServiceConcernsClient initialTickets={tickets ?? []} preset={preset} />
       </section>
     </div>
   );

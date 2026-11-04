@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import StatusBadge from "@/components/StatusBadge";
 import { CalendarDays, ChevronRight } from "lucide-react";
 
 export default async function CustomerBookingsPage() {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   const { data: bookings } = await supabase
     .from("bookings")
     .select("*")
-    .eq("customer_id", user!.id)
+    .eq("customer_id", user.id)
     .order("scheduled_at", { ascending: false });
 
   return (

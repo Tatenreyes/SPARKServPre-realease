@@ -354,8 +354,10 @@ estimates with customer approval and revision; atomic booking (one live booking 
 request, no overlapping appointment); repair progress, customer inspection sign-off,
 GCash reference submission and administrator verification with a recorded reason;
 realtime messaging; in-app notifications and browser push; ratings and service
-history; a printable **job order** for every completed repair; support tickets; and
-the admin/super-admin operations screens with the queue audit trail.
+history; a printable **job order** for every completed repair; **service concerns**
+(complaints, account problems, warranty questions and feedback, kept apart from
+repair jobs); and the admin/super-admin operations screens with the queue audit
+trail.
 
 Deliberately simplified / left as extension points:
 - **Payments**: no payment gateway is wired in. A customer submits an external GCash

@@ -31,7 +31,7 @@ const SECTIONS: PolicySection[] = [
   },
   {
     title: "Disputes",
-    body: "If a repair does not resolve the reported fault, use the inspection step to flag it or open a support ticket. Refund eligibility is assessed case by case. Going around the platform to settle a dispute privately removes your ability to escalate it here.",
+    body: "If a repair does not resolve the reported fault, use the inspection step to flag it or raise a service concern. Refund eligibility is assessed case by case. Going around the platform to settle a dispute privately removes your ability to escalate it here.",
   },
   {
     title: "Conduct",

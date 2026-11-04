@@ -81,7 +81,9 @@ test("closed requests are excluded in SQL, from the one list that defines them",
 
 test("a request is only considered after the assignment was accepted", () => {
   assert.match(pending, /\.eq\("assignment_status", "accepted"\)/);
-  assert.match(pending, /\.eq\("assigned_technician_id", user!\.id\)/);
+  // `user.id`, not `user!.id`: the page reads its user through `requireUser()`,
+  // which redirects instead of returning a null (see `npm run test:user-guard`).
+  assert.match(pending, /\.eq\("assigned_technician_id", user\.id\)/);
 });
 
 // ------------------------------------------------- the record that was missing
@@ -90,7 +92,7 @@ test("past jobs exists as a technician route and reads the archive", () => {
   assert.match(pastJobs, /\.from\("service_history"\)/, "the archive is the source of finished work");
   assert.match(
     pastJobs,
-    /\.eq\("technician_id", user!\.id\)/,
+    /\.eq\("technician_id", user\.id\)/,
     "scoped to the signed-in technician, the policy that already allows it"
   );
 });

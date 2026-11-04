@@ -5,7 +5,7 @@ import { buildApplianceQueues, type ApplianceQueue } from "@/lib/queue";
 import StatusBadge from "@/components/StatusBadge";
 import { DashboardPanel, DashboardStatGroup, DashboardTrend } from "@/components/DashboardCard";
 import MobilePageHeader from "@/components/mobile/MobilePageHeader";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { timeAgo } from "@/lib/time-ago";
 import {
   BriefcaseBusiness,
@@ -37,7 +37,10 @@ export default async function AdminDashboard() {
   // `is_admin()` and a service-role client carries no `auth.uid()`.
   const supabase = createServiceRoleClient();
   const userClient = createClient();
-  await getCurrentUser();
+  // A real guard, not a discarded call: this page used to `await getCurrentUser()`
+  // and ignore the answer, so it rendered for nobody in particular. It redirects
+  // now, which is what every page in this workspace does (see `requireUser`).
+  await requireUser();
 
   const { count: technicianCount } = await supabase
     .from("technicians")
@@ -171,7 +174,7 @@ export default async function AdminDashboard() {
           // approval tile because both are people waiting on staff.
           { label: "Pending payments", value: pendingPaymentVerifications ?? 0, href: "/admin/payments", icon: CircleDollarSign, colorClass: "bg-accent-soft text-accent-ink" },
           { label: "Open requests", value: openRequests ?? 0, href: "/admin/technician-queue", icon: BriefcaseBusiness, colorClass: "bg-brand-soft text-brand-ink" },
-          { label: "Support tickets", value: supportTickets ?? 0, href: "/admin/support-tickets", icon: CircleAlert, colorClass: "bg-alert-soft text-alert-ink" },
+          { label: "Service concerns", value: supportTickets ?? 0, href: "/admin/service-concerns", icon: CircleAlert, colorClass: "bg-alert-soft text-alert-ink" },
         ]}
       />
 

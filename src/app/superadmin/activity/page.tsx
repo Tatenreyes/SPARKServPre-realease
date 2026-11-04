@@ -66,7 +66,7 @@ export default async function SuperAdminActivityPage() {
     })),
     ...(tickets ?? []).map((t) => ({
       id: `ticket-${t.id}`,
-      type: "Support ticket",
+      type: "Service concern",
       description: t.subject,
       timestamp: t.created_at,
     })),

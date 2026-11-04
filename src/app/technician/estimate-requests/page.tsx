@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getTechnicianPendingOffers } from "@/lib/assignment";
 import { getServiceTimezone, formatRequestedWindow } from "@/lib/service-time";
 import StatusBadge from "@/components/StatusBadge";
@@ -15,7 +15,7 @@ import {
 import type { EstimateRow, TechnicianPendingOfferRow } from "@/types/database";
 
 export default async function PendingAssignmentsPage() {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
   const serviceTimeZone = await getServiceTimezone(supabase);
 
@@ -31,7 +31,7 @@ export default async function PendingAssignmentsPage() {
   let offeredRequests: TechnicianPendingOfferRow[] = [];
   let offersUnavailable = false;
   try {
-    offeredRequests = await getTechnicianPendingOffers(supabase, user!.id);
+    offeredRequests = await getTechnicianPendingOffers(supabase, user.id);
   } catch (error) {
     // Never render a technician a blank "no offers" screen, say so instead.
     offersUnavailable = true;
@@ -51,7 +51,7 @@ export default async function PendingAssignmentsPage() {
   const { data: acceptedRequests } = await supabase
     .from("service_requests")
     .select("*")
-    .eq("assigned_technician_id", user!.id)
+    .eq("assigned_technician_id", user.id)
     .eq("assignment_status", "accepted")
     .not("status", "in", `(${CLOSED_REQUEST_STATUSES.join(",")})`)
     .order("created_at", { ascending: false });
@@ -59,7 +59,7 @@ export default async function PendingAssignmentsPage() {
   const { data: myEstimates } = await supabase
     .from("estimates")
     .select("*")
-    .eq("technician_id", user!.id)
+    .eq("technician_id", user.id)
     .order("version", { ascending: false });
 
   const estimates = myEstimates ?? [];

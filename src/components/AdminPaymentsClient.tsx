@@ -4,6 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, CheckCircle2, AlertTriangle } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
+import FilterDropdowns from "@/components/FilterDropdown";
+import WarrantyBadge from "@/components/WarrantyBadge";
+import { buildFacets, rowMatches, type FacetSpec, type FilterSelection } from "@/lib/filter-options";
+import {
+  WARRANTY_FILTER_LABELS,
+  WARRANTY_FILTER_VALUES,
+  warrantyFilterKey,
+} from "@/lib/warranty";
 import type { PaymentRow } from "@/types/database";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -25,6 +33,13 @@ export interface PaymentRepair {
   scheduledAt: string;
   finalCost: number | null;
   applianceType: string | null;
+  /**
+   * The workmanship warranty the repair carries once it is completed, straight
+   * off `service_history`. Shown before a payment is verified because that is the
+   * moment the cover starts — and the moment the admin can still refuse to charge
+   * for work that is already under warranty.
+   */
+  warrantyUntil: string | null;
 }
 
 export default function AdminPaymentsClient({
@@ -51,7 +66,35 @@ export default function AdminPaymentsClient({
   const [reason, setReason] = useState("");
   const [reviewing, setReviewing] = useState(false);
 
+  const [filters, setFilters] = useState<FilterSelection>({});
+
+  /**
+   * Two facets, both multi-select. The warranty one is the reason this control
+   * earns its space: "which of these is a repair we have already covered once" is
+   * a question the admin could not ask before, and it decides whether the customer
+   * is charged at all. Counts are faceted, so each box shows what ticking it shows.
+   */
+  const facets: FacetSpec<PaymentRow>[] = [
+    {
+      key: "status",
+      label: "Status",
+      values: Object.keys(STATUS_LABEL),
+      labels: STATUS_LABEL,
+      get: (payment) => payment.status,
+    },
+    {
+      key: "warranty",
+      label: "Warranty",
+      values: WARRANTY_FILTER_VALUES,
+      labels: WARRANTY_FILTER_LABELS,
+      get: (payment) => warrantyFilterKey(repairs[payment.booking_id]?.warrantyUntil ?? null),
+    },
+  ];
+
+  const groups = buildFacets(facets, payments, filters);
+
   const filtered = payments.filter((p) => {
+    if (!rowMatches(facets, p, filters)) return false;
     if (!search) return true;
     const name = customerNames[p.customer_id] ?? "";
     return (
@@ -59,6 +102,10 @@ export default function AdminPaymentsClient({
       name.toLowerCase().includes(search.toLowerCase())
     );
   });
+
+  /** True when the list on screen is narrower than the queue, for the empty state. */
+  const narrowed =
+    Object.values(filters).some((keys) => keys && keys.length > 0) || Boolean(search.trim());
 
   /** Clear the per-row message before a new attempt. */
   function clearResult(id: string) {
@@ -163,6 +210,10 @@ export default function AdminPaymentsClient({
         />
       </div>
 
+      <div className="mb-3 rounded-lg border border-line bg-surface px-3 py-2.5">
+        <FilterDropdowns groups={groups} selected={filters} onChange={setFilters} />
+      </div>
+
       <div className="overflow-x-auto rounded-card border border-line bg-surface shadow-card">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-line bg-canvas text-xs uppercase tracking-wide text-ink/70">
@@ -179,7 +230,7 @@ export default function AdminPaymentsClient({
             {!filtered.length ? (
               <tr>
                 <td colSpan={6} className="px-4 py-6 text-center text-sm text-ink/70">
-                  No transactions yet.
+                  {narrowed ? "No transactions match these filters." : "No transactions yet."}
                 </td>
               </tr>
             ) : (
@@ -199,6 +250,14 @@ export default function AdminPaymentsClient({
                           <span className="text-[11px] text-ink/70">
                             {new Date(repair.scheduledAt).toLocaleDateString()}
                           </span>
+                        </span>
+                      )}
+                      {/* Only a completed repair carries cover, and only then is
+                          there a date to show. A repair still at the payment step
+                          has no warranty row yet, so the cell stays quiet. */}
+                      {repair?.warrantyUntil && (
+                        <span className="mt-1 block">
+                          <WarrantyBadge until={repair.warrantyUntil} size="sm" />
                         </span>
                       )}
                     </td>

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import MessageThread from "@/components/MessageThread";
 import StatusBadge from "@/components/StatusBadge";
 
@@ -19,7 +19,7 @@ export default async function TechnicianConversationPage({
 }: {
   params: { bookingId: string };
 }) {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   const { data: booking } = await supabase
@@ -30,7 +30,7 @@ export default async function TechnicianConversationPage({
 
   // RLS already limits this to the technician's own booking; the explicit check keeps
   // a customer who guessed a technician URL from being handed the page at all.
-  if (!booking || booking.technician_id !== user!.id) notFound();
+  if (!booking || booking.technician_id !== user.id) notFound();
 
   const [{ data: customer }, { data: request }, { data: messages }] = await Promise.all([
     supabase.from("users").select("name").eq("id", booking.customer_id).single(),
@@ -79,7 +79,7 @@ export default async function TechnicianConversationPage({
 
       <MessageThread
         bookingId={booking.id}
-        currentUserId={user!.id}
+        currentUserId={user.id}
         otherUserId={booking.customer_id}
         initialMessages={messages ?? []}
       />

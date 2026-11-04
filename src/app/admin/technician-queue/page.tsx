@@ -13,6 +13,7 @@ import type {
   TechnicianQueueEventRow,
 } from "@/types/database";
 import { TONE_CHIP } from "@/components/QueueCard";
+import { FILTER_GROUP_LABEL, filterChipClass, filterCountClass } from "@/components/filterChipStyles";
 import QueueOverrideControl from "@/components/QueueOverrideControl";
 import StatusBadge from "@/components/StatusBadge";
 import { History, ListOrdered, ShieldCheck } from "lucide-react";
@@ -168,7 +169,7 @@ export default async function AdminTechnicianQueuePage({
 
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
+          <span className={FILTER_GROUP_LABEL}>
             Appliance queue
           </span>
           <FilterLink href={queueHref(null, statusKey)} active={!selectedQueue} label="All" />
@@ -183,7 +184,7 @@ export default async function AdminTechnicianQueuePage({
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
+          <span className={FILTER_GROUP_LABEL}>
             Status
           </span>
           {STATUS_FILTERS.map((filter) => (
@@ -476,6 +477,15 @@ function AdminStat({ label, value, hint }: { label: string; value: string; hint:
   );
 }
 
+/**
+ * One chip in the queue's two filter rows.
+ *
+ * The styling comes from `@/components/filterChipStyles`, the same recipe the
+ * client lists' bars use, so the workspace has ONE filter control rather than two
+ * that nearly match. Only the data behind the chips differs: here an appliance
+ * chip filters whole queues and a status chip filters technicians inside them,
+ * which is why this page keeps its own URL builder instead of `buildFacets`.
+ */
 function FilterLink({
   href,
   active,
@@ -488,25 +498,9 @@ function FilterLink({
   badge?: string;
 }) {
   return (
-    <Link
-      href={href}
-      aria-current={active ? "page" : undefined}
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold transition duration-200 ${
-        active
-          ? "border-brand-600 bg-brand-600 text-white"
-          : "border-line bg-surface text-muted hover:border-brand-300 hover:bg-brand-soft/60"
-      }`}
-    >
+    <Link href={href} aria-current={active ? "page" : undefined} className={filterChipClass(active)}>
       {label}
-      {badge && (
-        <span
-          className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
-            active ? "bg-white/20 text-white" : "bg-soft text-muted"
-          }`}
-        >
-          {badge}
-        </span>
-      )}
+      {badge && <span className={filterCountClass(active)}>{badge}</span>}
     </Link>
   );
 }

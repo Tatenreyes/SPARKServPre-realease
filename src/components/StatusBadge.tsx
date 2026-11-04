@@ -49,7 +49,7 @@ const STATUS_TONES: Record<string, Tone> = {
   matching: "warn",
   offered: "warn",
   waiting: "neutral",
-  // payments / support tickets / visits
+  // payments / service concerns / visits
   pending_verification: "warn",
   resolved: "success",
   closed: "neutral",

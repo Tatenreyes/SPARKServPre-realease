@@ -1,15 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import TechnicianJobsClient from "@/components/TechnicianJobsClient";
 
 export default async function TechnicianJobsPage() {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   const { data: bookings } = await supabase
     .from("bookings")
     .select("*")
-    .eq("technician_id", user!.id)
+    .eq("technician_id", user.id)
     .order("scheduled_at", { ascending: true });
 
   const requestIds = Array.from(new Set((bookings ?? []).map((b) => b.service_request_id)));
@@ -26,6 +26,16 @@ export default async function TechnicianJobsPage() {
         .order("visit_number", { ascending: true })
     : { data: [] };
 
+  // The technician's own ratings of these customers (step 21). Readable by the
+  // technician who wrote them, which is exactly the rule the card needs: it shows
+  // the rating back as read-only instead of offering the form twice.
+  const { data: customerRatings } = bookingIds.length
+    ? await supabase
+        .from("customer_ratings")
+        .select("*")
+        .in("booking_id", bookingIds)
+    : { data: [] };
+
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">My jobs</h1>
@@ -34,6 +44,7 @@ export default async function TechnicianJobsPage() {
         bookings={bookings ?? []}
         requests={requests ?? []}
         visits={visits ?? []}
+        customerRatings={customerRatings ?? []}
       />
     </div>
   );

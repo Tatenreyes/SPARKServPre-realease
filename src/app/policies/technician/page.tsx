@@ -37,7 +37,7 @@ const SECTIONS = [
   },
   {
     title: "Professional Conduct",
-    body: "Treat customers and their property with respect. Misconduct reported through support tickets may result in account review or deactivation.",
+    body: "Treat customers and their property with respect. Misconduct reported through service concerns may result in account review or deactivation.",
   },
   {
     title: "Dispute Handling",

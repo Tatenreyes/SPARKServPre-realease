@@ -361,6 +361,29 @@ technician's availability, widen a service area, or (rarely) have the customer
 change the requested time. Admins do **not** hand-assign a technician from the
 queue screen — that bypasses eligibility, capacity and the audit trail.
 
+### Rating the customer (the other direction)
+
+After the visit is over — from `awaiting_inspection` onwards, which is when the
+technician packs up — each job card on **My jobs** asks how the visit went for
+*them*: a star score, reasons (only offered below five stars), and an optional note.
+It is the half every two-way marketplace has: who was there, whether the access was
+safe, and whether the reported fault matched what was actually wrong.
+
+* **Only the technician and an administrator can read it.** The customer is never
+  told, and never sees the row — the table's policy allows those two readers and
+  nobody else.
+* **A 1–2 star rating notifies the administrators**, with the reasons and a link to
+  the job. That is the whole consequence: nothing is suspended, nobody is refused
+  work, and the queue never reads it. The office decides.
+* **One rating per visit**, and it cannot be edited, the same rule as the customer's.
+* The office sees the aggregate per customer in **User management** ("Tech rating
+  4.6 · 3 visits", flagged for review below 3.5 over three or more visits) and the
+  per-visit score beside the customer's own rating in **Job monitoring**.
+* **The customer can see their own average** on their dashboard, with the
+  compliments technicians chose — never a per-visit score and never a comment. Uber
+  shows a rider their rating; Grab does not show a passenger theirs, and that
+  opacity is the one part of the model worth not copying.
+
 ---
 
 ## System (no human in the loop)

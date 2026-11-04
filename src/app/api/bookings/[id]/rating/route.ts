@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 import { notify } from "@/lib/notifications";
+import { sanitizeTags } from "@/lib/rating-tags";
 
 const MAX_COMMENT_LENGTH = 1000;
 
@@ -13,6 +14,15 @@ const MAX_COMMENT_LENGTH = 1000;
  * rating. Ownership, the completed status and the duplicate check are all
  * enforced here on the server; the RLS insert policy only checks that the row's
  * `customer_id` matches the caller.
+ *
+ * ANONYMITY (step 21). The technician's notification carries the SCORE and the
+ * TAGS, never the customer's sentence. It used to forward the first 120 characters
+ * of the comment, which is a straight breach of the rule every platform in this
+ * space states plainly — Uber: "Displayed as an average… Anonymous. Neither riders
+ * nor drivers see individual ratings tied to a particular trip or person." The
+ * comment is still recorded and still read by an administrator; the tags are what
+ * the technician gets, and aggregated ("two customers said the area was left
+ * untidy"), which answers "what should I do differently?" without naming a visit.
  */
 export async function POST(
   request: NextRequest,
@@ -28,6 +38,7 @@ export async function POST(
     const body = await request.json().catch(() => ({}));
     const rating = Number(body.rating);
     const comment = typeof body.comment === "string" ? body.comment.trim() : "";
+    const tags = sanitizeTags("customer_rates_technician", body.tags);
 
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       return NextResponse.json(
@@ -85,6 +96,7 @@ export async function POST(
         customer_id: user.id,
         technician_id: booking.technician_id,
         rating,
+        tags,
         comment: comment || null,
       })
       .select()
@@ -101,15 +113,16 @@ export async function POST(
       throw error;
     }
 
-    // The technician hears about the rating. Sent after the row exists, so the
-    // notification can never announce a rating that failed to save.
+    // The technician hears about the rating — the SCORE and the REASONS, never the
+    // customer's sentence (see the note at the top of this file). Sent after the row
+    // exists, so the notification can never announce a rating that failed to save.
     try {
       await notify(createServiceRoleClient(), {
         userId: booking.technician_id,
         type: "rating_received",
         title: `You received a ${rating}-star rating`,
-        body: comment
-          ? comment.slice(0, 120)
+        body: tags.length
+          ? `Reasons given: ${tags.map((tag) => tag.replace(/_/g, " ")).join(", ")}.`
           : "Open your jobs to see how the customer rated this repair.",
         link: "/technician/jobs",
       });

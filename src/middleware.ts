@@ -33,13 +33,23 @@ export async function middleware(request: NextRequest) {
   // Logged in, check their role against the section they're trying to reach
   const { data: profile } = await supabase
     .from("users")
-    .select("role")
+    .select("role, is_active")
     .eq("id", user.id)
     .single();
 
   const allowedRoles = ROLE_PREFIXES[matchedPrefix];
   if (!profile || !allowedRoles.includes(profile.role)) {
     return NextResponse.redirect(new URL("/unauthorized", request.url));
+  }
+
+  // A DEACTIVATED account still holds a valid session, so checking the role alone
+  // let it straight into the workspace — where `getCurrentUser()` returns null for
+  // an inactive profile and every page's `user!.id` crashed with "Cannot read
+  // properties of null (reading 'id')". An administrator deactivating a customer
+  // in /admin/users produced exactly that white screen for the customer. The
+  // reason is passed so the page can say what actually happened.
+  if (!profile.is_active) {
+    return NextResponse.redirect(new URL("/unauthorized?reason=inactive", request.url));
   }
 
   // Maintenance mode gates customers/technicians only, admins still need access

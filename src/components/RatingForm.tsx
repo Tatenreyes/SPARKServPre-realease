@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Star } from "lucide-react";
+import { MAX_TAGS, TECHNICIAN_TAGS } from "@/lib/rating-tags";
 
 export type ExistingRating = {
   rating: number;
@@ -45,6 +46,7 @@ export default function RatingForm({
 }) {
   const router = useRouter();
   const [rating, setRating] = useState(0);
+  const [tags, setTags] = useState<string[]>([]);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +101,7 @@ export default function RatingForm({
       const res = await fetch(`/api/bookings/${bookingId}/rating`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating, comment }),
+        body: JSON.stringify({ rating, comment, tags }),
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -154,6 +156,45 @@ export default function RatingForm({
             ))}
           </div>
         </fieldset>
+
+        {/* The REASON, asked only once the score says something was wrong. Uber and
+            Grab both do exactly this ("a bit more feedback about why that rating was
+            chosen", below five stars), and it is what turns a 3 into something a
+            technician can act on. The comment stays optional and private to the
+            office; the tags are what the technician sees, aggregated. */}
+        {rating > 0 && rating <= 4 && (
+          <div className="mt-4">
+            <p className="text-xs font-semibold text-ink/80">What happened? (optional)</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {TECHNICIAN_TAGS.map((tag) => {
+                const selected = tags.includes(tag.key);
+                return (
+                  <button
+                    key={tag.key}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() =>
+                      setTags((current) =>
+                        current.includes(tag.key)
+                          ? current.filter((entry) => entry !== tag.key)
+                          : current.length >= MAX_TAGS
+                            ? current
+                            : [...current, tag.key]
+                      )
+                    }
+                    className={`inline-flex min-h-[34px] cursor-pointer items-center rounded-full border px-3 text-xs font-medium transition duration-200 ${
+                      selected
+                        ? "border-brand-300 bg-brand-soft text-brand-ink"
+                        : "border-line bg-surface text-ink/70 hover:border-brand-300 hover:bg-brand-soft"
+                    }`}
+                  >
+                    {tag.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <label
           htmlFor="rating-comment"

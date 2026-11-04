@@ -55,29 +55,34 @@ export function navForRole(role: UserRole): SidebarNavItem[] {
 
     case "admin":
       return [
+        // `Dashboard` is pinned first as the workspace's landing page; everything
+        // after it is alphabetical, so a new admin screen has one obvious place to
+        // go and nobody has to remember an insertion order.
         { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-        { label: "Progress Management", href: "/admin/progress", icon: Activity },
-        { label: "Technician Queue", href: "/admin/technician-queue", icon: ListOrdered },
         { label: "Job Monitoring", href: "/admin/job-monitoring", icon: Timer },
+        { label: "Progress Management", href: "/admin/progress", icon: Activity },
+        { label: "Service Concerns", href: "/admin/service-concerns", icon: Headset },
+        { label: "Technician Queue", href: "/admin/technician-queue", icon: ListOrdered },
         { label: "Technicians", href: "/admin/technicians", icon: Users },
-        { label: "User Management", href: "/admin/users", icon: UserRound },
-        { label: "Support Tickets", href: "/admin/support-tickets", icon: Headset },
         { label: "Transactions", href: "/admin/payments", icon: CircleDollarSign },
+        { label: "User Management", href: "/admin/users", icon: UserRound },
       ];
 
     case "super_admin":
       return [
+        // Same convention as the admin workspace: the landing page first, then
+        // alphabetical.
         { label: "Dashboard", href: "/superadmin/dashboard", icon: LayoutDashboard },
+        { label: "Activity Log", href: "/superadmin/activity", icon: Activity },
         { label: "Administrators", href: "/superadmin/admins", icon: ShieldCheck },
-        { label: "Technicians", href: "/admin/technicians", icon: Users },
         { label: "All Users", href: "/admin/users", icon: UserRound },
+        { label: "System Settings", href: "/superadmin/settings", icon: Settings },
+        { label: "Technicians", href: "/admin/technicians", icon: Users },
         // Verifying a GCash reference is what completes a repair, and /admin is
         // reachable for a super_admin, but without this entry there was no link to
         // it anywhere in this navigation, so the only way to finish a repair was to
         // type the URL.
         { label: "Transactions", href: "/admin/payments", icon: CircleDollarSign },
-        { label: "Activity Log", href: "/superadmin/activity", icon: Activity },
-        { label: "System Settings", href: "/superadmin/settings", icon: Settings },
       ];
 
     case "customer":
@@ -103,7 +108,7 @@ export function navForRole(role: UserRole): SidebarNavItem[] {
           label: "Support & Feedback",
           icon: LifeBuoy,
           children: [
-            { label: "Support Tickets", href: "/customer/support", icon: Headset },
+            { label: "Service Concerns", href: "/customer/support", icon: Headset },
             { label: "Messages", href: "/customer/messages", icon: MessageSquareText },
           ],
         },

@@ -289,6 +289,10 @@ create table public.ratings (
   technician_id uuid not null references public.technicians(id) on delete cascade,
   rating integer not null check (rating between 1 and 5),
   comment text,
+  -- WHY a score was given, as catalogue keys ("on_time", "left_a_mess"), step 21 —
+  -- see migration_customer_ratings.sql and src/lib/rating-tags.ts. Additive with a
+  -- default, so a rating written before that file simply carries no tags.
+  tags text[] not null default '{}',
   created_at timestamptz not null default now()
 );
 
@@ -2465,5 +2469,41 @@ create trigger stamp_service_warranty_before_insert
 -- it, and service_role's grant is also what the migration-state probe reads.
 revoke all on function public.service_warranty_days() from public, anon, authenticated;
 grant execute on function public.service_warranty_days() to service_role;
+
+-- =========================================================
+-- Step 21 — the other direction of a rating
+-- (see migration_customer_ratings.sql)
+-- =========================================================
+-- The customer's score of the technician lives in `ratings` (above). This is the
+-- technician's score of the CUSTOMER, in its own table so that the technician's
+-- published average can never be computed from their own opinions of customers —
+-- direction-by-table rather than a `rater_role` column, for exactly that reason.
+--
+-- Readable by the technician who wrote it and by an administrator, and by nobody
+-- else: the customer sees an aggregate (`src/lib/rating-summary.ts`), never a
+-- sentence about a visit. The policies below are the enforcement of that.
+create table public.customer_ratings (
+  id uuid primary key default uuid_generate_v4(),
+  booking_id uuid not null unique references public.bookings(id) on delete cascade,
+  technician_id uuid not null references public.technicians(id) on delete cascade,
+  customer_id uuid not null references public.users(id) on delete cascade,
+  rating integer not null check (rating between 1 and 5),
+  tags text[] not null default '{}',
+  comment text,
+  created_at timestamptz not null default now()
+);
+
+create index idx_customer_ratings_technician on public.customer_ratings(technician_id);
+create index idx_customer_ratings_customer on public.customer_ratings(customer_id);
+
+alter table public.customer_ratings enable row level security;
+
+create policy "technician rates own visit"
+  on public.customer_ratings for insert
+  with check (technician_id = auth.uid());
+
+create policy "technician and admin read customer ratings"
+  on public.customer_ratings for select
+  using (technician_id = auth.uid() or public.is_admin());
 
 

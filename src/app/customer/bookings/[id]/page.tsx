@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, MessageSquareText, ReceiptText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import StatusBadge from "@/components/StatusBadge";
 import PaymentForm from "@/components/PaymentForm";
 import CustomerInspectionControl from "@/components/CustomerInspectionControl";
@@ -10,13 +10,14 @@ import CancelBookingControl from "@/components/CancelBookingControl";
 import RatingForm from "@/components/RatingForm";
 import AssignedTechnicianCard from "@/components/AssignedTechnicianCard";
 import { buildTechnicianProfile } from "@/lib/technician-profile";
+import { loadPublicTechnicianRatings } from "@/lib/technician-ratings";
 
 export default async function CustomerBookingDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   // Ownership is asserted here as well as by RLS, exactly like the technician's job
@@ -25,7 +26,7 @@ export default async function CustomerBookingDetailPage({
     .from("bookings")
     .select("*")
     .eq("id", params.id)
-    .eq("customer_id", user!.id)
+    .eq("customer_id", user.id)
     .single();
 
   if (!booking) notFound();
@@ -60,10 +61,10 @@ export default async function CustomerBookingDetailPage({
   // technician's own record. The cached `technicians.rating` column has no trigger
   // maintaining it, so the average is derived from the `ratings` rows, and a
   // technician with no reviews shows no rating rather than a permanent zero.
-  const { data: technicianRatings } = await supabase
-    .from("ratings")
-    .select("rating")
-    .eq("technician_id", booking.technician_id);
+  // `loadPublicTechnicianRatings()` applies the window and the low-rater protection
+  // in one place, so this page cannot disagree with the request page about the same
+  // technician.
+  const technicianRatings = await loadPublicTechnicianRatings(supabase, booking.technician_id);
 
   const { data: technicianRecord } = await supabase
     .from("technicians")

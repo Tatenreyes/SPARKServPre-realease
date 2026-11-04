@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getTechnicianQueue, getTechnicianPendingOffers } from "@/lib/assignment";
 import { buildApplianceQueues, type ApplianceQueue } from "@/lib/queue";
 import type { TechnicianPendingOfferRow } from "@/types/database";
@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 export default async function TechnicianDashboard() {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   // Pending offers are counted through `technician_pending_offers()`, the one
@@ -32,7 +32,7 @@ export default async function TechnicianDashboard() {
   // under the tightened policy.
   let pendingOffers: TechnicianPendingOfferRow[] = [];
   try {
-    pendingOffers = await getTechnicianPendingOffers(supabase, user!.id);
+    pendingOffers = await getTechnicianPendingOffers(supabase, user.id);
   } catch {
     // The dashboard must never fail over the offer counter; the offer list on
     // /technician/estimate-requests reports the real state.
@@ -42,7 +42,7 @@ export default async function TechnicianDashboard() {
   const { count: activeJobs } = await supabase
     .from("bookings")
     .select("*", { count: "exact", head: true })
-    .eq("technician_id", user!.id)
+    .eq("technician_id", user.id)
     .in("status", ["pending", "in_progress"]);
 
   const todayStart = new Date();
@@ -50,21 +50,21 @@ export default async function TechnicianDashboard() {
   const { count: completedToday } = await supabase
     .from("bookings")
     .select("*", { count: "exact", head: true })
-    .eq("technician_id", user!.id)
+    .eq("technician_id", user.id)
     .eq("status", "completed")
     .gte("updated_at", todayStart.toISOString());
 
   const { count: upcomingSchedules } = await supabase
     .from("bookings")
     .select("*", { count: "exact", head: true })
-    .eq("technician_id", user!.id)
+    .eq("technician_id", user.id)
     .in("status", ["pending", "confirmed"])
     .gte("scheduled_at", todayStart.toISOString());
 
   const { data: todayBookings } = await supabase
     .from("bookings")
     .select("id, service_request_id, scheduled_at, status")
-    .eq("technician_id", user!.id)
+    .eq("technician_id", user.id)
     .in("status", ["pending", "in_progress", "confirmed"])
     .gte("scheduled_at", todayStart.toISOString())
     .order("scheduled_at", { ascending: true });
@@ -107,7 +107,7 @@ export default async function TechnicianDashboard() {
   const { data: recentRequests } = await supabase
     .from("service_requests")
     .select("id, appliance_type, location, problem_description, status, created_at")
-    .eq("assigned_technician_id", user!.id)
+    .eq("assigned_technician_id", user.id)
     .order("created_at", { ascending: false })
     .limit(5);
 

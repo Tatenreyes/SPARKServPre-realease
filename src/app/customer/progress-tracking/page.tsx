@@ -1,15 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import ProgressTrackingClient from "@/components/ProgressTrackingClient";
 
 export default async function ProgressTrackingPage() {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   const { data: bookings } = await supabase
     .from("bookings")
     .select("*")
-    .eq("customer_id", user!.id)
+    .eq("customer_id", user.id)
     // A repair is still the customer's to track until the verified payment closes
     // it: `awaiting_inspection` needs their sign-off and `awaiting_payment` needs
     // their GCash reference, so both belong on this page rather than disappearing
@@ -47,7 +47,7 @@ export default async function ProgressTrackingPage() {
         visits={visits ?? []}
         requests={requests ?? []}
         technicianNames={Object.fromEntries((technicianUsers ?? []).map((t) => [t.id, t.name]))}
-        currentUserName={user!.name}
+        currentUserName={user.name}
       />
     </div>
   );

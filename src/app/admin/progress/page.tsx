@@ -1,9 +1,28 @@
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import StatusBadge from "@/components/StatusBadge";
+import { FilterDropdownLinks } from "@/components/FilterDropdown";
 import { ACTIVE_BOOKING_STATUSES } from "@/lib/booking-status";
 import { requireRows } from "@/lib/query-rows";
+import {
+  buildFacets,
+  resolveActive,
+  rowMatches,
+  type FacetSpec,
+} from "@/lib/filter-options";
 
-export default async function AdminProgressManagementPage() {
+/** Display names for the four live statuses. The bar sorts them A→Z. */
+const BOOKING_STATUS_LABELS: Record<string, string> = {
+  pending: "Pending",
+  in_progress: "In progress",
+  awaiting_inspection: "Awaiting inspection",
+  awaiting_payment: "Awaiting payment",
+};
+
+export default async function AdminProgressManagementPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | undefined>;
+}) {
   const supabase = createServiceRoleClient();
 
   // Every read below goes through `requireRows()`, which raises on a query error
@@ -20,6 +39,26 @@ export default async function AdminProgressManagementPage() {
     .in("status", ACTIVE_BOOKING_STATUSES)
     .order("scheduled_at", { ascending: true });
   const bookings = requireRows("active bookings", bookingsResult.data, bookingsResult.error);
+
+  /**
+   * One facet. This page only ever loads LIVE bookings, so a status chip is a
+   * narrowing of that set — there is deliberately no "Active" bucket here, because
+   * every row already is active and a chip equal to "All" teaches nothing.
+   */
+  const facets: FacetSpec<(typeof bookings)[number]>[] = [
+    {
+      key: "status",
+      label: "Status",
+      values: ACTIVE_BOOKING_STATUSES,
+      labels: BOOKING_STATUS_LABELS,
+      get: (booking) => booking.status,
+    },
+  ];
+
+  const selected = resolveActive(facets, { status: searchParams?.status });
+  const groups = buildFacets(facets, bookings, selected);
+
+  const visible = bookings.filter((booking) => rowMatches(facets, booking, selected));
 
   const bookingIds = bookings.map((b) => b.id);
   const visitsResult = bookingIds.length
@@ -113,7 +152,11 @@ export default async function AdminProgressManagementPage() {
         />
       </div>
 
-      <div className="mt-8 overflow-x-auto rounded-card border border-line bg-surface shadow-card">
+      <div className="mt-6 rounded-card border border-line bg-surface px-3 py-2.5 shadow-card">
+        <FilterDropdownLinks groups={groups} selected={selected} basePath="/admin/progress" />
+      </div>
+
+      <div className="mt-4 overflow-x-auto rounded-card border border-line bg-surface shadow-card">
         <table className="min-w-[760px] w-full text-left text-sm">
           <thead className="border-b border-line bg-canvas text-xs uppercase tracking-wide text-ink/70">
             <tr>
@@ -126,14 +169,16 @@ export default async function AdminProgressManagementPage() {
             </tr>
           </thead>
           <tbody>
-            {!bookings.length ? (
+            {!visible.length ? (
               <tr>
                 <td colSpan={6} className="px-4 py-6 text-center text-sm text-ink/70">
-                  No active jobs right now.
+                  {bookings.length
+                    ? "No jobs match this filter."
+                    : "No active jobs right now."}
                 </td>
               </tr>
             ) : (
-              bookings.map((b) => {
+              visible.map((b) => {
                 const r = requestMap.get(b.service_request_id);
                 const jobVisits = visits.filter((v) => v.booking_id === b.id);
                 const completed = jobVisits.filter((v) => v.status === "completed").length;

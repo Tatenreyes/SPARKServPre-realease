@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getTechnicianQueue } from "@/lib/assignment";
 import {
   applianceLabel,
@@ -33,7 +33,7 @@ export default async function TechnicianQueuePage({
 }: {
   searchParams?: { queue?: string };
 }) {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   let queues: ApplianceQueue[] = [];
@@ -58,7 +58,7 @@ export default async function TechnicianQueuePage({
   const { data: upcomingBookings } = await supabase
     .from("bookings")
     .select("id, service_request_id, scheduled_at, status")
-    .eq("technician_id", user!.id)
+    .eq("technician_id", user.id)
     .in("status", ["pending", "confirmed", "in_progress"])
     .gte("scheduled_at", todayStart.toISOString())
     .order("scheduled_at", { ascending: true })

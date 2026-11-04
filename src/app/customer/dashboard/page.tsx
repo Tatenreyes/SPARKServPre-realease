@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
+import { habitualLowRaters, summariseRatings } from "@/lib/rating-summary";
+import { positiveTagCounts } from "@/lib/rating-tags";
 import { DashboardStatGroup, DashboardPanel } from "@/components/DashboardCard";
 import DashboardHero from "@/components/DashboardHero";
 import DashboardServiceIllustration from "@/components/DashboardServiceIllustration";
@@ -20,7 +22,7 @@ import {
 } from "lucide-react";
 
 export default async function CustomerDashboard() {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   // These reads do not depend on one another, so run them together instead of
@@ -33,17 +35,17 @@ export default async function CustomerDashboard() {
     supabase
       .from("service_requests")
       .select("*")
-      .eq("customer_id", user!.id)
+      .eq("customer_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
       .from("bookings")
       .select("*")
-      .eq("customer_id", user!.id)
+      .eq("customer_id", user.id)
       .order("scheduled_at", { ascending: true }),
     supabase
       .from("payments")
       .select("id, booking_id, amount, status")
-      .eq("customer_id", user!.id),
+      .eq("customer_id", user.id),
   ]);
 
   // "Active" is the shared rule (`isClosedRequestStatus`), not a local pair of string
@@ -95,6 +97,41 @@ export default async function CustomerDashboard() {
   // used to be here drew a full seven-step rail for a closed job, under a heading that
   // claimed to be tracking it.
   const trackedRequest = activeRequests[0] ?? null;
+
+  /**
+   * The customer's OWN rating, and the compliments technicians left (step 21).
+   *
+   * Read with the service-role client on purpose: `customer_ratings` is readable by
+   * the technician who wrote it and by an administrator, and by nobody else — so a
+   * customer's own session cannot see the rows. What comes back here is the
+   * AGGREGATE and the positive themes only; no per-visit score and no comment ever
+   * reaches this page. That is the transparency Uber gives a rider ("Your rating")
+   * and Grab does not give a passenger, which is the one part of Grab's model worth
+   * NOT copying.
+   *
+   * The same protection applies as on the other side: a technician who scores
+   * everybody one star does not get to sink a customer's number.
+   */
+  const serviceRole = createServiceRoleClient();
+  const { data: myRatings } = await serviceRole
+    .from("customer_ratings")
+    .select("technician_id, rating, tags")
+    .eq("customer_id", user.id);
+
+  const raterIds = Array.from(new Set((myRatings ?? []).map((row) => row.technician_id)));
+  const { data: raterHistory } = raterIds.length
+    ? await serviceRole
+        .from("customer_ratings")
+        .select("technician_id, rating")
+        .in("technician_id", raterIds)
+    : { data: [] };
+
+  const flaggedRaters = habitualLowRaters(
+    (raterHistory ?? []).map((row) => ({ rater_id: row.technician_id, rating: row.rating }))
+  );
+  const myKeptRatings = (myRatings ?? []).filter((row) => !flaggedRaters.has(row.technician_id));
+  const customerRating = summariseRatings(myKeptRatings.map((row) => ({ rating: row.rating })));
+  const customerCompliments = positiveTagCounts(myKeptRatings, "technician_rates_customer");
 
   const trackedBookings = trackedRequest
     ? (bookings ?? [])
@@ -343,6 +380,44 @@ export default async function CustomerDashboard() {
           },
         ]}
       />
+      {/* Your own rating as a customer, and the compliments technicians left. Uber
+          shows a rider their rating; Grab does not show a passenger theirs, and that
+          opacity is the part of the model this deliberately does not copy. Shown only
+          once somebody has actually rated a visit — "no rating yet" is not a score. */}
+      {customerRating.count > 0 && (
+        <section className="rounded-card border border-line bg-surface px-4 py-3 shadow-[0_1px_2px_rgba(16,38,74,0.04)] sm:px-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="spark-eyebrow">Your customer rating</p>
+              <p className="mt-1 font-display text-lg font-semibold text-ink">
+                {customerRating.average?.toFixed(1)}
+                <span className="ml-2 text-xs font-normal text-muted">
+                  from {customerRating.count} {customerRating.count === 1 ? "visit" : "visits"}
+                </span>
+              </p>
+            </div>
+            {customerCompliments.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {customerCompliments.map((tag) => (
+                  <span
+                    key={tag.key}
+                    className="rounded-full bg-signal-soft px-2 py-0.5 text-[11px] font-semibold text-signal-ink"
+                  >
+                    {tag.label}
+                    {tag.count > 1 ? ` ×${tag.count}` : ""}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="mt-1.5 text-xs leading-relaxed text-muted">
+            Technicians rate the visit as well: being ready on time, safe access, and how clearly
+            the fault was described. A single visit&apos;s score is never shown to anyone, and
+            this is the only place your average appears.
+          </p>
+        </section>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-12 xl:gap-5">
         <section
         aria-labelledby="next-step-heading"

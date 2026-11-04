@@ -226,7 +226,7 @@ flowchart TB
         AUTHG["(auth)/ and auth/callback<br/>login, register, forgot-password, update-password, choose"]
         CUST["customer/**<br/>dashboard, request-repair, repairs, bookings,<br/>estimates, messages, progress-tracking, support"]
         TECH["technician/**<br/>dashboard, queue, jobs, past-jobs, estimate-requests,<br/>availability, messages, profile"]
-        ADM["admin/**<br/>dashboard, users, technicians, technician-queue,<br/>bookings, payments, progress, job-monitoring, support-tickets"]
+        ADM["admin/**<br/>dashboard, users, technicians, technician-queue,<br/>bookings, payments, progress, job-monitoring, service-concerns"]
         SA["superadmin/**<br/>admins, users, settings, activity"]
         API["api/** — 18 groups, 33 route handlers"]
         PUB["public pages<br/>/, services, how-it-works, about, contact,<br/>policies, offline, maintenance, unauthorized"]
@@ -273,7 +273,7 @@ flowchart TB
 | `push-subscriptions` | `route` | Registering and removing a browser push endpoint |
 | `service-requests` | `route`, `photos`, `[id]`, `[id]/offer-response` | Request intake with assignment, photos, request detail, offer accept/decline |
 | `settings` | `route` | `system_settings` for administrators |
-| `support-tickets` | `route`, `[id]` | General help tickets, kept apart from repair requests |
+| `support-tickets` | `route`, `[id]` | **Service concerns** — general help kept apart from repair requests. The path is the TABLE's name (`support_tickets`), not the product's: see §7.2 |
 | `technician-availability` | `route` | Weekly availability windows |
 | `technicians` | `[id]/approve` | Approving a technician account |
 | `users` | `[id]/role`, `[id]/status` | Role changes and account suspension |
@@ -330,8 +330,9 @@ a label lives in the UI.** Nothing in `src/lib` decides who gets work.
 | Shell and navigation | `DashboardShell`, `DashboardTopbar`, `Sidebar`, `Navbar`, `DashboardHero`, `DashboardCard`, `QuickActions`, `Footer`, `BrandLogo`, `ThemeProvider`, `LoadingScreen`, `DashboardSkeleton`, `InstallPrompt`, `PlatformAnnouncementTicker`, `SupportBanner` | mostly server-rendered |
 | Mobile shell | `mobile/MobileBottomNav`, `MobilePageHeader`, `MobileStatGrid`, `MobileStatTile`, `MobileSectionLinks`, `MobileRepairCard`, `MobileNotificationsList`, `CollapsibleSection`, `SignOutRow` | client, below the mobile breakpoint |
 | Customer controls | `RequestRepairWizard`, `TroubleshootingPanel`, `ServiceLocationPicker`, `ServiceLocationMap`, `LeafletLocationMap`, `ServiceLocationCard`, `EstimatesClient`, `EstimateReviewCard`, `PaymentForm`, `RatingForm`, `CancelBookingControl`, `CustomerInspectionControl`, `RemoveRequestControl`, `ProgressTrackingClient`, `RequestDetailClient` | client |
-| Technician controls | `QueueCard`, `OfferResponseControl`, `EstimateForm`, `AvailabilityManager`, `TechnicianJobsClient`, `ScheduleTimeline`, `BookingStatusControl`, `AssignedTechnicianCard` | client |
-| Administrator controls | `UserManagementClient`, `RoleControl`, `AdminStatusToggle`, `ApproveTechnicianButton`, `QueueOverrideControl`, `AdminPaymentsClient`, `AdminSupportTicketsClient`, `AdminSmsTest`, `SystemSettingsClient`, `SupportTicketsClient` | client |
+| Technician controls | `QueueCard`, `OfferResponseControl`, `EstimateForm`, `AvailabilityManager`, `TechnicianJobsClient`, `ScheduleTimeline`, `BookingStatusControl`, `AssignedTechnicianCard`, `CustomerRatingForm` | client |
+| Administrator controls | `UserManagementClient`, `RoleControl`, `AdminStatusToggle`, `ApproveTechnicianButton`, `QueueOverrideControl`, `AdminPaymentsClient`, `AdminServiceConcernsClient`, `AdminSmsTest`, `SystemSettingsClient`, `ServiceConcernsClient` | client |
+| Admin filtering and warranty | `FilterDropdown` (a checkbox dropdown per facet: button variant for client lists, navigating variant for the server-rendered ones), `filterChipStyles` (the one filter-control recipe, in a non-client module so a server page can call it), `WarrantyBadge`; vocabularies and the multi-select rules in `src/lib/filter-options.ts`, the warranty reading in `src/lib/warranty.ts` | mixed |
 | Live and documents | `MessageThread`, `NotificationBell`, `ServiceTracking`, `AssignmentStatusCard`, `JobOrderDocument`, `PrintButton`, `StatusBadge`, `RecentRepairTable` | mixed |
 
 `src/components/motion/MotionProvider.tsx` wraps the animation library so that a
@@ -523,12 +524,12 @@ not a field list.
 | Identity | `users`, `technicians` | The application profile and role; the 1:1 technician record with specialisations, coverage, capacity limits and the cached operational status | `schema.sql` |
 | Customer property | `appliances` | The appliances a customer owns, which repair requests point at | `schema.sql` |
 | The repair | `service_requests`, `estimates`, `bookings` | The reported problem and its requested window; the itemised quotation and its versions; the confirmed appointment | `schema.sql` |
-| Delivery | `messages`, `visits`, `payments`, `ratings`, `service_history` | The per-booking thread; progress visits; the payment reference and its decision; the customer's rating; the archived completion record that carries the warranty | `schema.sql` |
+| Delivery | `messages`, `visits`, `payments`, `ratings`, `customer_ratings`, `service_history` | The per-booking thread; progress visits; the payment reference and its decision; the customer's rating of the technician and the technician's rating of the CUSTOMER (two tables, so neither average can be built from the other's opinions — step 21); the archived completion record that carries the warranty | `schema.sql`; `customer_ratings` in `migration_customer_ratings.sql` |
 | The queue | `technician_queue_state` (one row per technician **and** appliance type, keyed `(technician_id, appliance_type)`, carrying `queue_position` and `last_assigned_at`), `technician_offer_history`, `technician_queue_events` (append-only audit with no client insert path) | The rotation, and the record that makes "why was this technician skipped?" answerable | `technician_queue_state` and `technician_offer_history` in `schema.sql`; `technician_queue_events` in `migration_queue_redesign.sql` |
 | Technician configuration | `technician_availability` (weekly windows, `weekday` 0–6 in the service timezone), `technician_time_off`, `technician_service_areas` | What the eligibility checks read | `migration_queue_redesign.sql` |
 | Awareness | `notifications`, `push_subscriptions` | The in-app notification and the browser push endpoints a user registered | `schema.sql` |
 | Configuration | `system_settings` | Operator-controlled values: offer lifetime, decline policy, service timezone, model version, warranty period, maintenance mode | `schema.sql` |
-| Support | `support_tickets` | General help, kept apart from repair requests | `schema.sql` |
+| Support | `support_tickets` | **Service concerns**: general help kept apart from repair requests. The table and its API path keep the name `support_tickets`; only the product's wording changed, because renaming a live table would be a migration plus RLS plus every query for no user-visible gain. The UI words are: the admin queue at `/admin/service-concerns` (with `/admin/support-tickets` redirecting to it), the customer's list under the Support hub, and the noun "concern" everywhere a customer reads it | `schema.sql` |
 
 ### 7.3 Entity relationships
 

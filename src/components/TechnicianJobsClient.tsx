@@ -4,22 +4,34 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, Image as ImageIcon, MessageSquare } from "lucide-react";
-import type { BookingRow, ServiceRequestRow, VisitRow } from "@/types/database";
+import type { BookingRow, CustomerRatingRow, ServiceRequestRow, VisitRow } from "@/types/database";
 import StatusBadge from "@/components/StatusBadge";
 import BookingStatusControl from "@/components/BookingStatusControl";
+import CustomerRatingForm from "@/components/CustomerRatingForm";
 import ServiceLocationCard from "@/components/ServiceLocationCard";
 import { isActiveBookingStatus } from "@/lib/booking-status";
+
+/**
+ * The statuses from which the visit is OVER, so the technician can rate the
+ * customer. Mirrors `RATEABLE_STATUSES` in the API route, which is the enforcement
+ * — this is only what decides whether the form is worth rendering.
+ */
+const RATEABLE_STATUSES = ["awaiting_inspection", "awaiting_payment", "completed"];
 
 export default function TechnicianJobsClient({
   bookings,
   requests,
   visits,
+  customerRatings = [],
 }: {
   bookings: BookingRow[];
   requests: ServiceRequestRow[];
   visits: VisitRow[];
+  /** The technician's own ratings of customers (step 21), for the read-only state. */
+  customerRatings?: CustomerRatingRow[];
 }) {
   const requestMap = new Map(requests.map((r) => [r.id, r]));
+  const customerRatingByBooking = new Map(customerRatings.map((r) => [r.booking_id, r]));
   // One shared definition of "active" (src/lib/booking-status.ts). A repair
   // awaiting the customer's payment or an administrator's verification is still
   // this technician's job: it is neither finished nor cancelled, and hiding it
@@ -41,6 +53,7 @@ export default function TechnicianJobsClient({
                 booking={b}
                 request={requestMap.get(b.service_request_id)}
                 visits={visits.filter((v) => v.booking_id === b.id)}
+                existingCustomerRating={customerRatingByBooking.get(b.id) ?? null}
               />
             ))}
           </div>
@@ -92,10 +105,12 @@ function JobCard({
   booking,
   request,
   visits,
+  existingCustomerRating,
 }: {
   booking: BookingRow;
   request: ServiceRequestRow | undefined;
   visits: VisitRow[];
+  existingCustomerRating: CustomerRatingRow | null;
 }) {
   const router = useRouter();
   const [showAddVisit, setShowAddVisit] = useState(false);
@@ -166,6 +181,26 @@ function JobCard({
       </div>
 
       <BookingStatusControl bookingId={booking.id} currentStatus={booking.status} />
+
+      {/* The OTHER direction (step 21): how the visit went for the technician. Shown
+          once the visit is over — the same moment the customer is asked about the
+          repair — and read-only afterwards, because the API takes one rating per
+          visit. `CustomerRatingForm` renders its own read-only state when a rating
+          is passed in, so there is nothing to branch on here. */}
+      {RATEABLE_STATUSES.includes(booking.status) && (
+        <CustomerRatingForm
+          bookingId={booking.id}
+          existingRating={
+            existingCustomerRating
+              ? {
+                  rating: existingCustomerRating.rating,
+                  tags: existingCustomerRating.tags,
+                  comment: existingCustomerRating.comment,
+                }
+              : null
+          }
+        />
+      )}
 
       {/* Visits */}
       <div className="mt-4 border-t border-line pt-3">

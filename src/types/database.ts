@@ -389,6 +389,32 @@ export interface RatingRow {
   technician_id: string;
   rating: number;
   comment: string | null;
+  /**
+   * WHY the score was given, as catalogue keys (`src/lib/rating-tags.ts`), step 21.
+   * Empty on a rating written before `migration_customer_ratings.sql` was applied.
+   */
+  tags: string[];
+  created_at: string;
+}
+
+/**
+ * The technician's rating of the CUSTOMER (step 21, see
+ * `supabase/migration_customer_ratings.sql`).
+ *
+ * A separate table from `ratings` on purpose: `ratings` is what customers said, so
+ * the technician's published average can never be computed from their own opinions
+ * of their customers. Readable by the technician who wrote it and by an
+ * administrator, and by nobody else — the customer sees an aggregate
+ * (`src/lib/rating-summary.ts`), never a row.
+ */
+export interface CustomerRatingRow {
+  id: string;
+  booking_id: string;
+  technician_id: string;
+  customer_id: string;
+  rating: number;
+  tags: string[];
+  comment: string | null;
   created_at: string;
 }
 
@@ -563,6 +589,11 @@ export interface Database {
         Row: RatingRow;
         Insert: Partial<RatingRow>;
         Update: Partial<RatingRow>;
+      };
+      customer_ratings: {
+        Row: CustomerRatingRow;
+        Insert: Partial<CustomerRatingRow>;
+        Update: Partial<CustomerRatingRow>;
       };
       service_history: {
         Row: ServiceHistoryRow;

@@ -68,17 +68,25 @@ test("the segment config is a top-level export, not nested in the component", ()
 
 // ------------------------------------------- 2. no query result is read unguarded
 
-test("all four queries go through the guard", () => {
+test("all five queries go through the guard", () => {
   // Count real calls, not the comment above them: `requireRows("` only appears where
   // a query's result is actually handed to the guard.
   const guarded = [...page.matchAll(/requireRows\("/g)].length;
   assert.equal(
     guarded,
-    4,
-    "payments, customer names, bookings and appliance types must each be guarded by requireRows()"
+    5,
+    "payments, customer names, bookings, appliance types and service history must each be " +
+      "guarded by requireRows() — the warranty a payment starts is read from service_history, " +
+      "and a failed SELECT there must not read as 'no warranty recorded'"
   );
 
-  for (const label of ["payments", "customer names", "bookings", "appliance types"]) {
+  for (const label of [
+    "payments",
+    "customer names",
+    "bookings",
+    "appliance types",
+    "service history",
+  ]) {
     assert.ok(page.includes(`requireRows("${label}"`), `the ${label} query must be guarded`);
   }
 });

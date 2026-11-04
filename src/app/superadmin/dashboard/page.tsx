@@ -5,7 +5,7 @@ import MobilePageHeader from "@/components/mobile/MobilePageHeader";
 import { axisLabels, bucketDailyCounts } from "@/lib/dashboard-metrics";
 import { timeAgo } from "@/lib/time-ago";
 import AdminSmsTest from "@/components/AdminSmsTest";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -25,7 +25,11 @@ const TREND_DAYS = 7;
 
 export default async function SuperAdminDashboard() {
   const supabase = createServiceRoleClient();
-  const admin = await getCurrentUser();
+  // The signed-in super-administrator, and a redirect if there isn't one. This
+  // used to be `getCurrentUser()` with the null tolerated downstream, which meant
+  // the whole platform dashboard (read with the service-role key) rendered for a
+  // session that had already expired.
+  const admin = await requireUser();
 
   const { count: totalUsers } = await supabase
     .from("users")
@@ -45,10 +49,14 @@ export default async function SuperAdminDashboard() {
   const { count: totalBookings } = await supabase
     .from("bookings")
     .select("*", { count: "exact", head: true });
+  // `users` has no `status` column — the account flag is `is_active` — so this
+  // tile queried a column that does not exist, PostgREST answered with an error,
+  // `count` came back null and "Active accounts" always rendered as 0. The wrong
+  // number on a platform metric, from a query nobody could see failing.
   const { count: activeAccounts } = await supabase
     .from("users")
     .select("*", { count: "exact", head: true })
-    .eq("status", "active");
+    .eq("is_active", true);
 
   const { data: confirmedPayments } = await supabase
     .from("payments")
@@ -246,7 +254,7 @@ export default async function SuperAdminDashboard() {
               <QuickAction href="/superadmin/admins" label="Manage Admins" icon={<Building2 className="h-4 w-4" />} />
               <QuickAction href="/admin/users" label="User Activity" icon={<Users className="h-4 w-4" />} />
               <QuickAction href="/superadmin/settings" label="System Settings" icon={<ShieldCheck className="h-4 w-4" />} />
-              <QuickAction href="/admin/support-tickets" label="Support Tickets" icon={<CircleAlert className="h-4 w-4" />} />
+              <QuickAction href="/admin/service-concerns" label="Service Concerns" icon={<CircleAlert className="h-4 w-4" />} />
             </div>
           </DashboardPanel>
         </div>
@@ -257,7 +265,7 @@ export default async function SuperAdminDashboard() {
         icon={MessageSquareText}
         description="Verify your Semaphore SMS integration, sends a test message to the phone number saved on your own account."
       >
-        <AdminSmsTest phone={admin?.phone ?? null} />
+        <AdminSmsTest phone={admin.phone ?? null} />
       </DashboardPanel>
 
       <DashboardPanel

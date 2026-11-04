@@ -70,16 +70,18 @@ test("a conversation page refuses anyone who is not a participant", () => {
   const technician = source(TECHNICIAN_THREAD);
 
   // RLS already scopes the booking row; the explicit check is what stops a guessed URL
-  // from rendering the page at all.
+  // from rendering the page at all. The comparison reads `user.id` — not `user!.id` —
+  // because the page gets its user from `requireUser()`, which redirects rather than
+  // handing back a null (see `npm run test:user-guard`).
   assert.match(
     customer,
-    /booking\.customer_id !== user!\.id/,
+    /booking\.customer_id !== user\.id/,
     "the customer page must check that the caller is the customer"
   );
   assert.match(customer, /notFound\(\)/, "and must 404 when it is not");
   assert.match(
     technician,
-    /booking\.technician_id !== user!\.id/,
+    /booking\.technician_id !== user\.id/,
     "the technician page must check that the caller is the technician"
   );
   assert.match(technician, /notFound\(\)/, "and must 404 when it is not");

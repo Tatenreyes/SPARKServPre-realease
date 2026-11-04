@@ -25,7 +25,7 @@ const SECTIONS = [
   },
   {
     title: "Appliance Inspection Policy",
-    body: "After a technician marks a repair complete, you'll be asked to confirm the appliance is working properly before payment unlocks. If there's still a problem, you can report it directly instead of paying, which opens a support ticket for follow-up.",
+    body: "After a technician marks a repair complete, you'll be asked to confirm the appliance is working properly before payment unlocks. If there's still a problem, you can report it directly instead of paying, which opens a service concern for follow-up.",
   },
   {
     title: "Payment Policy",

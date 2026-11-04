@@ -444,6 +444,25 @@ const MIGRATIONS = [
     // install.
     prerequisiteOf: [],
   },
+  {
+    // Step 21, two-way ratings. Both objects this file creates are real and visible
+    // through PostgREST — the `customer_ratings` table and `ratings.tags` — so the
+    // preflight can probe them directly. There is no function to use as the
+    // completion signal, so the marker row covers it, the same pattern step 4 and
+    // step 20 use.
+    order: 21,
+    file: "supabase/migration_customer_ratings.sql",
+    purpose:
+      "The other direction of a rating: the technician rates the customer (customer_ratings, readable by that technician and an administrator only), and a rating carries the REASON it was given (ratings.tags)",
+    columns: [["ratings", "tags"]],
+    tables: ["customer_ratings"],
+    functions: [],
+    settings: [["customer_ratings_version", "21"]],
+    // It references `bookings`, `technicians` and `users`, all of which arrive with
+    // schema.sql, and it adds a column to `ratings` — so it must not be applied
+    // before the base schema exists.
+    prerequisiteOf: [],
+  },
 ];
 
 /**

@@ -63,3 +63,43 @@ export function requireRows<T>(
 
   return data ?? [];
 }
+
+/** PostgREST / Postgres codes that mean "this object is not in the database yet". */
+const NOT_IN_DATABASE = new Set([
+  "42P01", // undefined_table
+  "42703", // undefined_column
+  "PGRST205", // PostgREST: table not found in the schema cache
+  "PGRST204", // PostgREST: column not found in the schema cache
+]);
+
+/**
+ * Rows for a query whose TABLE OR COLUMN MAY NOT EXIST YET.
+ *
+ * WHY THIS IS SEPARATE FROM `requireRows()`. The rule that guard enforces — a
+ * failed SELECT must never render as an empty list — is about failures nobody
+ * expects: a privilege refusal, a broken predicate, a dropped connection. There is
+ * a second case, and it is the opposite: a migration is written, deployed with the
+ * code that uses it, and applied to the database minutes or hours later. Until it
+ * is, the table genuinely does not exist, and throwing here would take down a whole
+ * admin screen (`/admin/job-monitoring`, `/admin/users`) because of a feature that
+ * is merely not switched on yet. That is a deployment outage, not a guard.
+ *
+ * So: a "not in the database" code is tolerated and logged once, everything else
+ * still raises. `npm run db:check` is what reports the missing migration; this
+ * function only keeps the rest of the screen working while it is pending.
+ */
+export function optionalRows<T>(
+  query: string,
+  data: T[] | null,
+  failure: QueryFailure | null
+): T[] {
+  if (failure && NOT_IN_DATABASE.has(failure.code ?? "")) {
+    console.warn(
+      `[admin] ${query} is not in the database yet (code ${failure.code}); ` +
+        `its migration has not been applied — see npm run db:check. Rendering without it.`
+    );
+    return [];
+  }
+
+  return requireRows(query, data, failure);
+}

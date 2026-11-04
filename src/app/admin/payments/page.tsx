@@ -68,6 +68,23 @@ export default async function AdminPaymentsPage() {
     : [];
 
   const applianceByRequest = new Map(requests.map((r) => [r.id, r.appliance_type]));
+
+  // The workmanship warranty of any of these repairs that is already archived
+  // (step 19, `supabase/migration_service_warranty.sql`). Read on the server so
+  // the admin's queue and the customer's printed job order read the same column,
+  // and guarded like every other read: a missing warranty is a "no cover
+  // recorded" answer, a failed SELECT must not become one.
+  const historyResult = bookingIds.length
+    ? await supabase
+        .from("service_history")
+        .select("booking_id, warranty_until")
+        .in("booking_id", bookingIds)
+    : null;
+  const history = historyResult
+    ? requireRows("service history", historyResult.data, historyResult.error)
+    : [];
+  const warrantyByBooking = new Map(history.map((row) => [row.booking_id, row.warranty_until]));
+
   const repairByBooking = Object.fromEntries(
     bookings.map((b) => [
       b.id,
@@ -77,6 +94,7 @@ export default async function AdminPaymentsPage() {
         scheduledAt: b.scheduled_at,
         finalCost: b.final_cost,
         applianceType: applianceByRequest.get(b.service_request_id) ?? null,
+        warrantyUntil: warrantyByBooking.get(b.id) ?? null,
       },
     ])
   );

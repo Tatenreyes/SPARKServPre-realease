@@ -1,11 +1,39 @@
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { directionsUrlForRequest } from "@/lib/geo";
 import StatusBadge from "@/components/StatusBadge";
-import { isActiveBookingStatus } from "@/lib/booking-status";
-import { requireRows } from "@/lib/query-rows";
+import WarrantyBadge from "@/components/WarrantyBadge";
+import { FilterDropdownLinks } from "@/components/FilterDropdown";
+import { ACTIVE_BOOKING_STATUSES, isActiveBookingStatus } from "@/lib/booking-status";
+import { requireRows, optionalRows } from "@/lib/query-rows";
+import {
+  buildFacets,
+  resolveActive,
+  rowMatches,
+  type FacetSpec,
+} from "@/lib/filter-options";
+import {
+  WARRANTY_FILTER_LABELS,
+  WARRANTY_FILTER_VALUES,
+  warrantyFilterKey,
+} from "@/lib/warranty";
 import { Navigation } from "lucide-react";
+import type { CustomerRatingRow } from "@/types/database";
 
-export default async function AdminJobMonitoringPage() {
+/** Display names for `bookings.status`. The bar sorts them A→Z; this is only naming. */
+const BOOKING_STATUS_LABELS: Record<string, string> = {
+  pending: "Pending",
+  in_progress: "In progress",
+  awaiting_inspection: "Awaiting inspection",
+  awaiting_payment: "Awaiting payment",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
+export default async function AdminJobMonitoringPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | undefined>;
+}) {
   const supabase = createServiceRoleClient();
 
   // Every read below is guarded by `requireRows()`: a failed SELECT raises
@@ -46,6 +74,86 @@ export default async function AdminJobMonitoringPage() {
     : [];
   const ratingMap = new Map(ratings.map((r) => [r.booking_id, r.rating]));
 
+  // The workmanship warranty of any of these repairs that is already archived
+  // (step 19, `supabase/migration_service_warranty.sql`). A repair with no row has
+  // no cover to show, which is a real answer rather than a failure — so the
+  // absence renders as "No warranty recorded" and never as an error.
+  const historyResult = bookingIds.length
+    ? await supabase
+        .from("service_history")
+        .select("booking_id, warranty_until")
+        .in("booking_id", bookingIds)
+    : null;
+  const history = historyResult
+    ? requireRows("service history", historyResult.data, historyResult.error)
+    : [];
+  const warrantyByBooking = new Map(history.map((row) => [row.booking_id, row.warranty_until]));
+
+  // The other direction (step 21): what the technician said about the customer.
+  // Admin-only in the database, so an administrator is the only person who ever
+  // reads a per-visit row here — the customer sees an aggregate, and the technician
+  // sees their own.
+  const customerRatingsResult = bookingIds.length
+    ? await supabase
+        .from("customer_ratings")
+        .select("booking_id, rating, tags, comment")
+        .in("booking_id", bookingIds)
+    : null;
+  const customerRatings = customerRatingsResult
+    ? optionalRows(
+        "customer ratings",
+        customerRatingsResult.data,
+        customerRatingsResult.error
+      )
+    : [];
+  const customerRatingByBooking = new Map(
+    (customerRatings as CustomerRatingRow[]).map((row) => [row.booking_id, row] as const)
+  );
+
+  /**
+   * Three facets. "Active" is a BUCKET over the shared status list, so the chip and
+   * the "Active Jobs" tile above it cannot disagree; "Covered" answers the question
+   * this page could never answer before — is this repair still inside a warranty we
+   * already gave, which means the next visit is ours to pay for.
+   */
+  const facets: FacetSpec<(typeof bookings)[number]>[] = [
+    {
+      key: "status",
+      label: "Status",
+      values: Object.keys(BOOKING_STATUS_LABELS),
+      labels: BOOKING_STATUS_LABELS,
+      buckets: [{ key: "active", label: "Active", values: [...ACTIVE_BOOKING_STATUSES] }],
+      get: (booking) => booking.status,
+    },
+    {
+      key: "appliance",
+      label: "Appliance",
+      // Derived from the requests on this page, so a type that exists is always
+      // offered and a type that does not is not invented.
+      values: Array.from(new Set(requests.map((request) => request.appliance_type))),
+      get: (booking) => requestMap.get(booking.service_request_id)?.appliance_type ?? "",
+    },
+    {
+      key: "warranty",
+      label: "Warranty",
+      values: WARRANTY_FILTER_VALUES,
+      labels: WARRANTY_FILTER_LABELS,
+      get: (booking) => warrantyFilterKey(warrantyByBooking.get(booking.id) ?? null),
+    },
+  ];
+
+  // A hand-edited `?status=zzz` reads as "All" rather than as an empty table.
+  const selected = resolveActive(facets, {
+    status: searchParams?.status,
+    appliance: searchParams?.appliance,
+    warranty: searchParams?.warranty,
+  });
+
+  const groups = buildFacets(facets, bookings, selected);
+
+  const visible = bookings.filter((booking) => rowMatches(facets, booking, selected));
+  const narrowed = Object.values(selected).some((keys) => keys && keys.length > 0);
+
   // One definition of "active" for the whole workspace, so this tile and
   // /admin/progress cannot disagree (src/lib/booking-status.ts).
   const activeCount = bookings.filter((b) => isActiveBookingStatus(b.status)).length;
@@ -65,7 +173,15 @@ export default async function AdminJobMonitoringPage() {
         <StatCard label="Avg. Customer Rating" value={avgRating === "N/A" ? avgRating : `${avgRating}/5`} />
       </div>
 
-      <div className="mt-8 overflow-x-auto rounded-card border border-line bg-surface shadow-card">
+      <div className="mt-6 rounded-card border border-line bg-surface px-3 py-2.5 shadow-card">
+        <FilterDropdownLinks
+          groups={groups}
+          selected={selected}
+          basePath="/admin/job-monitoring"
+        />
+      </div>
+
+      <div className="mt-4 overflow-x-auto rounded-card border border-line bg-surface shadow-card">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-line bg-canvas text-xs uppercase tracking-wide text-ink/70">
             <tr>
@@ -75,19 +191,22 @@ export default async function AdminJobMonitoringPage() {
               <th className="px-4 py-3 font-medium">Technician</th>
               <th className="px-4 py-3 font-medium">Final cost</th>
               <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium">Warranty</th>
               <th className="px-4 py-3 font-medium">Location</th>
               <th className="px-4 py-3 font-medium">Rating</th>
             </tr>
           </thead>
           <tbody>
-            {!bookings.length ? (
+            {!visible.length ? (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-sm text-ink/70">
-                  No bookings yet.
+                <td colSpan={9} className="px-4 py-6 text-center text-sm text-ink/70">
+                  {bookings.length && narrowed
+                    ? "No jobs match these filters."
+                    : "No bookings yet."}
                 </td>
               </tr>
             ) : (
-              bookings.map((b) => {
+              visible.map((b) => {
                 const r = requestMap.get(b.service_request_id);
                 const rating = ratingMap.get(b.id);
                 const directionsUrl = r
@@ -113,6 +232,17 @@ export default async function AdminJobMonitoringPage() {
                     <td className="px-4 py-3">
                       <StatusBadge status={b.status} />
                     </td>
+                    {/* The warranty starts when the repair is completed, so a live
+                        job has nothing to claim yet — saying "no warranty
+                        recorded" there would read as a fault rather than as work
+                        still in progress. */}
+                    <td className="px-4 py-3">
+                      {isActiveBookingStatus(b.status) ? (
+                        <span className="text-xs text-muted">Not yet completed</span>
+                      ) : (
+                        <WarrantyBadge until={warrantyByBooking.get(b.id) ?? null} size="sm" />
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-xs text-ink/70">
                       <span className="block max-w-[16rem] break-words">{r?.location ?? "N/A"}</span>
                       {r?.latitude != null && r?.longitude != null && (
@@ -135,6 +265,22 @@ export default async function AdminJobMonitoringPage() {
                     </td>
                     <td className="px-4 py-3 text-xs text-ink/70">
                       {rating != null ? `★ ${rating}/5` : "N/A"}
+                      {/* The technician's own rating of the customer, under the
+                          customer's rating of the technician: one visit, both
+                          directions, side by side. Admin-only, and the only place a
+                          per-visit row is ever rendered. */}
+                      {(() => {
+                        const reverse = customerRatingByBooking.get(b.id);
+                        if (!reverse) return null;
+                        return (
+                          <span className="mt-0.5 block text-muted">
+                            Tech: ★ {reverse.rating}/5
+                            {reverse.tags.length > 0
+                              ? ` · ${reverse.tags.map((tag) => tag.replace(/_/g, " ")).join(", ")}`
+                              : ""}
+                          </span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 );

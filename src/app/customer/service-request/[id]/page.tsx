@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getServiceTimezone } from "@/lib/service-time";
 import { applianceCoverage } from "@/lib/assignment-coverage";
 import { buildTechnicianProfile, type TechnicianProfile } from "@/lib/technician-profile";
+import { loadPublicTechnicianRatings } from "@/lib/technician-ratings";
 import RequestDetailClient from "@/components/RequestDetailClient";
 
 export default async function ServiceRequestDetailPage({
@@ -34,7 +35,7 @@ export default async function ServiceRequestDetailPage({
     // The `technicians` row and the ratings are read alongside the user so the card
     // can show real evidence instead of a bare name; each degrades to null rather
     // than inventing a zero.
-    const [userResult, technicianResult, ratingsResult] = await Promise.all([
+    const [userResult, technicianResult, ratings] = await Promise.all([
       supabase
         .from("users")
         .select("id, name, avatar_url")
@@ -45,12 +46,13 @@ export default async function ServiceRequestDetailPage({
         .select("approved, jobs_completed, experience_years, specializations")
         .eq("id", technicianId)
         .maybeSingle(),
-      supabase.from("ratings").select("rating").eq("technician_id", technicianId),
+      // Windowed and protected in one place — see `src/lib/technician-ratings.ts`.
+      loadPublicTechnicianRatings(supabase, technicianId),
     ]);
     assignedTechnician = buildTechnicianProfile({
       user: userResult.data,
       technician: technicianResult.data,
-      ratings: ratingsResult.data,
+      ratings,
     });
   }
 

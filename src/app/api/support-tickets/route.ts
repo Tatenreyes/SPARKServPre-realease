@@ -2,7 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 
-// POST /api/support-tickets, any logged-in user opens a support ticket
+// POST /api/support-tickets, any logged-in user raises a service concern.
+//
+// THE PATH IS THE TABLE'S NAME (`support_tickets`), NOT THE PRODUCT'S: the UI
+// calls these Service Concerns, and the mapping is deliberate — renaming the
+// table would be a migration plus RLS plus every query, for no user-visible gain.
+// See DATABASE.md.
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -38,7 +43,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/support-tickets, list the caller's own tickets (or all, for admins)
+// GET /api/support-tickets, list the caller's own service concerns (or all, for admins)
 export async function GET() {
   try {
     const user = await getCurrentUser();

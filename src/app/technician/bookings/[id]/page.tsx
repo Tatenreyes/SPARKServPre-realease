@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, MessageSquareText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import StatusBadge from "@/components/StatusBadge";
 import ServiceLocationCard from "@/components/ServiceLocationCard";
 
@@ -11,14 +11,14 @@ export default async function TechnicianBookingDetailPage({
 }: {
   params: { id: string };
 }) {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   const { data: booking } = await supabase
     .from("bookings")
     .select("*")
     .eq("id", params.id)
-    .eq("technician_id", user!.id)
+    .eq("technician_id", user.id)
     .single();
 
   if (!booking) notFound();

@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { MessageSquare } from "lucide-react";
 import type { MessageRow } from "@/types/database";
 
 export default async function CustomerMessagesPage() {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   const { data: bookings } = await supabase
     .from("bookings")
     .select("*")
-    .eq("customer_id", user!.id)
+    .eq("customer_id", user.id)
     .order("scheduled_at", { ascending: false });
 
   const bookingIds = (bookings ?? []).map((b) => b.id);

@@ -1,27 +1,12 @@
-import { createServiceRoleClient } from "@/lib/supabase/server";
-import AdminSupportTicketsClient from "@/components/AdminSupportTicketsClient";
+import { redirect } from "next/navigation";
 
-export default async function AdminSupportTicketsPage() {
-  const supabase = createServiceRoleClient();
-
-  const { data: tickets } = await supabase
-    .from("support_tickets")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  const userIds = Array.from(new Set((tickets ?? []).map((t) => t.user_id)));
-  const { data: users } = userIds.length
-    ? await supabase.from("users").select("id, name, email").in("id", userIds)
-    : { data: [] };
-
-  return (
-    <div>
-      <h1 className="font-display text-2xl font-semibold text-ink">Support tickets</h1>
-      <p className="mt-1 text-sm text-ink/70">Manage customer inquiries and support requests.</p>
-      <AdminSupportTicketsClient
-        initialTickets={tickets ?? []}
-        userInfo={Object.fromEntries((users ?? []).map((u) => [u.id, u]))}
-      />
-    </div>
-  );
+/**
+ * The old address for what the product now calls **Service concerns**.
+ *
+ * The page moved to `/admin/service-concerns`; this redirect keeps bookmarks, the
+ * super-admin quick actions and anything a customer was sent by email working.
+ * Same pattern as `/admin/bookings`, which redirects into the merged job list.
+ */
+export default function AdminSupportTicketsPage() {
+  redirect("/admin/service-concerns");
 }

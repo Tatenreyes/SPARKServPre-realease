@@ -5,6 +5,7 @@ import { assignTechnician } from "@/lib/assignment";
 import { readRequestedWindow } from "@/lib/service-time";
 import { getIssueById } from "@/lib/appliance-issues";
 import { buildTechnicianProfile, type TechnicianProfile } from "@/lib/technician-profile";
+import { loadPublicTechnicianRatings } from "@/lib/technician-ratings";
 import {
   isValidLatitude,
   isValidLongitude,
@@ -211,7 +212,7 @@ export async function POST(request: NextRequest) {
     let assignedTechnician: TechnicianProfile | null = null;
     if (serviceRoleClient && assigned.assigned_technician_id) {
       const technicianId = assigned.assigned_technician_id;
-      const [userResult, technicianResult, ratingsResult] = await Promise.all([
+      const [userResult, technicianResult, ratings] = await Promise.all([
         serviceRoleClient
           .from("users")
           .select("id, name, avatar_url")
@@ -222,12 +223,15 @@ export async function POST(request: NextRequest) {
           .select("approved, jobs_completed, experience_years, specializations")
           .eq("id", technicianId)
           .maybeSingle(),
-        serviceRoleClient.from("ratings").select("rating").eq("technician_id", technicianId),
+        // Windowed and protected in one place, so this route, the customer's
+        // booking page and the customer's request page cannot publish three
+        // different averages for the same technician.
+        loadPublicTechnicianRatings(serviceRoleClient, technicianId),
       ]);
       assignedTechnician = buildTechnicianProfile({
         user: userResult.data,
         technician: technicianResult.data,
-        ratings: ratingsResult.data,
+        ratings,
       });
     }
 

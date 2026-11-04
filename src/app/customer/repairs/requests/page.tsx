@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { CLOSED_REQUEST_STATUSES } from "@/lib/estimate-costs";
 import { RecentRepairTable } from "@/components/RecentRepairTable";
 
@@ -22,7 +22,7 @@ export default async function MyRepairRequestsPage({
 }: {
   searchParams?: { page?: string; status?: string };
 }) {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const supabase = createClient();
 
   const parsed = Number.parseInt(searchParams?.page ?? "1", 10);
@@ -44,14 +44,14 @@ export default async function MyRepairRequestsPage({
   let requestsQuery = supabase
     .from("service_requests")
     .select("*")
-    .eq("customer_id", user!.id)
+    .eq("customer_id", user.id)
     .order("created_at", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
   let countQuery = supabase
     .from("service_requests")
     .select("*", { count: "exact", head: true })
-    .eq("customer_id", user!.id);
+    .eq("customer_id", user.id);
 
   if (onlyActive) {
     requestsQuery = requestsQuery.not("status", "in", closedFilter);

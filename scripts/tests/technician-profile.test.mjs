@@ -235,10 +235,21 @@ test("every surface that names a technician publishes the full profile", () => {
       /from\("technicians"\)/,
       `${name} must read the technician's record (verification, workload)`
     );
+    // The ratings come from the real `ratings` rows, never from the cached
+    // `technicians.rating` column — and since step 21 they come through ONE helper
+    // that also applies the rolling window and the low-rater protection, so the
+    // three surfaces cannot publish three different averages for the same person.
+    // `loadPublicTechnicianRatings()` is asserted to read `ratings` itself, in
+    // `scripts/tests/customer-rating.test.mjs`.
     assert.match(
       source,
-      /from\("ratings"\)/,
+      /loadPublicTechnicianRatings\(/,
       `${name} must read the real ratings — the cached column is not maintained`
+    );
+    assert.doesNotMatch(
+      source,
+      /technician\.rating\b/,
+      `${name} must not read the cached rating column`
     );
   }
 });
