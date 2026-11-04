@@ -44,6 +44,16 @@ import {
   cleanCode,
   sanitiseCodeInput,
 } from "@/lib/appliance-fields";
+import {
+  CUSTOM_WINDOW_KEY,
+  FLEXIBLE_WINDOWS,
+  REQUEST_DURATION_MINUTES,
+  SERVICE_HOURS,
+  resolveWindow,
+  serviceClockTimes,
+  serviceWindows,
+  windowLabel,
+} from "@/lib/service-windows";
 import { isAfter } from "@/lib/time-of-day";
 import { matchIssue, type TroubleshootingOutcome } from "@/lib/issue-matching";
 import { getTroubleshootingGuide } from "@/lib/troubleshooting";
@@ -75,6 +85,19 @@ const FIELD =
 
 /** Section identity, used for the collapsible state map. */
 type SectionKey = "appliance" | "problem" | "photos" | "service" | "summary";
+
+/**
+ * The times the custom pickers may offer, computed once at module load.
+ *
+ * Module-level on purpose: `TimeSelect` memoises its option list on the identity of
+ * `within`, so an array rebuilt on every render would rebuild that list on every
+ * keystroke elsewhere in the form.
+ */
+const SERVICE_CLOCK_TIMES = serviceClockTimes();
+
+/** The shop's slots, generated once for the same reason: this form re-renders on
+ *  every keystroke, and regenerating ten windows each time is pure waste. */
+const SERVICE_SLOTS = serviceWindows();
 
 /**
  * Every section starts expanded, and there is deliberately no "collapse all".
@@ -193,8 +216,18 @@ export default function RequestRepairWizard() {
 
   const [serviceType, setServiceType] = useState("on_site");
   const [preferredDate, setPreferredDate] = useState("");
-  const [preferredStart, setPreferredStart] = useState("");
-  const [preferredEnd, setPreferredEnd] = useState("");
+  /**
+   * Which window was chosen: `""` for any time that day, a flexible key
+   * (`morning` / `afternoon`), a slot key (`09:00-09:30`), or `custom` for the two
+   * pickers below.
+   *
+   * ONE KEY rather than a start/end pair, because most answers are not a pair: a
+   * pair can be half-filled or inverted, and both of those states used to be
+   * possible here. A key cannot. The pair is derived from it below.
+   */
+  const [windowChoice, setWindowChoice] = useState("");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
   const [serviceAddress, setServiceAddress] = useState("");
   /**
    * The map pin the customer CONFIRMED, or null. Only a confirmed point is ever
@@ -268,6 +301,18 @@ export default function RequestRepairWizard() {
    */
   const troubleshootingResolved = troubleshootingOutcome === "resolved";
 
+  /**
+   * The pair the choice means, or null for "any time that day".
+   *
+   * Derived, never stored, so the summary line, the desktop rail and the request
+   * body all read the same value and cannot disagree about what was chosen. A
+   * `custom` choice resolves to null until both halves form a legal window.
+   */
+  const preferredWindow = useMemo(
+    () => resolveWindow(windowChoice, customStart, customEnd),
+    [windowChoice, customStart, customEnd]
+  );
+
   /** Empty string (not "No preference") when unscheduled, the rail renders its
    *  own placeholder for an untouched field. */
   const scheduleText = preferredDate
@@ -276,8 +321,8 @@ export default function RequestRepairWizard() {
         day: "numeric",
         year: "numeric",
       })}${
-        preferredStart && preferredEnd
-          ? `, ${preferredStart} ${preferredEnd} (PH time)`
+        preferredWindow
+          ? `, ${windowLabel(preferredWindow.start, preferredWindow.end)} (PH time)`
           : ", time to be agreed"
       }`
     : "";
@@ -509,15 +554,17 @@ export default function RequestRepairWizard() {
       return;
     }
 
-    // A requested window has to be a real window: the queue compares it against
-    // bookings, so an end time at or before the start would match nobody.
-    if (preferredDate && (preferredStart || preferredEnd) && !(preferredStart && preferredEnd)) {
-      setError("Fill in both a start and an end time, or leave both blank.");
-      setSubmitting(false);
-      return;
-    }
-    if (preferredDate && preferredStart && preferredEnd && preferredEnd <= preferredStart) {
-      setError("The preferred end time must be after the start time.");
+    // A window the customer names themselves must be a real one: both halves, and
+    // inside the shop's hours. The queue compares a window against bookings, so an
+    // end at or before the start matches nobody, and a span across the lunch break
+    // matches nobody either. Slots and flexible choices are generated, so they
+    // cannot be wrong.
+    if (windowChoice === CUSTOM_WINDOW_KEY && !preferredWindow) {
+      setError(
+        customStart || customEnd
+          ? `That time is outside our hours. We work ${windowLabel(SERVICE_HOURS.opens, SERVICE_HOURS.closes)} and are closed ${windowLabel(SERVICE_HOURS.break.start, SERVICE_HOURS.break.end)}. Pick a start and an end inside those hours.`
+          : "Pick both a start and an end time for your window, or choose any time that day."
+      );
       setSubmitting(false);
       return;
     }
@@ -639,8 +686,17 @@ export default function RequestRepairWizard() {
           ...(preferredDate
             ? {
                 preferred_date: preferredDate,
-                ...(preferredStart ? { preferred_start_time: preferredStart } : {}),
-                ...(preferredEnd ? { preferred_end_time: preferredEnd } : {}),
+                // The pair plus the appointment length. The length is sent explicitly
+                // because a 30-minute arrival window does not mean a 30-minute repair:
+                // without it the API would treat the window itself as the duration and
+                // ring-fence 30 minutes of a technician's day for a two-hour job.
+                ...(preferredWindow
+                  ? {
+                      preferred_start_time: preferredWindow.start,
+                      preferred_end_time: preferredWindow.end,
+                      requested_duration_minutes: REQUEST_DURATION_MINUTES,
+                    }
+                  : {}),
               }
             : {}),
         }),
@@ -1372,43 +1428,96 @@ export default function RequestRepairWizard() {
             />
           </div>
 
-          {/* Full width: two three-control pickers side by side need the room, and the
-              half-width cell they used to share would wrap them into a column each. */}
-          <div className="sm:col-span-2">
-            <p className="mb-1.5 block text-sm font-medium text-ink/80">
+          {/* Full width: a grid of slots plus the flexible row needs the room, and the
+              half-width cell two three-control pickers used to share would wrap them
+              into a column each. */}
+          <fieldset className="sm:col-span-2" disabled={!preferredDate}>
+            <legend className="mb-1.5 block text-sm font-medium text-ink/80">
               Preferred time window{" "}
               <span className="font-normal text-muted">(optional)</span>
+            </legend>
+            <p className="mb-2 text-xs leading-relaxed text-muted">
+              We work {windowLabel(SERVICE_HOURS.opens, SERVICE_HOURS.closes)} Philippine
+              time and are closed for lunch from{" "}
+              {windowLabel(SERVICE_HOURS.break.start, SERVICE_HOURS.break.end)}. Only
+              technicians free in your window are offered the job.
             </p>
-            {/* A range, so two pickers, and the end only offers times that can follow the
-                start: `readRequestedWindow()` drops a window whose end is not strictly
-                later, silently, so an invalid pair would vanish without a word. */}
-            <div className="grid gap-3 sm:grid-cols-2">
-              <TimeSelect
-                id="preferred-start"
-                label="Preferred start time"
-                value={preferredStart}
-                onChange={(value) => {
-                  setPreferredStart(value);
-                  if (preferredEnd && !isAfter(value, preferredEnd)) setPreferredEnd("");
-                }}
-                disabled={!preferredDate}
-              />
-              <TimeSelect
-                id="preferred-end"
-                label="Preferred end time"
-                value={preferredEnd}
-                onChange={setPreferredEnd}
-                after={preferredStart}
-                disabled={!preferredDate}
-              />
+
+            {/* The whole day is one choice, so one radio group: a chip grid rather than
+                three selects per boundary, which is what let a customer ask for 1:00 AM.
+                Disabled until a date is chosen, the same as the pickers it replaces. */}
+            <div role="radiogroup" aria-label="Preferred time window" className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <WindowChip
+                  selected={windowChoice === ""}
+                  label="Any time that day"
+                  onSelect={() => setWindowChoice("")}
+                />
+                {FLEXIBLE_WINDOWS.map((window) => (
+                  <WindowChip
+                    key={window.key}
+                    selected={windowChoice === window.key}
+                    label={
+                      window.key === "morning"
+                        ? `Morning · ${windowLabel(window.start, window.end)}`
+                        : `Afternoon · ${windowLabel(window.start, window.end)}`
+                    }
+                    onSelect={() => setWindowChoice(window.key)}
+                  />
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {SERVICE_SLOTS.map((window) => (
+                  <WindowChip
+                    key={window.key}
+                    selected={windowChoice === window.key}
+                    label={windowLabel(window.start, window.end)}
+                    onSelect={() => setWindowChoice(window.key)}
+                  />
+                ))}
+              </div>
+
+              <div>
+                <WindowChip
+                  selected={windowChoice === CUSTOM_WINDOW_KEY}
+                  label="A different time…"
+                  onSelect={() => setWindowChoice(CUSTOM_WINDOW_KEY)}
+                />
+              </div>
             </div>
-          </div>
+
+            {/* The two pickers, for a time the slots do not name ("9:20"). Their pools
+                are restricted to the open hours, so the customer can name any minute of
+                the working day and none outside it. */}
+            {windowChoice === CUSTOM_WINDOW_KEY && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <TimeSelect
+                  id="preferred-start"
+                  label="Preferred start time"
+                  value={customStart}
+                  onChange={(value) => {
+                    setCustomStart(value);
+                    if (customEnd && !isAfter(value, customEnd)) setCustomEnd("");
+                  }}
+                  within={SERVICE_CLOCK_TIMES}
+                />
+                <TimeSelect
+                  id="preferred-end"
+                  label="Preferred end time"
+                  value={customEnd}
+                  onChange={setCustomEnd}
+                  after={customStart}
+                  within={SERVICE_CLOCK_TIMES}
+                />
+              </div>
+            )}
+          </fieldset>
         </div>
 
         <p className="mt-2 text-xs leading-relaxed text-muted">
-          Times are Philippine time (GMT+8). Leave the window blank if any time that day
-          works, only technicians free in your window are offered the job, and you
-          confirm the exact slot before the visit.
+          A window is when we may arrive, not how long the visit takes, and you confirm
+          the exact slot before the visit.
         </p>
 
         <div className="mt-4">
@@ -1623,6 +1732,44 @@ export default function RequestRepairWizard() {
         </p>
       </div>
     </form>
+  );
+}
+
+/**
+ * One window in the preferred-time panel.
+ *
+ * A chip rather than a `<select>`, and one group of them rather than three selects
+ * per boundary: the answer is a single choice from a short list, so it should be
+ * visible and one tap away. `role="radio"` with `aria-checked` because the group is
+ * exclusive — the issue chips elsewhere in the form use `aria-pressed`, which is
+ * right for a toggle but wrong for a set where choosing one clears another.
+ *
+ * Re-selecting the current chip is a no-op, so a customer cannot accidentally
+ * deselect the window they just picked and land back on "any time".
+ */
+function WindowChip({
+  selected,
+  label,
+  onSelect,
+}: {
+  selected: boolean;
+  label: string;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onSelect}
+      className={`inline-flex min-h-[40px] cursor-pointer items-center rounded-full border px-3.5 text-xs font-medium transition duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+        selected
+          ? "border-brand-300 bg-brand-soft text-brand-ink"
+          : "border-line bg-surface text-ink/80 hover:border-brand-300 hover:bg-brand-soft"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 

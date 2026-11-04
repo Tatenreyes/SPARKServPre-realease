@@ -15,7 +15,7 @@ Dashboard → Request repair
   → pick appliance (existing `appliances` row, or add one)
   → describe the issue (+ photos)
   → service type: on_site | home_service | pickup
-  → optionally pick a preferred date AND start/end time
+  → optionally pick a preferred date AND arrival window
   → submit  →  POST /api/service-requests
 ```
 
@@ -67,8 +67,22 @@ that day look like a conflict, which is the exact bug this redesign removed.
 With no window, only eligibility and the concurrent-workload limit are checked,
 and the precise slot is agreed at booking time.
 
-The wizard therefore refuses a half-entered window ("start but no end") rather
-than silently discarding it, and it labels the state honestly on both sides: the
+The wizard therefore refuses a window it cannot honour rather than silently
+discarding it: the hours themselves live in `src/lib/service-windows.ts` (open
+09:00–16:00, closed 11:00–13:00 for lunch), every option is GENERATED from them —
+ten half-hour slots, the two flexible blocks, and the named times at five-minute
+steps — and `isServiceRange()` is applied by the form AND by the API. A customer
+who names 09:20–10:20 is fine; 01:00–02:00, a window across the lunch break, or a
+half-entered pair is refused with a sentence that says which hours the shop keeps.
+A window that crosses lunch is not merely untidy: eligibility needs a technician
+free across the WHOLE span, so such a request could never be offered to anybody.
+
+The window is when the technician may ARRIVE, not how long the visit takes: the
+appointment length is sent separately (`requested_duration_minutes`, 120), so a
+half-hour slot does not shrink a two-hour repair and "any time this afternoon"
+does not ring-fence three hours of a technician's day.
+
+And it labels the state honestly on both sides: the
 technician's offer card reads "Wants Sun, Jan 24 · 09:00 AM – 11:00 AM (PH time)"
 or "No time preference stated — agree a slot", and the customer's own request
 page echoes back what was recorded. Both use `formatRequestedWindow()` so the

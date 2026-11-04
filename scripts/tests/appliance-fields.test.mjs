@@ -48,6 +48,20 @@ import {
   timeOptions,
   toClockTime,
 } from "../../src/lib/time-of-day.ts";
+import {
+  CLOCK_STEP_MINUTES,
+  CUSTOM_WINDOW_KEY,
+  FLEXIBLE_WINDOWS,
+  REQUEST_DURATION_MINUTES,
+  SERVICE_HOURS,
+  WINDOW_MINUTES,
+  WINDOW_STEP_MINUTES,
+  isServiceRange,
+  resolveWindow,
+  serviceClockTimes,
+  serviceWindows,
+  windowLabel,
+} from "../../src/lib/service-windows.ts";
 
 const ROOT = new URL("../../", import.meta.url);
 const WIZARD = "src/components/RequestRepairWizard.tsx";
@@ -55,6 +69,7 @@ const PAGE = "src/app/customer/appliances/page.tsx";
 const DATE_SELECT = "src/components/DateSelect.tsx";
 const TIME_SELECT = "src/components/TimeSelect.tsx";
 const AVAILABILITY = "src/components/AvailabilityManager.tsx";
+const SERVICE_TIME = "src/lib/service-time.ts";
 const wizard = readFileSync(new URL(WIZARD, ROOT), "utf8");
 const page = readFileSync(new URL(PAGE, ROOT), "utf8");
 const dateSelect = readFileSync(new URL(DATE_SELECT, ROOT), "utf8");
@@ -393,23 +408,212 @@ test("the availability grid picks its times from selects", () => {
   );
 });
 
-test("the window is picked from selects, not native time inputs", () => {
-  assert.match(wizard, /<TimeSelect[\s\S]{0,160}id="preferred-start"/);
-  assert.match(wizard, /<TimeSelect[\s\S]{0,160}id="preferred-end"/);
-  assert.match(wizard, /after=\{preferredStart\}/, "the end is constrained by the start");
+test("the shop's slots are generated from its hours, not listed", () => {
+  const slots = serviceWindows();
+
+  assert.deepEqual(
+    slots.map((slot) => `${slot.start}-${slot.end}`),
+    [
+      "09:00-09:30",
+      "09:30-10:00",
+      "10:00-10:30",
+      "10:30-11:00",
+      "13:00-13:30",
+      "13:30-14:00",
+      "14:00-14:30",
+      "14:30-15:00",
+      "15:00-15:30",
+      "15:30-16:00",
+    ],
+    "the whole working day at half-hour steps, lunch left out"
+  );
+
+  // THE COUNT IS ARITHMETIC ON THE DECLARED HOURS, not a number copied from the module:
+  // widen the day in SERVICE_HOURS and both sides of this assertion move together, which
+  // is the property that makes the list safe to change.
+  const morning =
+    (minutesOfDay(SERVICE_HOURS.break.start) - minutesOfDay(SERVICE_HOURS.opens)) / WINDOW_STEP_MINUTES;
+  const afternoon =
+    (minutesOfDay(SERVICE_HOURS.closes) - minutesOfDay(SERVICE_HOURS.break.end)) / WINDOW_STEP_MINUTES;
+  assert.equal(slots.length, morning + afternoon);
+
+  // The first slot opens when the shop does, the last one closes when it does.
+  assert.equal(slots[0].start, SERVICE_HOURS.opens);
+  assert.equal(slots[slots.length - 1].end, SERVICE_HOURS.closes);
+
+  for (const slot of slots) {
+    assert.equal(minutesOfDay(slot.end) - minutesOfDay(slot.start), WINDOW_MINUTES);
+    assert.equal(
+      isServiceRange(slot.start, slot.end),
+      true,
+      `${slot.key} must satisfy the rule it is built from`
+    );
+    assert.equal(slot.key, `${slot.start}-${slot.end}`, "the key is stable, the form holds it");
+  }
+
+  // Contiguous inside each block: no gap a customer could fall into, and no overlap.
+  for (let index = 1; index < slots.length; index++) {
+    const previous = slots[index - 1];
+    const current = slots[index];
+    const abuts =
+      minutesOfDay(current.start) === minutesOfDay(previous.end) ||
+      minutesOfDay(previous.end) === minutesOfDay(SERVICE_HOURS.break.start);
+    assert.equal(abuts, true, `${previous.key} → ${current.key} must abut`);
+  }
+});
+
+test("a window is legal only inside the working day", () => {
+  for (const [start, end] of [
+    ["09:00", "11:00"],
+    ["13:00", "16:00"],
+    ["09:20", "10:20"], // the reason this module exists: a time the half-hour slots do not name
+    ["15:30", "16:00"],
+    ["13:05", "13:10"],
+  ]) {
+    assert.equal(isServiceRange(start, end), true, `${start}-${end} should be accepted`);
+  }
+
+  for (const [start, end, why] of [
+    ["01:00", "02:00", "before the shop opens"],
+    ["08:55", "09:30", "starts before opening"],
+    ["15:30", "16:30", "runs past closing"],
+    ["11:30", "12:30", "entirely inside the lunch break"],
+    ["10:30", "13:30", "crosses the break, so no technician is free for the whole span"],
+    ["10:00", "10:00", "an empty window"],
+    ["10:00", "09:00", "an inverted window"],
+    ["", "", "nothing chosen"],
+    [null, null, "no value at all"],
+  ]) {
+    assert.equal(isServiceRange(start, end), false, `${start}-${end} should be refused: ${why}`);
+  }
+});
+
+test("a named time is any five minutes of the working day", () => {
+  const times = serviceClockTimes();
+
+  assert.deepEqual(times[0], { hour: 9, minute: 0 });
+  assert.deepEqual(times[times.length - 1], { hour: 16, minute: 0 });
+  assert.equal(CLOCK_STEP_MINUTES, 5);
+  // 09:00–11:00 and 13:00–16:00 inclusive at five-minute steps: 25 + 37.
+  assert.equal(times.length, 62, "the open hours, less the lunch break");
+
+  const open = minutesOfDay(SERVICE_HOURS.opens);
+  const close = minutesOfDay(SERVICE_HOURS.closes);
+  const breakStart = minutesOfDay(SERVICE_HOURS.break.start);
+  const breakEnd = minutesOfDay(SERVICE_HOURS.break.end);
+
+  for (const time of times) {
+    const minute = minutesOfDay(toClockTime(time.hour, time.minute));
+    assert.equal(minute >= open && minute <= close, true, "every offered time is inside the day");
+    assert.equal(
+      minute > breakStart && minute < breakEnd,
+      false,
+      "and none is stranded inside the break, where no window could use it"
+    );
+  }
+
+  // Both boundaries stay: each is a legal END even though neither can start a window.
+  assert.equal(
+    times.some((time) => toClockTime(time.hour, time.minute) === SERVICE_HOURS.break.start),
+    true,
+    "10:30–11:00 is a real slot, so 11:00 has to be reachable as an end"
+  );
+  assert.equal(isServiceRange("11:00", "11:30"), false, "but it cannot start one");
+  assert.equal(isServiceRange("16:00", "16:30"), false, "nor can closing time");
+});
+
+test("a form choice resolves to exactly one window", () => {
+  assert.equal(resolveWindow(""), null, "any time that day means no window at all");
+
+  assert.deepEqual(resolveWindow("morning"), { start: "09:00", end: "11:00" });
+  assert.deepEqual(resolveWindow("afternoon"), { start: "13:00", end: "16:00" });
+  assert.equal(FLEXIBLE_WINDOWS.length, 2);
+
+  assert.deepEqual(resolveWindow("09:30-10:00"), { start: "09:30", end: "10:00" });
+  assert.equal(resolveWindow("09:15-09:45"), null, "a slot that is not in the day is not a slot");
+  assert.equal(resolveWindow("something-else"), null);
+
+  assert.deepEqual(resolveWindow(CUSTOM_WINDOW_KEY, "09:20", "10:20"), {
+    start: "09:20",
+    end: "10:20",
+  });
+  assert.equal(resolveWindow(CUSTOM_WINDOW_KEY, "09:20", ""), null, "half a window is no window");
+  assert.equal(resolveWindow(CUSTOM_WINDOW_KEY, "10:30", "13:30"), null, "nor is one across lunch");
+
+  assert.equal(windowLabel("09:20", "10:20"), "9:20 AM – 10:20 AM");
+  assert.equal(windowLabel("13:00", "16:00"), "1:00 PM – 4:00 PM");
+  assert.equal(windowLabel("", ""), "");
+
+  // The appointment length is NOT the window: a half-hour slot does not shrink the visit,
+  // and a three-hour "any time this afternoon" window does not ring-fence three hours.
+  assert.equal(REQUEST_DURATION_MINUTES, 120);
+});
+
+test("the window is one panel of chips, and the pickers only when asked", () => {
   assert.match(
     wizard,
-    /if \(preferredEnd && !isAfter\(value, preferredEnd\)\) setPreferredEnd\(""\)/,
+    /role="radiogroup"[\s\S]{0,160}Preferred time window/,
+    "one exclusive group, not six selects over the whole day"
+  );
+  assert.match(
+    wizard,
+    /const SERVICE_SLOTS = serviceWindows\(\)/,
+    "the slots come from the module, not a list in JSX"
+  );
+  assert.match(wizard, /SERVICE_SLOTS\.map/, "and are rendered from that one value");
+  assert.match(wizard, /FLEXIBLE_WINDOWS\.map/, "the flexible blocks come from the module too");
+  assert.match(wizard, /label="Any time that day"/);
+  assert.match(wizard, /label="A different time…"/);
+  assert.match(wizard, /role="radio"[\s\S]{0,120}aria-checked=\{selected\}/, "a chip is a radio");
+
+  assert.match(
+    wizard,
+    /windowChoice === CUSTOM_WINDOW_KEY && \(/,
+    "the two pickers appear only for a named time"
+  );
+  assert.match(wizard, /within=\{SERVICE_CLOCK_TIMES\}/, "and their pool is the working day");
+  assert.match(
+    wizard,
+    /const SERVICE_CLOCK_TIMES = serviceClockTimes\(\)/,
+    "computed once, not per render"
+  );
+  assert.match(wizard, /after=\{customStart\}/, "the end is still constrained by the start");
+  assert.match(
+    wizard,
+    /if \(customEnd && !isAfter\(value, customEnd\)\) setCustomEnd\(""\)/,
     "moving the start past the end clears the end, rather than leaving a window the API drops"
   );
   assert.match(wizard, /disabled=\{!preferredDate\}/, "no window before a date is chosen");
+  assert.match(
+    wizard,
+    /requested_duration_minutes: REQUEST_DURATION_MINUTES/,
+    "the visit keeps its length whatever the window is"
+  );
   assert.doesNotMatch(wizard, /type="time"/, "no native time input is left");
+  assert.doesNotMatch(wizard, /setPreferredStart|setPreferredEnd/, "the half-fillable pair is gone");
   assert.match(
     timeSelect,
-    /disabled=\{disabled \|\| minuteChoices\.length === 0\}/,
-    "the minute list is disabled when nothing is left in the day"
+    /within\?: ClockTime\[\]/,
+    "the picker takes a restricted pool, which is what keeps a customer inside the hours"
+  );
+  assert.match(timeSelect, /if \(!within \|\| within\.length === 0\) return options;/);
+});
+
+test("the API enforces the same hours as the form", () => {
+  const serviceTime = readFileSync(new URL(SERVICE_TIME, ROOT), "utf8");
+
+  assert.match(
+    serviceTime,
+    /import \{ isServiceRange \} from "@\/lib\/service-windows"/,
+    "one rule, imported rather than restated"
+  );
+  assert.match(
+    serviceTime,
+    /if \(!isServiceRange\(preferredStart, preferredEnd\)\)/,
+    "a window outside the hours is dropped before it reaches the database"
   );
 });
+
 test("every date field is picked, not typed", () => {
   for (const [name, source] of [
     [WIZARD, wizard],

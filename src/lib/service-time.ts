@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
+import { isServiceRange } from "@/lib/service-windows";
 
 /**
  * Service-timezone helpers.
@@ -119,6 +120,12 @@ export function formatRequestedWindow(
  * interpreted in the service timezone. A date with no times is NOT treated as a
  * whole-day booking, that would make every existing appointment that day a
  * conflict, which is exactly the behaviour the redesign removes.
+ *
+ * The plain-input path additionally has to be inside the shop's working hours
+ * (`isServiceRange`), because the wizard can only offer those: a window from an
+ * older client, or from a hand-rolled request, would otherwise be stored and never
+ * matched. The explicit-ISO path is left alone, it is for callers that already know
+ * the exact instant they mean.
  */
 export async function readRequestedWindow(
   supabase: SupabaseClient<Database>,
@@ -149,6 +156,15 @@ export async function readRequestedWindow(
   const preferredEnd = typeof body.preferred_end_time === "string" ? body.preferred_end_time : "";
 
   if (!preferredDate || !preferredStart || !preferredEnd) {
+    return { start: null, end: null, durationMinutes: explicitDuration };
+  }
+
+  // The shop's hours, enforced here as well as in the form. A window outside them is
+  // not a preference the queue can satisfy: eligibility needs a technician free across
+  // the whole span, so a request stored at 1:00–2:00 AM sits in `waiting` for ever
+  // while looking perfectly normal on every screen. Dropped, not rejected — the
+  // request still submits, without a window, which is what "any time" means.
+  if (!isServiceRange(preferredStart, preferredEnd)) {
     return { start: null, end: null, durationMinutes: explicitDuration };
   }
 

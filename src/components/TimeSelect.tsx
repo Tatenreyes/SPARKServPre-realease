@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import {
   TIME_STEP_MINUTES,
+  type ClockTime,
   formatClockTime,
   hour12Of,
   hour24Of,
@@ -54,6 +55,16 @@ export interface TimeSelectProps {
   /** Minutes between choices. Five suits a visit window; fifteen suits working hours. */
   step?: number;
   /**
+   * Restrict the pool to these times, on top of `after` and `step`.
+   *
+   * Used to keep a window inside the shop's open hours: the request form passes
+   * `serviceClockTimes()`, so 9:20 is offered and 1:20 AM is not. Left undefined by
+   * the availability grid, which is about a technician's own hours, not the shop's.
+   * Pass a module-level constant — an array rebuilt on every render would defeat the
+   * memo below.
+   */
+  within?: ClockTime[];
+  /**
    * `split` (the default) is three selects, hour, minute, AM/PM, for a window the
    * customer states precisely. `single` is one select of ready-made times, for a dense
    * row such as the availability grid, where three selects per boundary would not fit.
@@ -73,6 +84,7 @@ export default function TimeSelect({
   step = TIME_STEP_MINUTES,
   variant = "split",
   className = SELECT,
+  within,
 }: TimeSelectProps) {
   const parsed = minutesOfDay(value);
 
@@ -102,7 +114,13 @@ export default function TimeSelect({
     setMeridiem(meridiemOf(hour));
   }, [value]);
 
-  const valid = useMemo(() => timeOptions(after, step), [after, step]);
+  const valid = useMemo(() => {
+    const options = timeOptions(after, step);
+    if (!within || within.length === 0) return options;
+
+    const allowed = new Set(within.map((time) => toClockTime(time.hour, time.minute)));
+    return options.filter((option) => allowed.has(toClockTime(option.hour, option.minute)));
+  }, [after, step, within]);
 
   /**
    * The single-select list, plus the current value when it sits off the grid, a window

@@ -345,7 +345,9 @@ routing (customer / technician / admin / super admin) and password recovery (§3
 the appliance register (15 appliance types, each with a curated list of brands
 commonly serviced in the Philippines, plus model, serial, purchase date and warranty
 details); service request submission with photos, a confirmed map pin and an
-optional preferred time window; rule-based troubleshooting (one canonical issue
+optional preferred arrival window — half-hour slots between 9 AM and 4 PM with the
+lunch hour excluded, or any time the customer names inside those hours; rule-based
+troubleshooting (one canonical issue
 catalogue, a deterministic English/Tagalog/Bisaya matcher, and per-issue guides);
 the **fairness rotation queue** — approval, appliance specialisation, service area,
 requested-time availability and capacity decide who is offered a request, with **no
