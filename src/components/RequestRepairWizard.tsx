@@ -1428,14 +1428,16 @@ export default function RequestRepairWizard() {
             />
           </div>
 
-          {/* Full width: a grid of slots plus the flexible row needs the room, and the
-              half-width cell two three-control pickers used to share would wrap them
-              into a column each. */}
-          <fieldset className="sm:col-span-2" disabled={!preferredDate}>
-            <legend className="mb-1.5 block text-sm font-medium text-ink/80">
+          {/* Full width: the dropdown plus the two pickers it can reveal need the room the
+              half-width cell would not give them. */}
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="preferred-window"
+              className="mb-1.5 block text-sm font-medium text-ink/80"
+            >
               Preferred time window{" "}
               <span className="font-normal text-muted">(optional)</span>
-            </legend>
+            </label>
             <p className="mb-2 text-xs leading-relaxed text-muted">
               We work {windowLabel(SERVICE_HOURS.opens, SERVICE_HOURS.closes)} Philippine
               time and are closed for lunch from{" "}
@@ -1443,49 +1445,40 @@ export default function RequestRepairWizard() {
               technicians free in your window are offered the job.
             </p>
 
-            {/* The whole day is one choice, so one radio group: a chip grid rather than
-                three selects per boundary, which is what let a customer ask for 1:00 AM.
-                Disabled until a date is chosen, the same as the pickers it replaces. */}
-            <div role="radiogroup" aria-label="Preferred time window" className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                <WindowChip
-                  selected={windowChoice === ""}
-                  label="Any time that day"
-                  onSelect={() => setWindowChoice("")}
-                />
+            {/* ONE dropdown, not six selects over the whole day — which is how a customer
+                used to be able to ask for 1:00 AM. Every option is generated from the
+                shop's hours, so nothing outside them can be chosen. Two groups, because
+                they answer two different questions: "sometime in this block" and "this
+                slot". `FIELD` is the same recipe as the appliance and brand selects above,
+                so the three read as one form. */}
+            <select
+              id="preferred-window"
+              value={windowChoice}
+              onChange={(event) => setWindowChoice(event.target.value)}
+              disabled={!preferredDate}
+              className={`${FIELD} cursor-pointer disabled:cursor-not-allowed disabled:opacity-60`}
+            >
+              <option value="">Any time that day</option>
+              <optgroup label="Any time in a block">
                 {FLEXIBLE_WINDOWS.map((window) => (
-                  <WindowChip
-                    key={window.key}
-                    selected={windowChoice === window.key}
-                    label={
-                      window.key === "morning"
-                        ? `Morning · ${windowLabel(window.start, window.end)}`
-                        : `Afternoon · ${windowLabel(window.start, window.end)}`
-                    }
-                    onSelect={() => setWindowChoice(window.key)}
-                  />
+                  <option key={window.key} value={window.key}>
+                    {window.key === "morning" ? "Morning" : "Afternoon"} ·{" "}
+                    {windowLabel(window.start, window.end)}
+                  </option>
                 ))}
-              </div>
-
-              <div className="flex flex-wrap gap-2">
+              </optgroup>
+              <optgroup label="Pick a slot">
                 {SERVICE_SLOTS.map((window) => (
-                  <WindowChip
-                    key={window.key}
-                    selected={windowChoice === window.key}
-                    label={windowLabel(window.start, window.end)}
-                    onSelect={() => setWindowChoice(window.key)}
-                  />
+                  <option key={window.key} value={window.key}>
+                    {windowLabel(window.start, window.end)}
+                  </option>
                 ))}
-              </div>
-
-              <div>
-                <WindowChip
-                  selected={windowChoice === CUSTOM_WINDOW_KEY}
-                  label="A different time…"
-                  onSelect={() => setWindowChoice(CUSTOM_WINDOW_KEY)}
-                />
-              </div>
-            </div>
+              </optgroup>
+              <option value={CUSTOM_WINDOW_KEY}>A different time…</option>
+            </select>
+            {!preferredDate && (
+              <p className="mt-1.5 text-xs text-muted">Pick a date above to choose a time.</p>
+            )}
 
             {/* The two pickers, for a time the slots do not name ("9:20"). Their pools
                 are restricted to the open hours, so the customer can name any minute of
@@ -1501,6 +1494,7 @@ export default function RequestRepairWizard() {
                     if (customEnd && !isAfter(value, customEnd)) setCustomEnd("");
                   }}
                   within={SERVICE_CLOCK_TIMES}
+                  disabled={!preferredDate}
                 />
                 <TimeSelect
                   id="preferred-end"
@@ -1509,10 +1503,11 @@ export default function RequestRepairWizard() {
                   onChange={setCustomEnd}
                   after={customStart}
                   within={SERVICE_CLOCK_TIMES}
+                  disabled={!preferredDate}
                 />
               </div>
             )}
-          </fieldset>
+          </div>
         </div>
 
         <p className="mt-2 text-xs leading-relaxed text-muted">
@@ -1732,44 +1727,6 @@ export default function RequestRepairWizard() {
         </p>
       </div>
     </form>
-  );
-}
-
-/**
- * One window in the preferred-time panel.
- *
- * A chip rather than a `<select>`, and one group of them rather than three selects
- * per boundary: the answer is a single choice from a short list, so it should be
- * visible and one tap away. `role="radio"` with `aria-checked` because the group is
- * exclusive — the issue chips elsewhere in the form use `aria-pressed`, which is
- * right for a toggle but wrong for a set where choosing one clears another.
- *
- * Re-selecting the current chip is a no-op, so a customer cannot accidentally
- * deselect the window they just picked and land back on "any time".
- */
-function WindowChip({
-  selected,
-  label,
-  onSelect,
-}: {
-  selected: boolean;
-  label: string;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={selected}
-      onClick={onSelect}
-      className={`inline-flex min-h-[40px] cursor-pointer items-center rounded-full border px-3.5 text-xs font-medium transition duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
-        selected
-          ? "border-brand-300 bg-brand-soft text-brand-ink"
-          : "border-line bg-surface text-ink/80 hover:border-brand-300 hover:bg-brand-soft"
-      }`}
-    >
-      {label}
-    </button>
   );
 }
 

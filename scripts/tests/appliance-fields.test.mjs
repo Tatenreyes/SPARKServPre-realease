@@ -549,22 +549,43 @@ test("a form choice resolves to exactly one window", () => {
   assert.equal(REQUEST_DURATION_MINUTES, 120);
 });
 
-test("the window is one panel of chips, and the pickers only when asked", () => {
+test("the window is one dropdown, and the pickers only when asked", () => {
   assert.match(
     wizard,
-    /role="radiogroup"[\s\S]{0,160}Preferred time window/,
-    "one exclusive group, not six selects over the whole day"
+    /<select[\s\S]{0,200}id="preferred-window"/,
+    "one dropdown, not six selects over the whole day"
   );
+  assert.match(
+    wizard,
+    /htmlFor="preferred-window"/,
+    "a real label, not a legend plus a duplicate aria-label"
+  );
+  assert.match(
+    wizard,
+    /onChange=\{\(event\) => setWindowChoice\(event\.target\.value\)\}/,
+    "the chosen key is what the form holds"
+  );
+  assert.ok(
+    wizard.includes("${FIELD} cursor-pointer"),
+    "the dropdown wears the same field recipe as the appliance and brand selects, `spark-input` is not a class in this project"
+  );
+  assert.match(wizard, /optgroup label="Any time in a block"/, "the flexible answers are grouped");
+  assert.match(wizard, /optgroup label="Pick a slot"/, "and so are the slots");
+
   assert.match(
     wizard,
     /const SERVICE_SLOTS = serviceWindows\(\)/,
-    "the slots come from the module, not a list in JSX"
+    "the options come from the module, not a list in JSX"
   );
   assert.match(wizard, /SERVICE_SLOTS\.map/, "and are rendered from that one value");
   assert.match(wizard, /FLEXIBLE_WINDOWS\.map/, "the flexible blocks come from the module too");
-  assert.match(wizard, /label="Any time that day"/);
-  assert.match(wizard, /label="A different time…"/);
-  assert.match(wizard, /role="radio"[\s\S]{0,120}aria-checked=\{selected\}/, "a chip is a radio");
+  assert.match(wizard, /Any time that day/, "the default is stated, so an empty window is a choice");
+  assert.match(wizard, /A different time…/);
+  assert.doesNotMatch(
+    wizard,
+    /WindowChip|role="radiogroup"/,
+    "the chip grid is gone, the day is a list of options now"
+  );
 
   assert.match(
     wizard,
