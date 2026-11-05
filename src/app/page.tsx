@@ -33,7 +33,7 @@ const trustPoints = [
 
 export default function HomePage() {
   return (
-    <div className="bg-[#070D12]">
+    <div className="bg-canvas">
       {/* Hero. The photograph is the same wide technician shot used before
           (`Backgound.jpg` is the real filename, there is no `Background.jpg`),
           now paired with a single directional navy scrim instead of the old
@@ -90,24 +90,24 @@ export default function HomePage() {
 
       {/* Trust strip. Four capabilities in one row on desktop, a 2x2 grid on
           phones, so it adds a band rather than a section of its own. */}
-      <section aria-label="Why SPARKServ" className="border-t border-white/10 bg-[#0B1118] text-white">
+      <section aria-label="Why SPARKServ" className="border-t border-line bg-soft text-ink dark:bg-[#0B1118]">
         <div className="spark-section">
           <ul className="grid grid-cols-2 md:grid-cols-4">
             {trustPoints.map((point, index) => (
               <li
                 key={point.title}
                 className={`flex min-w-0 items-center gap-3 py-4 md:px-5 md:py-5 ${
-                  index >= 2 ? "border-t border-white/10 md:border-t-0" : ""
-                } ${index > 0 ? "md:border-l md:border-white/10" : ""} ${
-                  index % 2 === 1 ? "border-l border-white/10 pl-4 md:pl-5" : ""
+                  index >= 2 ? "border-t border-line md:border-t-0" : ""
+                } ${index > 0 ? "md:border-l md:border-line" : ""} ${
+                  index % 2 === 1 ? "border-l border-line pl-4 md:pl-5" : ""
                 }`}
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[#81EDF4] ring-1 ring-inset ring-white/10">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface text-brand-600 dark:text-[#81EDF4] ring-1 ring-inset ring-line">
                   <point.icon className="h-4 w-4" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold leading-tight text-white">{point.title}</p>
-                  <p className="mt-1 text-[11px] leading-snug text-white/60">{point.body}</p>
+                  <p className="text-[13px] font-semibold leading-tight text-ink">{point.title}</p>
+                  <p className="mt-1 text-[11px] leading-snug text-muted">{point.body}</p>
                 </div>
               </li>
             ))}

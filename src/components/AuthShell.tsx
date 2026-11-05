@@ -123,7 +123,7 @@ export default function AuthShell({
           <div
             className={
               panelStyle === "signup"
-                ? "auth-signup-form-panel w-full max-w-[480px] p-0"
+                ? "auth-signup-form-panel dark text-ink w-full max-w-[480px] p-0"
                 : "rounded-2xl border border-line bg-surface p-6 shadow-card sm:p-8"
             }
           >

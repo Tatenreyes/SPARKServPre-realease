@@ -8,6 +8,7 @@ import BrandLogo from "@/components/BrandLogo";
 import NotificationBell from "@/components/NotificationBell";
 import PlatformAnnouncementTicker from "@/components/PlatformAnnouncementTicker";
 import LoadingScreen from "@/components/LoadingScreen";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useUser } from "@/hooks/useUser";
 import { signOut } from "@/lib/signOut";
 import type { DashboardRole } from "@/components/DashboardShell";
@@ -85,7 +86,7 @@ export default function DashboardTopbar({
   return (
     <>
       {signingOut && <LoadingScreen message="Signing you out..." />}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#070D12]/95 text-white shadow-sm backdrop-blur print:hidden">
+      <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 text-ink shadow-sm backdrop-blur print:hidden">
         <div className="mx-auto flex h-16 w-full max-w-[1800px] items-center gap-3 px-4 sm:px-6 lg:px-8">
           {/* Desktop rail collapse toggle. Its own control, distinct from the
               hamburger below (which only opens the mobile drawer): the rail is a
@@ -97,7 +98,7 @@ export default function DashboardTopbar({
             aria-label={collapsed ? "Expand navigation sidebar" : "Collapse navigation sidebar"}
             aria-expanded={!collapsed}
             aria-controls="dashboard-sidebar"
-            className="hidden h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-white/20 text-white/75 transition hover:border-white/40 hover:bg-white/10 hover:text-white lg:inline-flex"
+            className="hidden h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-line text-muted transition hover:border-ink/40 hover:bg-soft hover:text-ink lg:inline-flex"
           >
             {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
@@ -108,7 +109,7 @@ export default function DashboardTopbar({
             aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={menuOpen}
             aria-controls="dashboard-sidebar"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/20 text-white/75 transition hover:border-white/40 hover:bg-white/10 hover:text-white lg:hidden"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line text-muted transition hover:border-ink/40 hover:bg-soft hover:text-ink lg:hidden"
           >
             {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
@@ -116,15 +117,16 @@ export default function DashboardTopbar({
           <Link
             href={ROLE_HOME[role]}
             aria-label="SPARKServ dashboard home"
-            className="flex min-w-0 items-center gap-2 font-display text-base font-bold tracking-tight text-white"
+            className="flex min-w-0 items-center gap-2 font-display text-base font-bold tracking-tight text-ink"
           >
             <BrandLogo size={28} variant="light" />
             <span className="truncate">
-              SPARK<span className="text-[#81EDF4]">Serv</span>
+              SPARK<span className="text-brand-600 dark:text-[#81EDF4]">Serv</span>
             </span>
           </Link>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            <ThemeToggle />
             {profile && <NotificationBell userId={profile.id} />}
 
             {profile && (
@@ -134,7 +136,7 @@ export default function DashboardTopbar({
                   onClick={() => setUserMenuOpen((open) => !open)}
                   aria-haspopup="menu"
                   aria-expanded={userMenuOpen}
-                    className="flex cursor-pointer items-center gap-2 rounded-xl px-1.5 py-1.5 transition hover:bg-white/10 sm:pr-2.5"
+                    className="flex cursor-pointer items-center gap-2 rounded-xl px-1.5 py-1.5 transition hover:bg-soft sm:pr-2.5"
                 >
                   <span
                     className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-soft text-sm font-bold text-brand-ink ring-1 ring-line"
@@ -151,13 +153,13 @@ export default function DashboardTopbar({
                     {!profile.avatar_url && (profile.name?.charAt(0)?.toUpperCase() ?? "S")}
                   </span>
                   <span className="hidden min-w-0 text-left sm:block">
-                    <span className="block max-w-[9rem] truncate text-xs font-semibold text-white">
+                    <span className="block max-w-[9rem] truncate text-xs font-semibold text-ink">
                       {profile.name ?? "Welcome"}
                     </span>
-                    <span className="block text-[11px] text-white/60">{ROLE_LABEL[role]}</span>
+                    <span className="block text-[11px] text-muted">{ROLE_LABEL[role]}</span>
                   </span>
                   <ChevronDown
-                    className={`hidden h-3.5 w-3.5 text-white/60 transition-transform duration-200 sm:block ${
+                    className={`hidden h-3.5 w-3.5 text-muted transition-transform duration-200 sm:block ${
                       userMenuOpen ? "rotate-180" : ""
                     }`}
                   />

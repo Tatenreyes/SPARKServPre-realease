@@ -15,20 +15,23 @@
 :root {
   color-scheme: light;
 
-  --spark-canvas: 245 247 251;   /* #F5F7FB — page background      */
-  --spark-surface: 255 255 255;  /* #FFFFFF — cards, sheets, menus */
-  --spark-ink: 16 38 74;         /* #10264A — primary text         */
-  /* `muted` and `line` each moved one step in the UI audit, because the maths said
-     they had to:
-       - slate-500 `text-muted` on the canvas measured 4.44:1 — just under the AA
-         floor of 4.5:1, which is why secondary text read as washed out.
-       - slate-200 hairlines measured 1.15:1 on the canvas: an edge you cannot see,
-         which is why input boxes and cards looked like they had no outline.
-     At slate-600 secondary text is 7.0:1 on the canvas and 7.6:1 on a surface; at
-     slate-300 borders are 1.37:1 and 1.49:1, matching the dark theme's 1.39:1.
-     Both are pinned by `npm run test:design`. */
-  --spark-muted: 71 85 105;      /* slate-600 — secondary text     */
-  --spark-line: 203 213 225;     /* slate-300 — structural border  */
+  --spark-canvas: 255 255 255;   /* #FFFFFF — page background      */
+  --spark-surface: 248 249 250;  /* #F8F9FA — cards, sheets, menus */
+  --spark-ink: 17 24 39;         /* #111827 — primary text         */
+  /* `muted` and `line` are set by the maths, and both are pinned by
+     `npm run test:design`:
+       - slate-600 `text-muted` measures 7.6:1 on the white canvas, 7.2:1 on a
+         #F8F9FA surface and 6.9:1 on a #F1F5F9 `soft` fill. Grey-500 (#6B7280)
+         was tried first, to match a lighter grey palette, but it lands at 4.41:1
+         on `soft` — 0.09 under the AA floor of 4.5:1 — and `text-muted` on
+         `bg-soft` is a real pairing: it is what the idle sidebar row becomes on
+         hover.
+       - grey-300 hairlines measure 1.47:1 on the canvas and 1.40:1 on a surface,
+         the same order as the dark theme's own line token at 1.39:1. Grey-200
+         (#E5E7EB) came out at 1.17:1 against a #F8F9FA card — an edge you cannot
+         see, which is the failure this test exists to catch. */
+  --spark-muted: 71 85 105;      /* #475569 — secondary text     */
+  --spark-line: 209 213 219;     /* #D1D5DB — structural border  */
   --spark-soft: 241 245 249;     /* slate-100 — hover fill, tracks */
 
   --spark-brand-ink: 14 66 159;    /* brand-600, read as text  */
@@ -573,7 +576,7 @@ img {
 /* Reference palette for sign-in, sign-up, and authenticated dashboards. It is
    scoped to those shells so the rest of the product can keep its existing
    theme while shared components inherit the same dark surfaces and accents. */
-.reference-palette {
+.dark .reference-palette {
   color-scheme: dark;
   --spark-canvas: 7 13 18;
   --spark-surface: 16 25 35;
@@ -588,8 +591,7 @@ img {
 /* Registration follows the purple, space-inspired reference artwork while
    keeping the login and recovery screens on the normal dashboard palette. */
 .auth-signup-shell {
-  background: #05070b;
-  color-scheme: dark;
+  background: rgb(var(--spark-canvas));
 }
 
 .auth-signup-stage {
@@ -602,6 +604,9 @@ img {
   background-size: 118px 118px, 164px 164px, auto, auto;
 }
 
+/* Fixed dark glass: dark in BOTH themes. The form inside therefore carries the
+   `dark` class (see AuthShell) so every token resolves to its dark value — the
+   light `--spark-ink` would otherwise paint near-black text on this surface. */
 .auth-signup-form-panel {
   border-radius: 1.5rem;
   border: 1px solid rgb(255 255 255 / 0.16);
@@ -624,9 +629,13 @@ img {
 
 /* The named brand shades are fixed Tailwind values, so map them only inside
    these surfaces to the purple / cyan from the supplied reference. */
-.reference-palette .bg-brand-50,
-.reference-palette .bg-brand-100,
-.reference-palette .bg-brand-soft {
+/* Dark-only. In light mode these must keep their light values: `bg-brand-soft`
+   is the tonal fill behind selected options and stat tiles, and the text on it
+   is `text-ink`, which is near-black in light mode — a fixed #131d27 plate left
+   the selected label and the tile icon invisible. */
+.dark .reference-palette .bg-brand-50,
+.dark .reference-palette .bg-brand-100,
+.dark .reference-palette .bg-brand-soft {
   background-color: #131d27;
 }
 
@@ -647,15 +656,18 @@ img {
   background-color: #070d12;
 }
 
-.reference-palette .text-brand-300,
-.reference-palette .text-brand-400,
-.reference-palette .text-brand-500,
-.reference-palette .text-brand-600,
-.reference-palette .text-brand-700,
-.reference-palette .text-brand-800,
-.reference-palette .text-brand-900,
-.reference-palette .text-brand-100,
-.reference-palette .text-brand-200 {
+/* Dark-only. In light mode `text-brand-600` must stay the real brand blue:
+   components pair it with `dark:text-[#81EDF4]` precisely because the cyan is
+   the dark-theme value. Applying cyan in light mode painted it on white. */
+.dark .reference-palette .text-brand-300,
+.dark .reference-palette .text-brand-400,
+.dark .reference-palette .text-brand-500,
+.dark .reference-palette .text-brand-600,
+.dark .reference-palette .text-brand-700,
+.dark .reference-palette .text-brand-800,
+.dark .reference-palette .text-brand-900,
+.dark .reference-palette .text-brand-100,
+.dark .reference-palette .text-brand-200 {
   color: #81edf4;
 }
 
@@ -681,8 +693,10 @@ img {
   border-color: #81edf4;
 }
 
-.reference-palette .hover\:text-brand-ink:hover,
-.reference-palette .focus\:text-brand-ink:focus {
+/* Dark-only, same reason as the text shades above: in light mode a hover must
+   land on the real brand ink rather than cyan on white. */
+.dark .reference-palette .hover\:text-brand-ink:hover,
+.dark .reference-palette .focus\:text-brand-ink:focus {
   color: #81edf4;
 }
 
@@ -708,7 +722,11 @@ img {
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
-.reference-palette .spark-hero-gradient {
+/* Dark-only. `DashboardHero` builds the light-mode band from the pale
+   `.spark-hero-gradient` and a token scrim, because its copy is `text-ink` /
+   `text-muted` and inverts with the theme. Forcing the navy plate here painted
+   near-black text on a near-black band whenever the theme was light. */
+.dark .reference-palette .spark-hero-gradient {
   background-image: linear-gradient(103deg, #101923 0%, #171a36 54%, #1b1d43 100%);
 }
 

@@ -310,19 +310,19 @@ export default function ApplianceGallery() {
   }
 
   return (
-    <section id="supported-appliances" className="border-y border-white/10 bg-[#070D12]">
+    <section id="supported-appliances" className="border-y border-line bg-canvas">
       <div className="spark-section py-8 md:py-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#81EDF4]">Supported Appliances</p>
-            <h2 className="mt-1.5 text-2xl font-bold text-white sm:text-3xl">A closer look at what we repair</h2>
-            <p className="mt-1.5 text-sm leading-6 text-white/65">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-600 dark:text-[#81EDF4]">Supported Appliances</p>
+            <h2 className="mt-1.5 text-2xl font-bold text-ink sm:text-3xl">A closer look at what we repair</h2>
+            <p className="mt-1.5 text-sm leading-6 text-muted">
               Scroll or use the arrows to browse. Select an appliance to view it larger.
             </p>
           </div>
           <Link
             href="/services"
-            className="group inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-full border border-[#81EDF4]/30 bg-white/5 px-5 text-sm font-semibold text-white transition-colors duration-200 hover:border-[#81EDF4] hover:bg-white/10 sm:w-auto"
+            className="group inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-full border border-line bg-surface px-5 text-sm font-semibold text-ink transition-colors duration-200 hover:border-brand-600 hover:bg-soft dark:hover:border-[#81EDF4] sm:w-auto"
           >
             View all services
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -366,9 +366,9 @@ export default function ApplianceGallery() {
                     }}
                     aria-haspopup="dialog"
                     aria-label={`Open a larger image of ${item.label}`}
-                    className="group flex w-full flex-col items-center rounded-[1.4rem] text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#81EDF4] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070D12]"
+                    className="group flex w-full flex-col items-center rounded-[1.4rem] text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas dark:focus-visible:ring-[#81EDF4]"
                   >
-                    <div className="appliance-slide-media relative aspect-square w-full overflow-hidden rounded-[1.1rem] bg-[radial-gradient(circle_at_50%_35%,#182333_0%,#0B1118_72%)] shadow-[0_10px_22px_-12px_rgba(0,0,0,0.7)] ring-1 ring-white/10">
+                    <div className="appliance-slide-media relative aspect-square w-full overflow-hidden rounded-[1.1rem] bg-soft shadow-[0_10px_22px_-12px_rgba(0,0,0,0.25)] ring-1 ring-line dark:bg-[radial-gradient(circle_at_50%_35%,#182333_0%,#0B1118_72%)] dark:shadow-[0_10px_22px_-12px_rgba(0,0,0,0.7)]">
                       {item.image ? (
                         <Image
                           src={item.image}
@@ -382,12 +382,12 @@ export default function ApplianceGallery() {
                       ) : (
                         <AppliancePlaceholder item={item} />
                       )}
-                      <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/15 opacity-0 shadow-sm backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+                      <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-soft text-ink ring-1 ring-line opacity-0 shadow-sm backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
                         <Expand className="h-3.5 w-3.5" aria-hidden="true" />
                       </span>
                     </div>
 
-                    <h3 className="appliance-slide-title mt-3 text-sm font-semibold leading-tight text-white sm:text-[15px]">
+                    <h3 className="appliance-slide-title mt-3 text-sm font-semibold leading-tight text-ink sm:text-[15px]">
                       {item.label}
                     </h3>
                   </button>
@@ -402,7 +402,7 @@ export default function ApplianceGallery() {
               onClick={() => goToCarouselIndex(carouselIndex - 1)}
               disabled={carouselIndex === 0}
               aria-label="Previous appliance"
-              className="absolute left-1 top-[40%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#6D70F0] text-white shadow-[0_10px_24px_-8px_rgba(5,11,24,0.6)] transition duration-200 hover:scale-105 hover:bg-[#8587FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#81EDF4] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070D12] disabled:cursor-not-allowed disabled:opacity-25 disabled:hover:scale-100 disabled:hover:bg-[#6D70F0] sm:flex"
+              className="absolute left-1 top-[40%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#6D70F0] text-white shadow-[0_10px_24px_-8px_rgba(5,11,24,0.6)] transition duration-200 hover:scale-105 hover:bg-[#8587FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas dark:focus-visible:ring-[#81EDF4] disabled:cursor-not-allowed disabled:opacity-25 disabled:hover:scale-100 disabled:hover:bg-[#6D70F0] sm:flex"
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -412,7 +412,7 @@ export default function ApplianceGallery() {
               onClick={() => goToCarouselIndex(carouselIndex + 1)}
               disabled={carouselIndex === GALLERY_ITEMS.length - 1}
               aria-label="Next appliance"
-              className="absolute right-1 top-[40%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#6D70F0] text-white shadow-[0_10px_24px_-8px_rgba(5,11,24,0.6)] transition duration-200 hover:scale-105 hover:bg-[#8587FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#81EDF4] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070D12] disabled:cursor-not-allowed disabled:opacity-25 disabled:hover:scale-100 disabled:hover:bg-[#6D70F0] sm:flex"
+              className="absolute right-1 top-[40%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#6D70F0] text-white shadow-[0_10px_24px_-8px_rgba(5,11,24,0.6)] transition duration-200 hover:scale-105 hover:bg-[#8587FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas dark:focus-visible:ring-[#81EDF4] disabled:cursor-not-allowed disabled:opacity-25 disabled:hover:scale-100 disabled:hover:bg-[#6D70F0] sm:flex"
             >
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -423,7 +423,7 @@ export default function ApplianceGallery() {
                 onClick={() => goToCarouselIndex(carouselIndex - 1)}
                 disabled={carouselIndex === 0}
                 aria-label="Previous appliance"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition-colors duration-200 hover:border-[#81EDF4] hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#81EDF4] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070D12] disabled:cursor-not-allowed disabled:opacity-25 sm:hidden"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-ink transition-colors duration-200 hover:border-brand-600 hover:bg-soft dark:hover:border-[#81EDF4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas dark:focus-visible:ring-[#81EDF4] disabled:cursor-not-allowed disabled:opacity-25 sm:hidden"
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -440,8 +440,8 @@ export default function ApplianceGallery() {
                     onClick={() => goToCarouselIndex(index)}
                     aria-label={`Show ${item.label}`}
                     aria-current={carouselIndex === index ? "true" : undefined}
-                    className={`h-2 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#81EDF4] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070D12] ${
-                      carouselIndex === index ? "w-5 bg-[#81EDF4]" : "w-2 bg-white/25 hover:bg-[#81EDF4]"
+                    className={`h-2 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas dark:focus-visible:ring-[#81EDF4] ${
+                      carouselIndex === index ? "w-5 bg-brand-600 dark:bg-[#81EDF4]" : "w-2 bg-line hover:bg-brand-600 dark:hover:bg-[#81EDF4]"
                     }`}
                   />
                 ))}
@@ -452,7 +452,7 @@ export default function ApplianceGallery() {
                 onClick={() => goToCarouselIndex(carouselIndex + 1)}
                 disabled={carouselIndex === GALLERY_ITEMS.length - 1}
                 aria-label="Next appliance"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition-colors duration-200 hover:border-[#81EDF4] hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#81EDF4] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070D12] disabled:cursor-not-allowed disabled:opacity-25 sm:hidden"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-ink transition-colors duration-200 hover:border-brand-600 hover:bg-soft dark:hover:border-[#81EDF4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas dark:focus-visible:ring-[#81EDF4] disabled:cursor-not-allowed disabled:opacity-25 sm:hidden"
               >
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -491,12 +491,12 @@ export default function ApplianceGallery() {
                   aria-labelledby="appliance-lightbox-title"
                   aria-describedby="appliance-lightbox-description"
                   tabIndex={-1}
-                  className="relative z-10 flex max-h-full w-full max-w-4xl flex-col overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-[#070D12] text-white shadow-[0_30px_90px_-20px_rgba(5,11,24,0.75)]"
+                  className="relative z-10 flex max-h-full w-full max-w-4xl flex-col overflow-y-auto overscroll-contain rounded-2xl border border-line bg-surface text-ink shadow-card"
                 >
-                  <div className="flex items-start justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-6 sm:py-4">
+                  <div className="flex items-start justify-between gap-4 border-b border-line px-4 py-3 sm:px-6 sm:py-4">
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#81EDF4]">Supported appliance</p>
-                      <h2 id="appliance-lightbox-title" className="mt-1 text-lg font-bold leading-tight text-white sm:text-xl">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-600 dark:text-[#81EDF4]">Supported appliance</p>
+                      <h2 id="appliance-lightbox-title" className="mt-1 text-lg font-bold leading-tight text-ink sm:text-xl">
                         {currentItem.label}
                       </h2>
                     </div>
@@ -505,7 +505,7 @@ export default function ApplianceGallery() {
                       type="button"
                       onClick={close}
                       aria-label="Close appliance gallery"
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 text-white/65 transition-colors duration-200 hover:border-[#81EDF4] hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#81EDF4] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070D12]"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line text-muted transition-colors duration-200 hover:border-brand-600 hover:bg-soft hover:text-ink dark:hover:border-[#81EDF4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas dark:focus-visible:ring-[#81EDF4]"
                     >
                       <X className="h-5 w-5" aria-hidden="true" />
                     </button>
@@ -514,7 +514,7 @@ export default function ApplianceGallery() {
                   <div
                     onTouchStart={handleTouchStart}
                     onTouchEnd={handleTouchEnd}
-                    className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[radial-gradient(circle_at_50%_45%,#182333_0%,#070D12_75%)] sm:aspect-[16/10]"
+                    className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-soft dark:bg-[radial-gradient(circle_at_50%_45%,#182333_0%,#070D12_75%)] sm:aspect-[16/10]"
                   >
                     <AnimatePresence mode="wait" initial={false}>
                       <motion.div
@@ -542,8 +542,8 @@ export default function ApplianceGallery() {
                     </AnimatePresence>
                   </div>
 
-                  <div className="flex flex-col gap-3 border-t border-white/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
-                    <p id="appliance-lightbox-description" className="max-w-xl text-sm leading-6 text-white/65">
+                  <div className="flex flex-col gap-3 border-t border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
+                    <p id="appliance-lightbox-description" className="max-w-xl text-sm leading-6 text-muted">
                       {GALLERY_DESCRIPTIONS[currentItem.value] ?? "Appliance repair support from SPARKServ."}
                     </p>
 
@@ -554,13 +554,13 @@ export default function ApplianceGallery() {
                         aria-label={`Previous appliance: ${
                           GALLERY_ITEMS[(currentIndex - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length].label
                         }`}
-                        className="inline-flex h-11 min-w-11 items-center justify-center gap-1 rounded-full border border-white/15 px-3 text-xs font-semibold text-white transition-colors duration-200 hover:border-[#81EDF4] hover:bg-white/10 sm:px-4"
+                        className="inline-flex h-11 min-w-11 items-center justify-center gap-1 rounded-full border border-line px-3 text-xs font-semibold text-ink transition-colors duration-200 hover:border-brand-600 hover:bg-soft sm:px-4 dark:hover:border-[#81EDF4]"
                       >
                         <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                         <span className="hidden sm:inline">Previous</span>
                       </button>
 
-                      <span className="min-w-14 text-center text-xs font-semibold tabular-nums text-white/50" aria-hidden="true">
+                      <span className="min-w-14 text-center text-xs font-semibold tabular-nums text-muted" aria-hidden="true">
                         {currentIndex + 1} / {GALLERY_ITEMS.length}
                       </span>
 
@@ -570,7 +570,7 @@ export default function ApplianceGallery() {
                         aria-label={`Next appliance: ${
                           GALLERY_ITEMS[(currentIndex + 1) % GALLERY_ITEMS.length].label
                         }`}
-                        className="inline-flex h-11 min-w-11 items-center justify-center gap-1 rounded-full border border-white/15 px-3 text-xs font-semibold text-white transition-colors duration-200 hover:border-[#81EDF4] hover:bg-white/10 sm:px-4"
+                        className="inline-flex h-11 min-w-11 items-center justify-center gap-1 rounded-full border border-line px-3 text-xs font-semibold text-ink transition-colors duration-200 hover:border-brand-600 hover:bg-soft sm:px-4 dark:hover:border-[#81EDF4]"
                       >
                         <span className="hidden sm:inline">Next</span>
                         <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -604,19 +604,19 @@ function AppliancePlaceholder({
     <div
       role="img"
       aria-label={`${item.label} image coming soon`}
-      className={`absolute inset-0 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_32%,#182333_0%,#070D12_72%)] text-white ${
+      className={`absolute inset-0 flex flex-col items-center justify-center bg-soft text-ink dark:bg-[radial-gradient(circle_at_50%_32%,#182333_0%,#070D12_72%)] ${
         large ? "gap-4" : "gap-2"
       }`}
     >
       <span
-        className={`flex items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-[#81EDF4] ${
+        className={`flex items-center justify-center rounded-2xl border border-line bg-surface text-brand-600 dark:text-[#81EDF4] ${
           large ? "h-20 w-20" : "h-12 w-12"
         }`}
       >
         <Icon className={large ? "h-10 w-10" : "h-6 w-6"} aria-hidden="true" />
       </span>
       <span
-        className={`font-semibold uppercase tracking-[0.14em] text-white/55 ${
+        className={`font-semibold uppercase tracking-[0.14em] text-muted ${
           large ? "text-[11px]" : "text-[8px]"
         }`}
       >

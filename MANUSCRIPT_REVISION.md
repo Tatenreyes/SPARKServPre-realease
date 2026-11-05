@@ -659,12 +659,12 @@ system does not have.
 ## 3.9 Accessibility and the Design System
 
 The interface ships a **light and a dark theme**. The theme is applied by a pre-paint script that
-reads a stored choice from `localStorage` and falls back to the operating system's
-`prefers-color-scheme`, so the correct theme is painted before the first frame rather than after a
-white flash. The provider that persists an explicit choice exists
-(`src/components/ThemeProvider.tsx`, `src/lib/theme.ts`), but **this release ships no in-app
-control for it** — the toggle component was removed — so in practice the theme follows the operating
-system. The manuscript should state it that way rather than implying a user-facing setting.
+reads a stored choice from `localStorage` (`sparkserv-theme`). **Light is the default when nothing is
+stored** — `prefers-color-scheme` is deliberately not consulted — so the correct theme is painted
+before the first frame rather than after a white flash. The provider that persists an explicit choice
+exists (`src/components/ThemeProvider.tsx`, `src/lib/theme.ts`), and `ThemeToggle` — in the site
+navbar and the dashboard top bar — is the control, so a reader can switch at will. The manuscript
+should describe a real, user-facing light/dark setting that defaults to light.
 
 Accessibility was treated as a measurable property rather than a matter of taste, and this produced
 a method worth reporting in the manuscript:

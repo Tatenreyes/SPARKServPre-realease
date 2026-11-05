@@ -94,10 +94,10 @@ correct.
 
 **The context** (`ThemeProvider`) starts as `null` and touches `document` only
 inside an effect, so server HTML, the first client render and the pre-paint
-script always agree. `src/components/ThemeToggle.tsx` was removed in this
-release, and nothing consumes `useTheme()` today: the theme still follows the
-stored choice (or the OS preference, via the pre-paint script), but there is
-currently **no in-app control** to switch it. A toggle added back must keep the
+script always agree. `src/components/ThemeToggle.tsx` is the only control, in the
+site navbar and the dashboard top bar, and it writes the class and the stored key
+through `useTheme()`. Light is the default: the OS preference is deliberately not
+consulted, so an OS set to dark cannot override the choice. A toggle must keep the
 same rule — read nothing browser-only while rendering, and let the icon settle
 one frame after hydration, which is cheaper than a hydration mismatch or a wrong
 SSR icon.

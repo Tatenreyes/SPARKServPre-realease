@@ -379,3 +379,37 @@ Deliberately simplified / left as extension points:
 - **A service-warranty workflow** (claims, evidence, refunds) does not exist. The job
   order prints a warranty line only when a per-repair warranty date is stored, and
   claims nothing until then.
+
+---
+
+## 8. Theming
+
+The app ships in two themes, and every surface follows the user's choice — the
+landing page and the dashboard chrome included, not just the workspace content.
+
+- **Tokens, not hex.** `src/app/globals.css` defines each colour as an RGB
+  *triplet* (`--spark-canvas`, `--spark-ink`, `--spark-muted`, `--spark-line`,
+  `--spark-soft`, plus the `-ink`/`-soft` brand pairs) under `:root` for light and
+  under `.dark` for dark. Tailwind reads them as `bg-canvas`, `text-ink`,
+  `border-line` and so on, which keeps the `/opacity` modifiers working
+  (`border-ink/8` compiles to `rgb(var(--spark-ink) / 0.08)`). `color-scheme` is
+  set alongside each theme so native date/time pickers and scrollbars match
+  instead of punching bright white boxes into a dark page.
+- **The switch.** `ThemeToggle` — in the site navbar and the dashboard top bar — is
+  the only control. It writes the `dark` class, `color-scheme` and the
+  `sparkserv-theme` key through `ThemeProvider`; **light is the default** when
+  nothing is stored — the OS preference is deliberately ignored, so an OS set to
+  dark cannot override the choice. The inline script in `src/app/layout.tsx` reads
+  that key before the first paint, so a dark visitor never sees a white flash.
+- **What is deliberately fixed.** A few surfaces are not themed, because they are
+  not surfaces: the hero is a photograph under a navy scrim (white copy over a
+  photo is correct in both themes), the closing call-to-action band is brand
+  indigo, the step mockups are dark app screenshots, and the lightbox scrim stays
+  dark so its panel reads as raised. The `dark:` variants on the trust strip and
+  the sidebar rail keep dark mode exactly as it looked before the light theme
+  existed.
+- **The guardrail.** `npm run test:design` checks both themes at once: every text
+  token pair clears WCAG AA, no `text-white` is painted onto a light surface, no
+  state variant repeats the value it overrides, and no text is set at 10px. Add a
+  colour as a token and let that suite hold it to the same standard.
+

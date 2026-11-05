@@ -45,10 +45,11 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F5F7FB" },
-    { media: "(prefers-color-scheme: dark)", color: "#080D1A" },
-  ],
+  /* A single entry, deliberately NOT media-scoped: this is the Android/iOS
+     browser-chrome colour, and with a class-based toggle the OS is no longer
+     what decides the theme. The pre-paint script below and `applyTheme` in
+     ThemeProvider rewrite this meta at runtime so the chrome follows the toggle. */
+  themeColor: "#F5F7FB",
 };
 
 /**
@@ -70,11 +71,14 @@ const THEME_PRE_PAINT = `
     var key = "${STORAGE_KEY}";
     var stored = null;
     try { stored = localStorage.getItem(key); } catch (e) {}
-    var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    var dark = stored === "dark" || (!stored && prefersDark);
+    /* Light is the default: 'prefers-color-scheme' is deliberately NOT consulted,
+       so an OS set to dark cannot override the toggle's stored choice. */
+    var dark = stored === "dark";
     var el = document.documentElement;
     el.classList.toggle("dark", dark);
     el.style.colorScheme = dark ? "dark" : "light";
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", dark ? "#080D1A" : "#F5F7FB");
   } catch (e) {}
 })();
 `;

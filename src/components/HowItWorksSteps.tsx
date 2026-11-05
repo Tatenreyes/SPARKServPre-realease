@@ -50,17 +50,17 @@ export default function HowItWorksSteps() {
   const [failed, setFailed] = useState<boolean[]>(() => STEPS.map(() => false));
 
   return (
-    <section aria-labelledby="how-it-works-heading" className="border-y border-white/10 bg-[#070D12]">
+    <section aria-labelledby="how-it-works-heading" className="border-y border-line bg-canvas">
       <div className="spark-section py-12 md:py-14">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="spark-eyebrow text-[#81EDF4]">How SPARKServ works</p>
+          <p className="spark-eyebrow text-brand-600 dark:text-[#81EDF4]">How SPARKServ works</p>
           <h2
             id="how-it-works-heading"
-            className="mt-2 text-2xl font-bold text-white sm:text-3xl"
+            className="mt-2 text-2xl font-bold text-ink sm:text-3xl"
           >
             From problem to service in 3 steps
           </h2>
-          <p className="mt-3 text-sm leading-6 text-white/70 md:text-base">
+          <p className="mt-3 text-sm leading-6 text-muted md:text-base">
             Tell us what&apos;s wrong, review your estimate, and track your repair, all in one place.
           </p>
         </div>
@@ -68,7 +68,7 @@ export default function HowItWorksSteps() {
         <ol className="mt-10 grid gap-8 md:grid-cols-3">
           {STEPS.map((step, index) => (
             <li key={step.number} className="group md:text-center">
-              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-white/10 bg-black transition-colors duration-300 group-hover:border-[#81EDF4]/40">
+              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-line bg-black transition-colors duration-300 group-hover:border-brand-600/40 dark:group-hover:border-[#81EDF4]/40">
                 {failed[index] ? (
                   <StepPlaceholder number={step.number} />
                 ) : (
@@ -90,12 +90,12 @@ export default function HowItWorksSteps() {
               </div>
 
               <h3 className="mt-4 flex items-baseline gap-2.5 md:justify-center">
-                <span className="font-mono text-[11px] leading-none tracking-[0.14em] text-[#81EDF4]">
+                <span className="font-mono text-[11px] leading-none tracking-[0.14em] text-brand-600 dark:text-[#81EDF4]">
                   {step.number}
                 </span>
-                <span className="text-sm font-semibold text-white md:text-base">{step.title}</span>
+                <span className="text-sm font-semibold text-ink md:text-base">{step.title}</span>
               </h3>
-              <p className="mt-1.5 text-sm leading-6 text-white/70 md:mx-auto md:max-w-xs">
+              <p className="mt-1.5 text-sm leading-6 text-muted md:mx-auto md:max-w-xs">
                 {step.description}
               </p>
 
@@ -116,8 +116,8 @@ export default function HowItWorksSteps() {
 function StepPlaceholder({ number }: { number: string }) {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-3">
-      <span className="h-10 w-10 rounded-lg border border-dashed border-white/20" />
-      <span className="font-mono text-[11px] tracking-[0.14em] text-white/35">{number}</span>
+      <span className="h-10 w-10 rounded-lg border border-dashed border-line" />
+      <span className="font-mono text-[11px] tracking-[0.14em] text-muted">{number}</span>
     </div>
   );
 }

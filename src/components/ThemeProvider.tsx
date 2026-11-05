@@ -44,6 +44,9 @@ function readStoredTheme(): Theme | null {
 function applyTheme(next: Theme) {
   document.documentElement.classList.toggle("dark", next === "dark");
   document.documentElement.style.colorScheme = next;
+  // Keep the browser-chrome colour in step with the toggle rather than the OS.
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", next === "dark" ? "#080D1A" : "#F5F7FB");
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

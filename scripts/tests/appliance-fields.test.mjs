@@ -642,10 +642,13 @@ test("the window is two hour + minute boxes, with the AM/PM implied", () => {
     "moving the start past the end clears it, rather than leaving a window the API drops"
   );
 
-  // The removed dropdown is an empty module, so a stale import fails at build time
+  // The removed dropdown is gone outright, so a stale import fails at build time
   // instead of quietly rendering the old control again.
-  const removed = readFileSync(new URL("src/components/ServiceWindowSelect.tsx", ROOT), "utf8");
-  assert.doesNotMatch(removed, /export default/, "the old dropdown cannot be rendered again");
+  assert.throws(
+    () => readFileSync(new URL("src/components/ServiceWindowSelect.tsx", ROOT), "utf8"),
+    { code: "ENOENT" },
+    "the old dropdown cannot be rendered again"
+  );
 });
 
 test("the API enforces the same hours as the form", () => {

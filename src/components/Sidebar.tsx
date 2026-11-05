@@ -90,7 +90,7 @@ export default function Sidebar({
 
       <aside
         id="dashboard-sidebar"
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-[#0B1118] text-white transition-[width,transform] duration-200 ease-out lg:sticky lg:z-30 lg:max-w-none lg:shrink-0 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-surface text-ink transition-[width,transform] duration-200 ease-out dark:bg-[#0B1118] lg:sticky lg:z-30 lg:max-w-none lg:shrink-0 lg:translate-x-0 ${
           /* `top-24` (6rem) is the 64px bar plus the 32px announcement strip.
              Both offsets are written out rather than derived so the geometry
              stays greppable next to the header it mirrors. */
@@ -104,14 +104,14 @@ export default function Sidebar({
         }`}
       >
         <div className="flex items-center justify-between px-4 pt-5 lg:hidden">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
             {ROLE_LABEL[role]} workspace
           </span>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close navigation menu"
-            className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-white/60 transition hover:bg-white/10 hover:text-white"
+            className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted transition hover:bg-soft hover:text-ink"
           >
             <X className="h-4 w-4" />
           </button>
@@ -121,14 +121,14 @@ export default function Sidebar({
             initial so the rail keeps a sense of place without spending width on
             the full role name (which the topbar pill already states). */}
         <p
-          className={`hidden px-5 pb-1 pt-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40 lg:block ${
+          className={`hidden px-5 pb-1 pt-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted lg:block ${
             collapsed ? "lg:hidden" : ""
           }`}
         >
           {ROLE_LABEL[role]} workspace
         </p>
         {collapsed && (
-          <p className="hidden px-2 pb-1 pt-6 text-center font-display text-sm font-bold text-white/50 lg:block">
+          <p className="hidden px-2 pb-1 pt-6 text-center font-display text-sm font-bold text-muted lg:block">
             {ROLE_LABEL[role].charAt(0)}
           </p>
         )}
@@ -166,20 +166,20 @@ export default function Sidebar({
           )}
         </nav>
 
-        <div className="border-t border-white/10 p-3">
+        <div className="border-t border-line p-3">
           {role === "customer" && (
             <Link
               href="/customer/support"
               onClick={onClose}
               aria-label={collapsed ? "Need a hand? Contact support" : undefined}
-              className={`group relative mb-2 flex w-full cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-left transition hover:border-[#81EDF4]/40 hover:bg-white/10 ${
+              className={`group relative mb-2 flex w-full cursor-pointer items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5 text-left transition hover:border-brand-600/40 hover:bg-soft dark:hover:border-[#81EDF4]/40 ${
                 collapsed ? "lg:justify-center lg:px-0" : ""
               }`}
             >
               <LifeBuoy className="h-[18px] w-[18px] shrink-0 text-[#81EDF4]" />
               <span className={`min-w-0 ${collapsed ? "lg:hidden" : ""}`}>
-                <span className="block text-xs font-semibold text-white">Need a hand?</span>
-                <span className="mt-0.5 block text-[11px] text-white/60">Contact support</span>
+                <span className="block text-xs font-semibold text-ink">Need a hand?</span>
+                <span className="mt-0.5 block text-[11px] text-muted">Contact support</span>
               </span>
               {collapsed && <RailTooltip label="Need a hand? Contact support" />}
             </Link>
@@ -187,7 +187,7 @@ export default function Sidebar({
           <button
             type="button"
             onClick={handleSignOut}
-            className={`group relative flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/60 transition hover:bg-alert-500/20 hover:text-white ${
+            className={`group relative flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted transition hover:bg-alert-500/20 hover:text-ink ${
               collapsed ? "lg:justify-center lg:px-0" : ""
             }`}
           >
@@ -211,7 +211,7 @@ function isRouteActive(pathname: string, href?: string) {
 const ROW_BASE =
   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition duration-200 cursor-pointer";
 const ROW_ACTIVE = "bg-brand-500 text-white shadow-[0_8px_20px_rgba(18,85,199,0.4)]";
-const ROW_IDLE = "text-white/65 hover:bg-white/10 hover:text-white";
+const ROW_IDLE = "text-muted hover:bg-soft hover:text-ink";
 
 /**
  * The hover/focus label that appears beside an icon when the rail is collapsed.
@@ -269,7 +269,7 @@ function SidebarLink({
       {typeof item.badge === "number" && item.badge > 0 && (
         <span
           className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-            active ? "bg-white/25 text-white" : "bg-white/10 text-white/70"
+            active ? "bg-soft text-ink" : "bg-soft text-muted"
           } ${collapsed ? "lg:hidden" : ""}`}
         >
           {item.badge > 99 ? "99+" : item.badge}
@@ -342,7 +342,7 @@ function SidebarGroup({
         <span className={`flex-1 truncate ${collapsed ? "lg:hidden" : ""}`}>{item.label}</span>
         {badgeTotal > 0 && !open && (
           <span
-            className={`shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-white/70 ${
+            className={`shrink-0 rounded-full bg-soft px-2 py-0.5 text-[11px] font-semibold text-muted ${
               collapsed ? "lg:hidden" : ""
             }`}
           >
@@ -356,7 +356,7 @@ function SidebarGroup({
           />
         )}
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-white/40 transition-transform duration-200 ${
+          className={`h-4 w-4 shrink-0 text-muted transition-transform duration-200 ${
             open ? "rotate-180" : ""
           } ${collapsed ? "lg:hidden" : ""}`}
         />
@@ -368,7 +368,7 @@ function SidebarGroup({
           reveals them (a globally-collapsed rail must not cripple the drawer). */}
       {open && (
         <div
-          className={`ml-4 mt-1 space-y-1 border-l border-white/10 pl-2 ${
+          className={`ml-4 mt-1 space-y-1 border-l border-line pl-2 ${
             collapsed ? "lg:hidden" : ""
           }`}
         >
