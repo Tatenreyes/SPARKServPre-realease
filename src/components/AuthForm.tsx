@@ -163,7 +163,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/50 transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
-                placeholder="Juan Dela Cruz"
+                placeholder="Enter your Full name"
               />
             </div>
           )}
