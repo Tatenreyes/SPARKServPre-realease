@@ -4,10 +4,7 @@ import {
   ArrowRight,
   Clock3,
   FileText,
-  MapPin,
-  MessageSquareText,
   Play,
-  ReceiptText,
   ShieldCheck,
   UsersRound,
   Wrench,
@@ -15,6 +12,7 @@ import {
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import ApplianceGallery from "@/components/ApplianceGallery";
+import HowItWorksSteps from "@/components/HowItWorksSteps";
 
 /*
  * The homepage is deliberately short: hero, four trust points, three steps,
@@ -31,27 +29,6 @@ const trustPoints = [
   { icon: UsersRound, title: "Fair Queue System", body: "Rotation-based assignments" },
   { icon: FileText, title: "Transparent Estimates", body: "Approve costs upfront" },
   { icon: Clock3, title: "Service Tracking", body: "Updates from request to completion" },
-];
-
-const howItWorksSteps = [
-  {
-    number: "1",
-    icon: MessageSquareText,
-    title: "Describe the Problem",
-    description: "Select your appliance, brand, model, and describe the issue.",
-  },
-  {
-    number: "2",
-    icon: ReceiptText,
-    title: "Review Your Estimate",
-    description: "Get a preliminary estimate and approve any additional costs.",
-  },
-  {
-    number: "3",
-    icon: MapPin,
-    title: "Track Your Repair",
-    description: "Follow your repair from assignment to completion.",
-  },
 ];
 
 export default function HomePage() {
@@ -138,45 +115,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How It Works. Three steps, icon + number, no cards. The arrow is
-          decorative and disappears when the steps stack. */}
-      <section className="border-y border-white/10 bg-[#070D12]">
-        <div className="spark-section py-12 md:py-14">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="spark-eyebrow text-[#81EDF4]">How SPARKServ Works</p>
-            <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">From Problem to Service in 3 Simple Steps</h2>
-            <p className="mt-3 text-sm leading-6 text-white/70 md:text-base">
-              Tell us what&apos;s wrong, review your estimate, and track your repair, all in one place.
-            </p>
-          </div>
-
-          <ol className="mt-9 grid gap-7 md:grid-cols-3 md:gap-0">
-            {howItWorksSteps.map((step, index) => (
-              <li
-                key={step.number}
-                className="relative flex items-start gap-4 md:flex-col md:items-center md:px-6 md:text-center"
-              >
-                <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#101923] text-[#81EDF4] ring-1 ring-inset ring-white/15">
-                  <step.icon className="h-5 w-5" />
-                  <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#6D70F0] text-[11px] font-bold text-white">
-                    {step.number}
-                  </span>
-                </span>
-                <div className="md:mt-4">
-                  <h3 className="text-sm font-semibold text-white">{step.title}</h3>
-                  <p className="mt-1 max-w-xs text-xs leading-5 text-white/70">{step.description}</p>
-                </div>
-                {index < howItWorksSteps.length - 1 && (
-                  <ArrowRight
-                    aria-hidden="true"
-                    className="absolute -right-4 top-3.5 hidden h-4 w-4 text-[#81EDF4] md:block"
-                  />
-                )}
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
+      {/* How It Works. The two-column section lives in `HowItWorksSteps`: the picture
+          panel on the left, the steps as an accordion on the right, one accent colour. */}
+      <HowItWorksSteps />
 
       {/* Supported Appliances. The gallery and its category data live in
           `ApplianceGallery`, which reads the shared `APPLIANCES` catalogue. */}
