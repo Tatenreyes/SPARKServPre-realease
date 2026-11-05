@@ -47,9 +47,10 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   /* A single entry, deliberately NOT media-scoped: this is the Android/iOS
      browser-chrome colour, and with a class-based toggle the OS is no longer
-     what decides the theme. The pre-paint script below and `applyTheme` in
-     ThemeProvider rewrite this meta at runtime so the chrome follows the toggle. */
-  themeColor: "#F5F7FB",
+     what decides the theme. The dark canvas is the build-time value because dark
+     is the default; the pre-paint script below and `applyTheme` in ThemeProvider
+     rewrite this meta at runtime so the chrome follows the toggle. */
+  themeColor: "#080D1A",
 };
 
 /**
@@ -71,9 +72,10 @@ const THEME_PRE_PAINT = `
     var key = "${STORAGE_KEY}";
     var stored = null;
     try { stored = localStorage.getItem(key); } catch (e) {}
-    /* Light is the default: 'prefers-color-scheme' is deliberately NOT consulted,
-       so an OS set to dark cannot override the toggle's stored choice. */
-    var dark = stored === "dark";
+    /* Dark is the default: only an explicit stored choice of light overrides it,
+       and 'prefers-color-scheme' is deliberately NOT consulted, so an OS set to
+       light cannot override it either. */
+    var dark = stored !== "light";
     var el = document.documentElement;
     el.classList.toggle("dark", dark);
     el.style.colorScheme = dark ? "dark" : "light";

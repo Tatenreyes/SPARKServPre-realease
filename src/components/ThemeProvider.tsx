@@ -55,8 +55,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme | null>(null);
 
   useEffect(() => {
-    // Stored choice wins; with no stored choice the pre-paint script already
-    // picked from the OS preference, so adopt whatever is on the document.
+    // Stored choice wins; with no stored choice the pre-paint script has already
+    // applied the default, which is dark, so adopt whatever is on the document.
     setThemeState(readStoredTheme() ?? readLiveTheme());
   }, []);
 

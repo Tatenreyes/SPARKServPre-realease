@@ -96,8 +96,8 @@ correct.
 inside an effect, so server HTML, the first client render and the pre-paint
 script always agree. `src/components/ThemeToggle.tsx` is the only control, in the
 site navbar and the dashboard top bar, and it writes the class and the stored key
-through `useTheme()`. Light is the default: the OS preference is deliberately not
-consulted, so an OS set to dark cannot override the choice. A toggle must keep the
+through `useTheme()`. Dark is the default: only a stored choice of light overrides
+it, and the OS preference is deliberately not consulted. A toggle must keep the
 same rule — read nothing browser-only while rendering, and let the icon settle
 one frame after hydration, which is cheaper than a hydration mismatch or a wrong
 SSR icon.

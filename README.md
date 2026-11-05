@@ -397,10 +397,10 @@ landing page and the dashboard chrome included, not just the workspace content.
   instead of punching bright white boxes into a dark page.
 - **The switch.** `ThemeToggle` — in the site navbar and the dashboard top bar — is
   the only control. It writes the `dark` class, `color-scheme` and the
-  `sparkserv-theme` key through `ThemeProvider`; **light is the default** when
-  nothing is stored — the OS preference is deliberately ignored, so an OS set to
-  dark cannot override the choice. The inline script in `src/app/layout.tsx` reads
-  that key before the first paint, so a dark visitor never sees a white flash.
+  `sparkserv-theme` key through `ThemeProvider`; **dark is the default** when
+  nothing is stored — only an explicit choice of light overrides it, and the OS
+  preference is deliberately ignored. The inline script in `src/app/layout.tsx`
+  reads that key before the first paint, so a light visitor never sees a dark flash.
 - **What is deliberately fixed.** A few surfaces are not themed, because they are
   not surfaces: the hero is a photograph under a navy scrim (white copy over a
   photo is correct in both themes), the closing call-to-action band is brand
