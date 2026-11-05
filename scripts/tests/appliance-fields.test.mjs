@@ -50,17 +50,17 @@ import {
 } from "../../src/lib/time-of-day.ts";
 import {
   CLOCK_STEP_MINUTES,
-  CUSTOM_WINDOW_KEY,
   FLEXIBLE_WINDOWS,
   REQUEST_DURATION_MINUTES,
   SERVICE_HOURS,
-  WINDOW_MINUTES,
-  WINDOW_STEP_MINUTES,
   isServiceRange,
-  resolveWindow,
+  resolveWindowPair,
   serviceClockTimes,
-  serviceWindows,
+  windowEndTimes,
+  windowHours,
   windowLabel,
+  windowMinutes,
+  windowStartTimes,
 } from "../../src/lib/service-windows.ts";
 
 const ROOT = new URL("../../", import.meta.url);
@@ -68,12 +68,14 @@ const WIZARD = "src/components/RequestRepairWizard.tsx";
 const PAGE = "src/app/customer/appliances/page.tsx";
 const DATE_SELECT = "src/components/DateSelect.tsx";
 const TIME_SELECT = "src/components/TimeSelect.tsx";
+const WINDOW_FIELDS = "src/components/ServiceWindowFields.tsx";
 const AVAILABILITY = "src/components/AvailabilityManager.tsx";
 const SERVICE_TIME = "src/lib/service-time.ts";
 const wizard = readFileSync(new URL(WIZARD, ROOT), "utf8");
 const page = readFileSync(new URL(PAGE, ROOT), "utf8");
 const dateSelect = readFileSync(new URL(DATE_SELECT, ROOT), "utf8");
 const timeSelect = readFileSync(new URL(TIME_SELECT, ROOT), "utf8");
+const windowFields = readFileSync(new URL(WINDOW_FIELDS, ROOT), "utf8");
 const availability = readFileSync(new URL(AVAILABILITY, ROOT), "utf8");
 
 // -------------------------------------------------- 1. the caps
@@ -408,65 +410,94 @@ test("the availability grid picks its times from selects", () => {
   );
 });
 
-test("the shop's slots are generated from its hours, not listed", () => {
-  const slots = serviceWindows();
+test("the hour choices ARE the shop's day, and nothing else", () => {
+  const hours = windowHours(serviceClockTimes());
 
   assert.deepEqual(
-    slots.map((slot) => `${slot.start}-${slot.end}`),
-    [
-      "09:00-09:30",
-      "09:30-10:00",
-      "10:00-10:30",
-      "10:30-11:00",
-      "13:00-13:30",
-      "13:30-14:00",
-      "14:00-14:30",
-      "14:30-15:00",
-      "15:00-15:30",
-      "15:30-16:00",
-    ],
-    "the whole working day at half-hour steps, lunch left out"
+    hours.map((hour) => hour.hour),
+    [9, 10, 11, 13, 14, 15, 16],
+    "the shop's own hours, 9 AM to 4 PM with the lunch hour left out"
+  );
+  assert.deepEqual(
+    hours.map((hour) => hour.label),
+    ["9 AM", "10 AM", "11 AM", "1 PM", "2 PM", "3 PM", "4 PM"],
+    "each hour carries its own half of the day"
   );
 
+  // THE POINT OF THE REDESIGN. The AM/PM is a property of the hour rather than a third
+  // control, so 9 PM (21) and 4 AM (4) are not on any list to be refused: they cannot
+  // be assembled from these options at all.
+  assert.equal(hours.some((hour) => hour.hour === 21), false, "9 PM is not an option");
+  assert.equal(hours.some((hour) => hour.hour === 4), false, "nor is 4 AM");
+  for (const hour of hours) {
+    assert.equal(hour.meridiem, hour.hour < 12 ? "AM" : "PM", "the label follows the hour");
+    assert.equal(hour.label, `${hour.hour12} ${hour.meridiem}`);
+  }
+
   // THE COUNT IS ARITHMETIC ON THE DECLARED HOURS, not a number copied from the module:
-  // widen the day in SERVICE_HOURS and both sides of this assertion move together, which
-  // is the property that makes the list safe to change.
-  const morning =
-    (minutesOfDay(SERVICE_HOURS.break.start) - minutesOfDay(SERVICE_HOURS.opens)) / WINDOW_STEP_MINUTES;
-  const afternoon =
-    (minutesOfDay(SERVICE_HOURS.closes) - minutesOfDay(SERVICE_HOURS.break.end)) / WINDOW_STEP_MINUTES;
-  assert.equal(slots.length, morning + afternoon);
+  // widen the day in SERVICE_HOURS and both sides of this assertion move together.
+  const open = minutesOfDay(SERVICE_HOURS.opens);
+  const close = minutesOfDay(SERVICE_HOURS.closes);
+  const breakStart = minutesOfDay(SERVICE_HOURS.break.start);
+  const breakEnd = minutesOfDay(SERVICE_HOURS.break.end);
+  assert.equal(hours.length, (breakStart - open) / 60 + 1 + (close - breakEnd) / 60 + 1);
+  assert.equal(hours[0].hour * 60, open, "the first option opens when the shop does");
+  assert.equal(hours[hours.length - 1].hour * 60, close, "the last one closes when it does");
+});
 
-  // The first slot opens when the shop does, the last one closes when it does.
-  assert.equal(slots[0].start, SERVICE_HOURS.opens);
-  assert.equal(slots[slots.length - 1].end, SERVICE_HOURS.closes);
+test("the start and end pools never leave the day or cross lunch", () => {
+  const starts = windowStartTimes();
 
-  for (const slot of slots) {
-    assert.equal(minutesOfDay(slot.end) - minutesOfDay(slot.start), WINDOW_MINUTES);
-    assert.equal(
-      isServiceRange(slot.start, slot.end),
-      true,
-      `${slot.key} must satisfy the rule it is built from`
-    );
-    assert.equal(slot.key, `${slot.start}-${slot.end}`, "the key is stable, the form holds it");
+  // A start is only offered when a legal end exists after it, inside its own block:
+  // 11:00 AM runs into the break and 4:00 PM closes the shop, so neither can start.
+  assert.equal(starts[0].hour, 9);
+  assert.equal(starts[starts.length - 1].hour, 15);
+  assert.equal(starts[starts.length - 1].minute, 55, "3:55 PM is the last legal start");
+  assert.equal(starts.some((time) => toClockTime(time.hour, time.minute) === "11:00"), false);
+  assert.equal(starts.some((time) => toClockTime(time.hour, time.minute) === "16:00"), false);
+
+  for (const start of starts) {
+    const from = toClockTime(start.hour, start.minute);
+    const ends = windowEndTimes(from);
+    assert.equal(ends.length > 0, true, `${from} is only offered because an end exists`);
+    for (const end of ends) {
+      assert.equal(
+        isServiceRange(from, toClockTime(end.hour, end.minute)),
+        true,
+        `${from} to ${toClockTime(end.hour, end.minute)} must satisfy the rule it is built from`
+      );
+    }
   }
 
-  // Contiguous inside each block: no gap a customer could fall into, and no overlap.
-  for (let index = 1; index < slots.length; index++) {
-    const previous = slots[index - 1];
-    const current = slots[index];
-    const abuts =
-      minutesOfDay(current.start) === minutesOfDay(previous.end) ||
-      minutesOfDay(previous.end) === minutesOfDay(SERVICE_HOURS.break.start);
-    assert.equal(abuts, true, `${previous.key} → ${current.key} must abut`);
-  }
+  // THE BLOCK BOUND. A 10:30 AM start offers ends up to 11:00 AM and no further, so the
+  // lunch-crossing window that used to be offerable — and then dropped in silence by the
+  // form and again by the API — is not on any list at all.
+  const morningEnds = windowEndTimes("10:30").map((time) => toClockTime(time.hour, time.minute));
+  assert.deepEqual(morningEnds.slice(0, 3), ["10:35", "10:40", "10:45"]);
+  assert.equal(morningEnds[morningEnds.length - 1], "11:00");
+  assert.equal(morningEnds.includes("13:00"), false, "the other block is not reachable");
+
+  const afternoonEnds = windowEndTimes("13:00").map((time) => toClockTime(time.hour, time.minute));
+  assert.equal(afternoonEnds[0], "13:05");
+  assert.equal(afternoonEnds[afternoonEnds.length - 1], "16:00");
+
+  // Nothing to end with before a start is chosen, which is why the end box stays shut.
+  assert.deepEqual(windowEndTimes(""), []);
+  assert.deepEqual(windowEndTimes(null), []);
+
+  // The minutes offered for one hour are that hour's own grid, and the whole day is a
+  // five-minute grid: twelve minutes to the hour.
+  const nine = windowMinutes(serviceClockTimes(), 9);
+  assert.deepEqual(nine.slice(0, 3), [0, 5, 10]);
+  assert.equal(nine[nine.length - 1], 55);
+  assert.equal(windowMinutes(serviceClockTimes(), null).length, 12);
 });
 
 test("a window is legal only inside the working day", () => {
   for (const [start, end] of [
     ["09:00", "11:00"],
     ["13:00", "16:00"],
-    ["09:20", "10:20"], // the reason this module exists: a time the half-hour slots do not name
+    ["09:20", "10:20"], // the reason this module exists: a time no preset list names
     ["15:30", "16:00"],
     ["13:05", "13:10"],
   ]) {
@@ -516,108 +547,105 @@ test("a named time is any five minutes of the working day", () => {
   assert.equal(
     times.some((time) => toClockTime(time.hour, time.minute) === SERVICE_HOURS.break.start),
     true,
-    "10:30–11:00 is a real slot, so 11:00 has to be reachable as an end"
+    "10:30–11:00 is a real window, so 11:00 has to be reachable as an end"
   );
   assert.equal(isServiceRange("11:00", "11:30"), false, "but it cannot start one");
   assert.equal(isServiceRange("16:00", "16:30"), false, "nor can closing time");
 });
 
-test("a form choice resolves to exactly one window", () => {
-  assert.equal(resolveWindow(""), null, "any time that day means no window at all");
+test("a pair of picks resolves to exactly one window", () => {
+  assert.equal(resolveWindowPair("", ""), null, "any time that day means no window at all");
+  assert.equal(resolveWindowPair("09:20", ""), null, "half a window is no window");
+  assert.equal(resolveWindowPair("", "10:20"), null, "nor is the other half on its own");
 
-  assert.deepEqual(resolveWindow("morning"), { start: "09:00", end: "11:00" });
-  assert.deepEqual(resolveWindow("afternoon"), { start: "13:00", end: "16:00" });
+  assert.deepEqual(resolveWindowPair("09:20", "10:20"), { start: "09:20", end: "10:20" });
+  assert.equal(resolveWindowPair("10:30", "13:30"), null, "nor is one across lunch");
+  assert.equal(resolveWindowPair("10:00", "10:00"), null, "an empty window is not a window");
+  assert.equal(resolveWindowPair("13:00", "09:00"), null, "nor is an inverted one");
+  assert.equal(resolveWindowPair("01:00", "02:00"), null, "nor is one outside the hours");
+
+  // The one-tap fills are the day's own blocks, so they always resolve to a real window.
+  for (const window of FLEXIBLE_WINDOWS) {
+    assert.deepEqual(resolveWindowPair(window.start, window.end), {
+      start: window.start,
+      end: window.end,
+    });
+  }
   assert.equal(FLEXIBLE_WINDOWS.length, 2);
-
-  assert.deepEqual(resolveWindow("09:30-10:00"), { start: "09:30", end: "10:00" });
-  assert.equal(resolveWindow("09:15-09:45"), null, "a slot that is not in the day is not a slot");
-  assert.equal(resolveWindow("something-else"), null);
-
-  assert.deepEqual(resolveWindow(CUSTOM_WINDOW_KEY, "09:20", "10:20"), {
-    start: "09:20",
-    end: "10:20",
-  });
-  assert.equal(resolveWindow(CUSTOM_WINDOW_KEY, "09:20", ""), null, "half a window is no window");
-  assert.equal(resolveWindow(CUSTOM_WINDOW_KEY, "10:30", "13:30"), null, "nor is one across lunch");
 
   assert.equal(windowLabel("09:20", "10:20"), "9:20 AM – 10:20 AM");
   assert.equal(windowLabel("13:00", "16:00"), "1:00 PM – 4:00 PM");
   assert.equal(windowLabel("", ""), "");
 
-  // The appointment length is NOT the window: a half-hour slot does not shrink the visit,
-  // and a three-hour "any time this afternoon" window does not ring-fence three hours.
+  // The appointment length is NOT the window: a half-hour arrival window does not shrink
+  // the visit, and a three-hour "any time this afternoon" window does not ring-fence
+  // three hours of a technician's day.
   assert.equal(REQUEST_DURATION_MINUTES, 120);
 });
 
-test("the window is one dropdown, and the pickers only when asked", () => {
+test("the window is two hour + minute boxes, with the AM/PM implied", () => {
   assert.match(
     wizard,
-    /<select[\s\S]{0,200}id="preferred-window"/,
-    "one dropdown, not six selects over the whole day"
+    /<ServiceWindowFields[\s\S]{0,300}start=\{windowStart\}/,
+    "the form holds the pair, not a choice key"
   );
+  assert.match(wizard, /onEndChange=\{setWindowEnd\}/);
+  assert.match(wizard, /disabled=\{!preferredDate\}/, "no window before a date is chosen");
   assert.match(
     wizard,
-    /htmlFor="preferred-window"/,
-    "a real label, not a legend plus a duplicate aria-label"
+    /<legend[\s\S]{0,120}Preferred time window/,
+    "labelled as a fieldset legend, since two controls cannot share one htmlFor"
   );
-  assert.match(
-    wizard,
-    /onChange=\{\(event\) => setWindowChoice\(event\.target\.value\)\}/,
-    "the chosen key is what the form holds"
-  );
-  assert.ok(
-    wizard.includes("${FIELD} cursor-pointer"),
-    "the dropdown wears the same field recipe as the appliance and brand selects, `spark-input` is not a class in this project"
-  );
-  assert.match(wizard, /optgroup label="Any time in a block"/, "the flexible answers are grouped");
-  assert.match(wizard, /optgroup label="Pick a slot"/, "and so are the slots");
-
-  assert.match(
-    wizard,
-    /const SERVICE_SLOTS = serviceWindows\(\)/,
-    "the options come from the module, not a list in JSX"
-  );
-  assert.match(wizard, /SERVICE_SLOTS\.map/, "and are rendered from that one value");
-  assert.match(wizard, /FLEXIBLE_WINDOWS\.map/, "the flexible blocks come from the module too");
-  assert.match(wizard, /Any time that day/, "the default is stated, so an empty window is a choice");
-  assert.match(wizard, /A different time…/);
   assert.doesNotMatch(
     wizard,
-    /WindowChip|role="radiogroup"/,
-    "the chip grid is gone, the day is a list of options now"
+    /windowChoice|customStart|customEnd|ServiceWindowSelect|TimeSelect/,
+    "the dropdown and the six-select pickers are gone"
   );
-
-  assert.match(
-    wizard,
-    /windowChoice === CUSTOM_WINDOW_KEY && \(/,
-    "the two pickers appear only for a named time"
-  );
-  assert.match(wizard, /within=\{SERVICE_CLOCK_TIMES\}/, "and their pool is the working day");
-  assert.match(
-    wizard,
-    /const SERVICE_CLOCK_TIMES = serviceClockTimes\(\)/,
-    "computed once, not per render"
-  );
-  assert.match(wizard, /after=\{customStart\}/, "the end is still constrained by the start");
-  assert.match(
-    wizard,
-    /if \(customEnd && !isAfter\(value, customEnd\)\) setCustomEnd\(""\)/,
-    "moving the start past the end clears the end, rather than leaving a window the API drops"
-  );
-  assert.match(wizard, /disabled=\{!preferredDate\}/, "no window before a date is chosen");
+  assert.doesNotMatch(wizard, /type="time"/, "no native time input is left");
   assert.match(
     wizard,
     /requested_duration_minutes: REQUEST_DURATION_MINUTES/,
     "the visit keeps its length whatever the window is"
   );
-  assert.doesNotMatch(wizard, /type="time"/, "no native time input is left");
-  assert.doesNotMatch(wizard, /setPreferredStart|setPreferredEnd/, "the half-fillable pair is gone");
+
+  // The component itself: an hour box and a minute box per boundary, and NO AM/PM
+  // control. The half of the day is read off the hour, which is what makes 9 PM and
+  // 4 AM unrepresentable rather than merely refused.
+  assert.match(windowFields, /`\$\{id\}-hour`/);
+  assert.match(windowFields, /`\$\{id\}-minute`/);
+  assert.doesNotMatch(windowFields, /-meridiem/, "there is no AM/PM select");
+  assert.match(windowFields, /meridiemOf\(hour\)/, "the badge states the half of the day");
+  assert.match(windowFields, /label="Earliest arrival"/);
+  assert.match(windowFields, /label="Latest arrival"/);
+
   assert.match(
-    timeSelect,
-    /within\?: ClockTime\[\]/,
-    "the picker takes a restricted pool, which is what keeps a customer inside the hours"
+    windowFields,
+    /const START_TIMES = windowStartTimes\(\)/,
+    "the pool is computed once, not per render"
   );
-  assert.match(timeSelect, /if \(!within \|\| within\.length === 0\) return options;/);
+  assert.match(windowFields, /const START_HOURS = windowHours\(START_TIMES\)/);
+  assert.match(windowFields, /windowEndTimes\(start\)/, "the end pool follows the start");
+  assert.match(
+    windowFields,
+    /disabled=\{disabled \|\| !start\}/,
+    "the end box stays shut until a start exists, so no half-filled pair can be held"
+  );
+  assert.match(
+    windowFields,
+    /FLEXIBLE_WINDOWS\.map/,
+    "the one-tap fills are the day's own blocks, not a list typed into the component"
+  );
+  assert.match(windowFields, /Any time/, "and there is a way back to no preference");
+  assert.match(
+    windowFields,
+    /if \(end && !stillLegal\) onEndChange\(""\)/,
+    "moving the start past the end clears it, rather than leaving a window the API drops"
+  );
+
+  // The removed dropdown is an empty module, so a stale import fails at build time
+  // instead of quietly rendering the old control again.
+  const removed = readFileSync(new URL("src/components/ServiceWindowSelect.tsx", ROOT), "utf8");
+  assert.doesNotMatch(removed, /export default/, "the old dropdown cannot be rendered again");
 });
 
 test("the API enforces the same hours as the form", () => {
