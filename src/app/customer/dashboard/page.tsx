@@ -4,21 +4,23 @@ import { requireUser } from "@/lib/auth";
 import { habitualLowRaters, summariseRatings } from "@/lib/rating-summary";
 import { positiveTagCounts } from "@/lib/rating-tags";
 import { DashboardStatGroup, DashboardPanel } from "@/components/DashboardCard";
-import DashboardHero from "@/components/DashboardHero";
-import DashboardServiceIllustration from "@/components/DashboardServiceIllustration";
 import { ServiceTracking } from "@/components/ServiceTracking";
 import { QuickActions } from "@/components/QuickActions";
 import { applianceCoverage } from "@/lib/assignment-coverage";
 import { isClosedRequestStatus } from "@/lib/estimate-costs";
-import { customerAssignmentCopy } from "@/lib/queue";
+import { applianceLabel, customerAssignmentCopy } from "@/lib/queue";
+import { timeAgo } from "@/lib/time-ago";
 import { formatPeso, type MobileAction } from "@/lib/customer-actions";
 import {
   AlertTriangle,
   CalendarCheck2,
+  CheckCircle2,
+  ChevronRight,
   ClipboardList,
   DollarSign,
   Plus,
   Wrench,
+  type LucideIcon,
 } from "lucide-react";
 
 export default async function CustomerDashboard() {
@@ -307,9 +309,50 @@ export default async function CustomerDashboard() {
       detail:
         "The repair is complete but no verified payment is on file. Upload your GCash reference and we'll verify it, payment is confirmed only after an administrator checks it.",
       cta: "Review payment",
-      href: `/customer/bookings/${booking.id}`,
+      href: `/customer/payments?booking=${booking.id}`,
     });
   }
+
+  /**
+   * Recent activity: the newest few of this customer's OWN requests, in the words
+   * the rest of the app already uses. Built from the `service_requests` rows the
+   * page loads above and formatted with `applianceLabel` (`@/lib/queue`) and
+   * `timeAgo` (`@/lib/time-ago`), so the card cannot describe a repair differently
+   * from the list it links to.
+   *
+   * The relative time is the REQUEST's `created_at`: no status history is fetched
+   * for this page, so "when the status last changed" is not knowable here, and the
+   * card states when the request was made rather than inventing a later moment.
+   */
+  const recentActivity = (requests ?? []).slice(0, 3);
+
+  const activityWord: Record<string, string> = {
+    open: "submitted",
+    quoted: "estimate ready",
+    booked: "scheduled",
+    in_progress: "in progress",
+    completed: "completed",
+    cancelled: "cancelled",
+  };
+
+  /** Icon-chip tone per request status, the same tones `StatusBadge` uses. */
+  const activityTone: Record<string, string> = {
+    open: "bg-soft text-muted",
+    quoted: "bg-warn-soft text-warn-ink",
+    booked: "bg-brand-soft text-brand-ink",
+    in_progress: "bg-brand-soft text-brand-ink",
+    completed: "bg-signal-soft text-signal-ink",
+    cancelled: "bg-alert-soft text-alert-ink",
+  };
+
+  const activityIcon: Record<string, LucideIcon> = {
+    open: ClipboardList,
+    quoted: ClipboardList,
+    booked: CalendarCheck2,
+    in_progress: Wrench,
+    completed: CheckCircle2,
+    cancelled: AlertTriangle,
+  };
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
@@ -318,22 +361,26 @@ export default async function CustomerDashboard() {
   // section is a scroll of nothing but margins, and a phone is where the person
   // is trying to reach one specific card. Unchanged from `md` up.
   return (
-    <div className="space-y-4 md:space-y-5">
-      <DashboardHero
-        eyebrow="Customer workspace"
-        title={`${greeting}, ${user?.name?.split(" ")[0] ?? "there"}`}
-        subtitle="Your repairs, appointments, and next steps at a glance."
-        illustration={<DashboardServiceIllustration />}
-        actions={
-          <Link
-            href="/customer/request-repair"
-            className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-accent-500 px-5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-accent-600"
-          >
-            <Plus className="h-4 w-4" />
-            Start service inquiry
-          </Link>
-        }
-      />
+    <div className="flex flex-col space-y-4 md:space-y-5">
+      {/* The column is ordered rather than re-sorted, so the greeting row leads and
+          the "next step" card sits directly under it. */}
+      <header className="order-[-2] flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-display text-lg font-semibold text-ink sm:text-xl">
+            {greeting}, {user?.name?.split(" ")[0] ?? "there"}
+          </h1>
+          <p className="mt-0.5 text-sm text-muted">
+            Your repairs, appointments, and next steps at a glance.
+          </p>
+        </div>
+        <Link
+          href="/customer/request-repair"
+          className="inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-brand-700"
+        >
+          <Plus className="h-4 w-4" />
+          New request
+        </Link>
+      </header>
 
       {/* The platform announcement is deliberately not a card here any more. It
           is platform-wide, so it renders in the topbar every workspace shares
@@ -353,6 +400,7 @@ export default async function CustomerDashboard() {
             icon: Wrench,
             colorClass: "bg-brand-soft text-brand-ink",
             hint: "View requests",
+            emptyLabel: "No active repairs",
           },
           {
             label: "Pending estimates",
@@ -360,7 +408,8 @@ export default async function CustomerDashboard() {
             href: "/customer/estimates",
             icon: ClipboardList,
             colorClass: "bg-warn-soft text-warn-ink",
-            hint: pendingEstimates > 0 ? "Review and approve" : "All reviewed",
+            hint: "Review and approve",
+            emptyLabel: "No estimates to review",
           },
           {
             label: "Upcoming visits",
@@ -369,14 +418,16 @@ export default async function CustomerDashboard() {
             icon: CalendarCheck2,
             colorClass: "bg-brand-soft text-brand-ink",
             hint: "See schedule",
+            emptyLabel: "No visits scheduled",
           },
           {
-            label: "Awaiting payment",
+            label: "Payments",
             value: pendingPayments,
-            href: "/customer/bookings",
+            href: "/customer/payments",
             icon: DollarSign,
-            colorClass: "bg-accent-soft text-accent-ink",
-            hint: pendingPayments > 0 ? "Settle balance" : "Nothing due",
+            colorClass: "bg-brand-soft text-brand-ink",
+            hint: "Under review",
+            emptyLabel: "No payments to verify",
           },
         ]}
       />
@@ -418,10 +469,9 @@ export default async function CustomerDashboard() {
         </section>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-12 xl:gap-5">
-        <section
+      <section
         aria-labelledby="next-step-heading"
-          className="h-full md:order-1 overflow-hidden rounded-card border border-line bg-surface shadow-[0_1px_2px_rgba(16,38,74,0.04)] md:col-span-1 xl:col-span-6"
+          className="order-[-1] overflow-hidden rounded-card border border-line bg-surface shadow-[0_1px_2px_rgba(16,38,74,0.04)]"
       >
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3 sm:px-5">
           <div>
@@ -469,8 +519,9 @@ export default async function CustomerDashboard() {
             {trackedHasProgress ? " You can check your repair progress below." : ""}
           </p>
         )}
-        </section>
+      </section>
 
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-12 xl:gap-5">
         <div className="space-y-5 md:space-y-0 md:contents">
           {/* The rail exists only when there is progress to show. A request that is
               still waiting for a technician, or one that is already finished, has
@@ -516,7 +567,7 @@ export default async function CustomerDashboard() {
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link
                   href="/customer/support"
-                  className="inline-flex h-9 items-center rounded-lg bg-warn-ink px-4 text-xs font-semibold text-white transition hover:opacity-90"
+                  className="inline-flex h-9 items-center rounded-lg bg-brand-600 px-4 text-xs font-semibold text-white transition hover:bg-brand-700"
                 >
                   Contact support
                 </Link>
@@ -533,8 +584,52 @@ export default async function CustomerDashboard() {
 
         <div className="space-y-5 md:space-y-0 md:contents">
 
-          <DashboardPanel title="Quick actions" bodyClassName="px-3 pb-3 pt-2" className="h-full md:order-2 md:col-span-1 xl:col-span-6">
+          <DashboardPanel title="Quick actions" bodyClassName="px-3 pb-3 pt-2" className="h-full md:order-1 md:col-span-1 xl:col-span-6">
             <QuickActions />
+          </DashboardPanel>
+        </div>
+
+        <div className="space-y-5 md:space-y-0 md:contents">
+          <DashboardPanel
+            title="Recent activity"
+            bodyClassName="px-3 pb-3 pt-2"
+            className="h-full md:order-2 md:col-span-1 xl:col-span-6"
+          >
+            {recentActivity.length === 0 ? (
+              <p className="px-2 py-6 text-center text-sm text-muted">No recent activity</p>
+            ) : (
+              <ul>
+                {recentActivity.map((request) => {
+                  const Icon = activityIcon[request.status] ?? ClipboardList;
+                  return (
+                    <li key={request.id}>
+                      <Link
+                        href={`/customer/service-request/${request.id}`}
+                        className="flex items-center gap-2.5 rounded-xl px-2 py-2 transition duration-200 hover:bg-soft"
+                      >
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                            activityTone[request.status] ?? "bg-soft text-muted"
+                          }`}
+                        >
+                          <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] font-semibold text-ink">
+                            {applianceLabel(request.appliance_type)} repair{" "}
+                            {activityWord[request.status] ?? request.status}
+                          </span>
+                          <span className="mt-0.5 block text-[11px] text-muted">
+                            {timeAgo(request.created_at)}
+                          </span>
+                        </span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </DashboardPanel>
         </div>
       </div>

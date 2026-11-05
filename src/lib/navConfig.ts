@@ -97,6 +97,7 @@ export function navForRole(role: UserRole): SidebarNavItem[] {
             { label: "Service Inquiry", href: "/customer/request-repair", icon: Plus },
             { label: "Estimates", href: "/customer/estimates", icon: ClipboardList },
             { label: "Bookings", href: "/customer/bookings", icon: CalendarClock },
+            { label: "Payments", href: "/customer/payments", icon: CircleDollarSign },
             { label: "Repair Progress", href: "/customer/progress-tracking", icon: Timer },
             // Keep submitted repair requests directly after progress so customers
             // can reach active work before browsing completed service history.

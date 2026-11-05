@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
-import LoadingScreen from "@/components/LoadingScreen";
+import LoginLoadingScreen from "@/LoginLoadingScreen";
 import { signOut } from "@/lib/signOut";
 
 /**
@@ -16,16 +16,23 @@ import { signOut } from "@/lib/signOut";
  */
 export default function SignOutRow() {
   const router = useRouter();
-  const [signingOut, setSigningOut] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   return (
     <>
-      {signingOut && <LoadingScreen message="Signing you out..." />}
+      {loggingOut && <LoginLoadingScreen message="Logging out..." />}
       <button
         type="button"
         onClick={async () => {
-          setSigningOut(true);
-          await signOut(router);
+          setLoggingOut(true);
+          const startedAt = Date.now();
+          const wait = 4000 - (Date.now() - startedAt);
+          if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+          try {
+            await signOut(router);
+          } catch {
+            setLoggingOut(false);
+          }
         }}
         className="flex min-h-[64px] w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition duration-200 hover:bg-alert-soft sm:px-5"
       >

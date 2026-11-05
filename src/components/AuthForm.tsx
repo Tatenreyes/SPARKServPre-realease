@@ -4,7 +4,8 @@ import { useState, useId } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import LoadingScreen from "@/components/LoadingScreen";
+import LoginLoadingScreen from "@/LoginLoadingScreen";
+import AccountCreatingScreen from "@/components/AccountCreatingScreen";
 import { Eye, EyeOff, UserRoundCog, Wrench, Lock, Mail, User } from "lucide-react";
 import { MIN_PASSWORD_LENGTH, PASSWORD_HINT } from "@/lib/password";
 
@@ -12,17 +13,6 @@ interface AuthFormProps {
   mode: "login" | "register";
 }
 
-/**
- * Fallback for the Suspense boundary every caller of `AuthForm` must provide.
- *
- * `AuthForm` reads `?redirectTo=` through `useSearchParams()`, which opts the
- * route out of static rendering unless the component is wrapped in Suspense. The
- * root layout used to carry `force-dynamic`, which hid that requirement by
- * making the whole site dynamic; with it removed the boundary is load-bearing.
- *
- * It mirrors the form's box so the swap does not shift the layout: same
- * `max-w-[420px]` column, same heading block, then `rows` input-sized rows, * three for login, more for the taller registration form.
- */
 export function AuthFormSkeleton({ rows = 3 }: { rows?: number }) {
   return (
     <div className="w-full max-w-[420px]" aria-hidden="true">
@@ -57,6 +47,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
 
   const emailId = useId();
   const passwordId = useId();
@@ -72,6 +63,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
     }
 
     setLoading(true);
+    let redirecting = false;
+    const startedAt = Date.now();
 
     try {
       if (mode === "register") {
@@ -120,6 +113,16 @@ export default function AuthForm({ mode }: AuthFormProps) {
           super_admin: "/superadmin/dashboard",
         };
         const redirectTo = searchParams.get("redirectTo");
+        if (mode === "register") {
+          const minMs = mode === "register" ? 5000 : 4000;
+          const elapsed = Date.now() - startedAt;
+          if (elapsed < minMs) {
+            await new Promise((r) => setTimeout(r, minMs - elapsed));
+          }
+          setDone(true);
+          await new Promise((r) => setTimeout(r, 1400));
+        }
+        redirecting = true;
         router.push(redirectTo || roleHome[profile?.role ?? "customer"] || "/");
         router.refresh();
       } else {
@@ -130,13 +133,21 @@ export default function AuthForm({ mode }: AuthFormProps) {
         ? "Unable to connect to the authentication service. Check your internet connection and refresh the page."
         : err instanceof Error ? err.message : "Something went wrong");
     } finally {
-      setLoading(false);
+      if (!redirecting) {
+        setLoading(false);
+        setDone(false);
+      }
     }
   }
 
   return (
     <>
-      {loading && <LoadingScreen message={mode === "login" ? "Signing you in..." : "Creating your account..."} />}
+      {loading &&
+        (mode === "register" ? (
+          <AccountCreatingScreen mode={mode} done={done} />
+        ) : (
+          <LoginLoadingScreen />
+        ))}
       <div className="w-full max-w-[420px]">
         <div className={mode === "register" ? "mb-4" : "mb-8"}>
           <h1 className="font-display text-2xl font-bold text-ink leading-tight">

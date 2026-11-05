@@ -7,7 +7,7 @@ import { ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Settings, Use
 import BrandLogo from "@/components/BrandLogo";
 import NotificationBell from "@/components/NotificationBell";
 import PlatformAnnouncementTicker from "@/components/PlatformAnnouncementTicker";
-import LoadingScreen from "@/components/LoadingScreen";
+import LoginLoadingScreen from "@/LoginLoadingScreen";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useUser } from "@/hooks/useUser";
 import { signOut } from "@/lib/signOut";
@@ -50,7 +50,7 @@ export default function DashboardTopbar({
   const { profile } = useUser();
   const router = useRouter();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Dismiss the user menu on outside click or Escape, a dropdown that can only
@@ -76,8 +76,15 @@ export default function DashboardTopbar({
   }, [userMenuOpen]);
 
   async function handleSignOut() {
-    setSigningOut(true);
-    await signOut(router);
+    setLoggingOut(true);
+    const startedAt = Date.now();
+    const wait = 4000 - (Date.now() - startedAt);
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    try {
+      await signOut(router);
+    } catch {
+      setLoggingOut(false);
+    }
   }
 
   const profileHref = ROLE_PROFILE_HREF[role];
@@ -85,7 +92,7 @@ export default function DashboardTopbar({
 
   return (
     <>
-      {signingOut && <LoadingScreen message="Signing you out..." />}
+      {loggingOut && <LoginLoadingScreen message="Logging out..." />}
       <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 text-ink shadow-sm backdrop-blur print:hidden">
         <div className="mx-auto flex h-16 w-full max-w-[1800px] items-center gap-3 px-4 sm:px-6 lg:px-8">
           {/* Desktop rail collapse toggle. Its own control, distinct from the

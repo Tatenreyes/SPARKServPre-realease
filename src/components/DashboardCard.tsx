@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, type LucideIcon } from "lucide-react";
+import { ChevronRight, type LucideIcon } from "lucide-react";
 import MobileStatGrid from "@/components/mobile/MobileStatGrid";
 import MobileStatTile from "@/components/mobile/MobileStatTile";
 
@@ -10,6 +10,7 @@ export function DashboardStatCard({
   icon: Icon,
   colorClass = "bg-brand-soft text-brand-ink",
   hint,
+  emptyLabel,
 }: {
   label: string;
   value: number | string;
@@ -18,14 +19,19 @@ export function DashboardStatCard({
   colorClass?: string;
   
   hint?: string;
+  /** Zero-state copy, shown in place of the link when the count is 0. */
+  emptyLabel?: string;
 }) {
-  return (
-    <Link href={href} className="spark-card-interactive group flex flex-col justify-between p-4">
+  // A count of 0 has nothing to open, so the card stops being a link: no hover
+  // affordance, no chevron, and the footer says what the zero means instead of
+  // promising a page.
+  const isEmpty = value === 0;
+
+  const body = (
+    <>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
-            {label}
-          </p>
+          <p className="text-xs font-semibold text-muted">{label}</p>
           <p className="mt-2 font-display text-3xl font-bold leading-none text-ink">{value}</p>
         </div>
         <span
@@ -34,12 +40,26 @@ export function DashboardStatCard({
           <Icon className="h-5 w-5" />
         </span>
       </div>
-      {/* Hover feedback is a transform on the arrow only, the card itself never
+      {/* Hover feedback is a transform on the chevron only, the card itself never
           translates, because a hover that moves the card shifts the grid. */}
-      <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-brand-ink">
-        {hint ?? "View details"}
-        <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-      </div>
+      {isEmpty ? (
+        <p className="mt-4 text-xs font-medium text-muted">{emptyLabel ?? "Nothing to show"}</p>
+      ) : (
+        <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-brand-ink">
+          {hint ?? "View details"}
+          <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+        </div>
+      )}
+    </>
+  );
+
+  if (isEmpty) {
+    return <div className="spark-card flex flex-col justify-between p-4">{body}</div>;
+  }
+
+  return (
+    <Link href={href} className="spark-card-interactive group flex flex-col justify-between p-4">
+      {body}
     </Link>
   );
 }
@@ -52,6 +72,8 @@ export type DashboardStat = {
   icon: LucideIcon;
   colorClass?: string;
   hint?: string;
+  /** Zero-state copy, shown in place of the link when the count is 0. */
+  emptyLabel?: string;
 };
 
 /**

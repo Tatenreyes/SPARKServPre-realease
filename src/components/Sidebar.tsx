@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChevronDown, LifeBuoy, LogOut, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import LoadingScreen from "@/components/LoadingScreen";
+import LoginLoadingScreen from "@/LoginLoadingScreen";
 import { signOut } from "@/lib/signOut";
 import type { UserRole } from "@/types/database";
 import { ROLE_LABEL } from "@/lib/roleMeta";
@@ -68,16 +68,23 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [signingOut, setSigningOut] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   async function handleSignOut() {
-    setSigningOut(true);
-    await signOut(router);
+    setLoggingOut(true);
+    const startedAt = Date.now();
+    const wait = 4000 - (Date.now() - startedAt);
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    try {
+      await signOut(router);
+    } catch {
+      setLoggingOut(false);
+    }
   }
 
   return (
     <>
-      {signingOut && <LoadingScreen message="Signing you out..." />}
+      {loggingOut && <LoginLoadingScreen message="Logging out..." />}
 
       {mobileOpen && (
         <button

@@ -144,7 +144,7 @@ export async function PATCH(
           body: outcome?.completed_now
             ? `Your payment of ₱${payment.amount.toFixed(2)} has been verified and your repair is complete.`
             : `Your payment of ₱${payment.amount.toFixed(2)} has been verified.`,
-          link: `/customer/bookings/${payment.booking_id}`,
+          link: `/customer/payments?booking=${payment.booking_id}`,
         });
       }
 
@@ -229,7 +229,7 @@ async function mapRejectionOutcome(
           body: Number.isFinite(amount)
             ? `${outcome.rejection_reason} You can submit a new reference for ₱${amount.toFixed(2)}.`
             : `${outcome.rejection_reason} You can submit a new reference from your booking page.`,
-          link: `/customer/bookings/${outcome.booking_id}`,
+          link: `/customer/payments?booking=${outcome.booking_id}`,
         });
       }
 

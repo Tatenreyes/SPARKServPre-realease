@@ -33,6 +33,7 @@ export default function MobileStatTile({
   icon: Icon,
   colorClass = "bg-brand-soft text-brand-ink",
   hint,
+  emptyLabel,
 }: {
   label: string;
   value: number | string;
@@ -41,16 +42,15 @@ export default function MobileStatTile({
   colorClass?: string;
   /** Desktop-only affordance text; announced but not displayed here. */
   hint?: string;
+  /** Zero-state copy, shown in place of the link when the count is 0. */
+  emptyLabel?: string;
 }) {
-  return (
-    <Link
-      href={href}
-      className="spark-card-interactive flex min-h-[96px] flex-col justify-between gap-3 p-3.5"
-    >
+  // Same rule as the desktop card: a zero has nothing to open, so the tile stops
+  // being a link and states the zero instead.
+  const body = (
+    <>
       <span className="flex items-start justify-between gap-2">
-        <span className="text-xs font-semibold uppercase leading-tight tracking-[0.08em] text-muted">
-          {label}
-        </span>
+        <span className="text-xs font-semibold leading-tight text-muted">{label}</span>
         <span
           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${colorClass}`}
         >
@@ -62,7 +62,30 @@ export default function MobileStatTile({
         {value}
       </span>
 
-      {hint && <span className="sr-only">{hint}</span>}
+      {value === 0 ? (
+        <span className="text-[13px] font-medium text-muted">
+          {emptyLabel ?? "Nothing to show"}
+        </span>
+      ) : (
+        hint && <span className="sr-only">{hint}</span>
+      )}
+    </>
+  );
+
+  if (value === 0) {
+    return (
+      <div className="spark-card flex min-h-[96px] flex-col justify-between gap-3 p-3.5">
+        {body}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className="spark-card-interactive flex min-h-[96px] flex-col justify-between gap-3 p-3.5"
+    >
+      {body}
     </Link>
   );
 }
