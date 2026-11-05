@@ -81,6 +81,42 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ------------------------------------------------------------ smooth scrolling
+   Lenis's own base stylesheet, written out here rather than imported so the reason
+   for each rule sits next to it. Every selector below is keyed on `.lenis`, a class
+   Lenis adds to `<html>` when `SmoothScroll` creates an instance, so none of this
+   applies to a visitor who prefers reduced motion (that component creates nothing)
+   or before the page has hydrated.
+
+   The `scroll-behavior: auto` rule is the one that matters in this project: the
+   `html { scroll-behavior: smooth }` above would otherwise animate every scroll
+   Lenis performs on the browser's own clock, on top of Lenis's damping, which reads
+   as stutter rather than smoothing. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+
+.lenis [data-lenis-prevent],
+.lenis [data-lenis-prevent-wheel],
+.lenis [data-lenis-prevent-touch],
+.lenis [data-lenis-prevent-vertical],
+.lenis [data-lenis-prevent-horizontal] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
 html,
 body {
   min-height: 100%;

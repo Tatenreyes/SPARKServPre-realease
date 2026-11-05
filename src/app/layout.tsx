@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import InstallPrompt from "@/components/InstallPrompt";
+import SmoothScroll from "@/components/SmoothScroll";
 import { STORAGE_KEY } from "@/lib/theme";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
@@ -85,7 +86,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_PRE_PAINT }} />
         <ThemeProvider>
           <Navbar />
-          <main>{children}</main>
+          {/* Smooth scrolling wraps the page content only: the navbar is `sticky`
+              and the install prompt is a fixed overlay, and neither wants to sit
+              inside a component that manages the scroll position. `SmoothScroll`
+              renders a fragment, so this adds no element to the tree. */}
+          <main>
+            <SmoothScroll>{children}</SmoothScroll>
+          </main>
           {/* The install offer only appears when the browser says the app is
               installable and the visitor has not dismissed it, see the component. */}
           <InstallPrompt />
