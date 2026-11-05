@@ -35,6 +35,7 @@
     "test:dependency-types": "node --test scripts/tests/dependency-types.test.mjs",
     "test:technician-assignments": "node --test scripts/tests/technician-assignments.test.mjs",
     "icons": "node scripts/generate-icons.mjs",
+    "icons:brand": "node scripts/rasterize-brand-icon.mjs",
     "cron:tick": "node scripts/run-assignment-tick.mjs",
     "verify:queue": "node scripts/verify-queue-fairness.mjs",
     "db:check": "node scripts/check-migration-state.mjs",

@@ -116,7 +116,7 @@ export default function AuthShell({
       >
         <div className="w-full max-w-[480px]">
           <div className="mb-6 md:hidden">
-            <BrandLogo size={38} variant="auto" />
+            <BrandLogo size={38} />
             <h1 className="mt-5 font-display text-2xl font-bold leading-tight text-ink">{headline}</h1>
             <p className="mt-2 max-w-sm text-sm leading-6 text-muted">{subhead}</p>
           </div>

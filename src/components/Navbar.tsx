@@ -51,7 +51,7 @@ export default function Navbar() {
               aria-label="SPARKServ home"
               className="flex items-center gap-1.5 sm:gap-2.5"
             >
-              <BrandLogo size={30} variant="light" />
+              <BrandLogo size={30} />
               <span className="hidden flex-col min-[360px]:flex">
                   <span className="font-display text-base font-bold leading-none tracking-tight text-ink sm:text-lg">
                   SPARK<span className={landingAccent}>Serv</span>

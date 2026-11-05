@@ -19,7 +19,7 @@ export default function Footer({ variant = "default" }: { variant?: "default" | 
         <div className="grid gap-8 md:grid-cols-[1.5fr_1fr_1.1fr]">
           <div>
             <Link href="/" aria-label="SPARKServ home" className="flex items-center gap-2.5">
-              <BrandLogo size={36} variant="light" />
+              <BrandLogo size={36} />
                 <span className="font-display text-lg font-bold tracking-tight text-ink">
                 SPARK<span className={accent}>Serv</span>
               </span>
