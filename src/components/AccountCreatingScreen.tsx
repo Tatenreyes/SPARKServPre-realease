@@ -109,7 +109,7 @@ export default function AccountCreatingScreen({ mode, done = false }: Props) {
             <li
               key={label}
               className={`flex h-7 items-center gap-2.5 text-sm ${
-                current ? "text-ink" : complete ? "text-ink/70" : "text-ink/40"
+                current ? "text-ink" : complete ? "text-ink/70" : "text-muted"
               }`}
             >
               <span className="flex h-[18px] w-[18px] items-center justify-center">
