@@ -126,7 +126,7 @@ export default function DashboardTopbar({
             aria-label="SPARKServ dashboard home"
             className="flex min-w-0 items-center gap-2 font-display text-base font-bold tracking-tight text-ink"
           >
-            <BrandLogo size={28} />
+            <BrandLogo size={28} plate={false} />
             <span className="truncate">
               SPARK<span className="text-brand-600 dark:text-[#81EDF4]">Serv</span>
             </span>
