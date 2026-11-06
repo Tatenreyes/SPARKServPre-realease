@@ -7,13 +7,21 @@ import Image from "next/image";
  *
  * ## Why a tile, and why white
  *
- * The supplied artwork is a cut-out drawn in the brand blue (`#1155EE` — 89% of
- * the mark, with a yellow accent). The old `light` variant was a white wordmark,
- * which is why the mark disappeared on the light navbar, and a brand-blue tile
- * would be blue on blue at about 1.1:1. A white plate carries the mark on the
+ * Both supplied artworks are cut-outs, transparent at the corners and drawn in
+ * the brand blue, so they need a plate: on the sidebar's navy the mark would
+ * otherwise be blue on blue at roughly 1.1:1. A white plate carries it on the
  * light navbar and on the navy bands alike, in either theme.
  *
- * `size` is the tile's edge: the mark is square now, not the wide lockup this
+ * ## Two files, one mark
+ *
+ * `sparkserv-icon-light.png` is the deeper blue (about #3168CE) and
+ * `sparkserv-icon-dark.png` the brighter one (about #4B82EB) for the dark
+ * canvas; the geometry is identical, so the artwork swap is the only difference
+ * between the themes. Both are PNGs on purpose: this mark is drawn through
+ * `next/image`, and the project sets no `images.dangerouslyAllowSVG`, so an SVG
+ * source would be refused at runtime.
+ *
+ * `size` is the tile's edge: the mark is square, not the wide lockup this
  * replaced, so the width follows the height.
  */
 export default function BrandLogo({
@@ -37,8 +45,20 @@ export default function BrandLogo({
           alt="SPARKServ"
           width={width}
           height={size}
-          className={imageClass}
+          className={`${imageClass} dark:hidden`}
           priority
+        />
+        {/* The same mark in its dark-canvas blue. Both are rendered and the CSS
+            class decides which one is painted, so the theme toggle needs no state
+            and cannot flash the wrong logo. `priority` stays on the light copy,
+            the one the default theme shows. */}
+        <Image
+          src="/icons/sparkserv-icon-dark.png"
+          alt=""
+          aria-hidden="true"
+          width={width}
+          height={size}
+          className={`${imageClass} hidden dark:block`}
         />
       </span>
     </span>
