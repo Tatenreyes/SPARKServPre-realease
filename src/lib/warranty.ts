@@ -26,6 +26,15 @@ export type WarrantyStatus = "active" | "expiring_soon" | "expired" | "none";
 /** How close the end of cover has to be before the badge turns cautionary. */
 export const WARRANTY_SOON_DAYS = 7;
 
+/**
+ * The workmanship period a completed repair carries unless the database stamped
+ * its own (`service_history.warranty_days`, set from `service_warranty_days()` -
+ * 30 by default). The ONE place this number is written down: the customer's
+ * service history falls back to it for an archive row that carries no stamped
+ * date, so the screen and the shop cannot disagree about how long cover lasts.
+ */
+export const WARRANTY_DAYS = 30;
+
 export interface WarrantyState {
   status: WarrantyStatus;
   /** Days of cover left at the end of the expiry day; negative once it has passed. */
