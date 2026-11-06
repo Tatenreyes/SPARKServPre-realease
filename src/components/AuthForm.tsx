@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useId } from "react";
+import { useEffect, useState, useId } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -8,10 +8,14 @@ import LoginLoadingScreen from "@/LoginLoadingScreen";
 import AccountCreatingScreen from "@/components/AccountCreatingScreen";
 import { Eye, EyeOff, UserRoundCog, Wrench, Lock, Mail, User } from "lucide-react";
 import { MIN_PASSWORD_LENGTH, PASSWORD_HINT } from "@/lib/password";
+import { suggestEmailFix, validateEmail } from "@/lib/validateEmail";
 
 interface AuthFormProps {
   mode: "login" | "register";
 }
+
+/** How long the "Resend email" button stays disabled after a send. */
+const RESEND_COOLDOWN_SECONDS = 60;
 
 export function AuthFormSkeleton({ rows = 3 }: { rows?: number }) {
   return (
@@ -48,14 +52,48 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [resendIn, setResendIn] = useState(0);
+  const [unconfirmed, setUnconfirmed] = useState(false);
 
   const emailId = useId();
   const passwordId = useId();
   const nameId = useId();
 
+  // Suggestion only, recomputed as they type: it appears for the same typo
+  // domains `validateEmail` refuses, so a refused address always offers the fix.
+  const emailSuggestion = suggestEmailFix(email);
+
+  // The cooldown ticks itself down, so the button re-enables on its own.
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = setTimeout(() => setResendIn((seconds) => seconds - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendIn]);
+
+  /**
+   * Sends the confirmation email again, for the register panel and for the
+   * "email not confirmed" hint on the login form. Both wait out the cooldown.
+   */
+  async function resendConfirmation(value: string) {
+    const address = value.trim().toLowerCase();
+    setError(null);
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email: address,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback?type=signup` },
+    });
+    if (resendError) {
+      setError(resendError.message);
+      return;
+    }
+    setResendIn(RESEND_COOLDOWN_SECONDS);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setUnconfirmed(false);
 
     if (mode === "register" && (!agreedToPolicy || !agreedToPrivacy)) {
       setError("Please agree to the policies and privacy policy to continue.");
@@ -67,15 +105,35 @@ export default function AuthForm({ mode }: AuthFormProps) {
     const startedAt = Date.now();
 
     try {
+      const address = email.trim().toLowerCase();
+
       if (mode === "register") {
+        const emailError = validateEmail(email);
+        if (emailError) {
+          setError(emailError);
+          return;
+        }
+
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
+          email: address,
           password,
           options: {
             data: { name, role },
+            emailRedirectTo: `${window.location.origin}/auth/callback?type=signup`,
           },
         });
         if (signUpError) throw signUpError;
+
+        // Confirmation required: the account exists but no session was issued, so
+        // there is nothing to sign in with yet. The profile row is already written
+        // by the `on_auth_user_created` trigger; the service-role fallback exists
+        // for a database without that trigger and is not needed here. Leaving
+        // `redirecting` false closes the loading screen, and the "Check your
+        // email" panel takes the form's place.
+        if (!signUpData.session) {
+          setPendingEmail(address);
+          return;
+        }
 
         if (signUpData.user) {
           const profileRes = await fetch("/api/auth/ensure-profile", {
@@ -88,11 +146,26 @@ export default function AuthForm({ mode }: AuthFormProps) {
           }
         }
       } else {
+        const emailError = validateEmail(email);
+        if (emailError) {
+          setError(emailError);
+          return;
+        }
+
         const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
+          email: address,
           password,
         });
-        if (signInError) throw signInError;
+        if (signInError) {
+          // GoTrue says "Email not confirmed" for an account that never followed
+          // its link. That is a state the customer can fix from here.
+          if (signInError.message.toLowerCase().includes("email not confirmed")) {
+            setUnconfirmed(true);
+            setError("Please confirm your email first. Check your inbox for the link.");
+            return;
+          }
+          throw signInError;
+        }
       }
 
       const {
@@ -140,6 +213,56 @@ export default function AuthForm({ mode }: AuthFormProps) {
     }
   }
 
+  // Confirmation required: the form is replaced rather than decorated, because
+  // there is nothing left to submit until the link in the email is followed.
+  if (pendingEmail) {
+    return (
+      <div className="w-full max-w-[420px]">
+        <div className="rounded-card border border-line bg-surface p-5 shadow-card">
+          <h1 className="font-display text-xl font-bold text-ink">Check your email</h1>
+          <p className="mt-2 text-sm leading-relaxed text-ink/70">
+            We sent a confirmation link to{" "}
+            <span className="font-semibold text-ink">{pendingEmail}</span>. Click it to
+            activate your account.
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-muted">
+            Can&apos;t find it? Check your spam folder.
+          </p>
+
+          {error && (
+            <div
+              role="alert"
+              className="mt-3 flex min-w-0 items-start gap-2.5 rounded-xl bg-alert-soft px-4 py-3 text-sm text-alert-ink"
+            >
+              <span className="min-w-0 flex-1 leading-relaxed">{error}</span>
+            </div>
+          )}
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => resendConfirmation(pendingEmail)}
+              disabled={resendIn > 0}
+              className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white transition duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {resendIn > 0 ? `Resend in ${resendIn}s` : "Resend email"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPendingEmail(null);
+                setError(null);
+              }}
+              className="text-sm font-semibold text-brand-ink underline underline-offset-4 transition-colors hover:text-brand-600"
+            >
+              Use a different email
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {loading &&
@@ -159,6 +282,31 @@ export default function AuthForm({ mode }: AuthFormProps) {
               : "Sign up to get started with SPARKServ today."}
           </p>
         </div>
+
+        {/* The confirmation link lands on /auth/callback, which forwards here with
+            one of these two outcomes in the URL. Login only: the register form has
+            nothing to confirm yet. */}
+        {mode === "login" && searchParams.get("confirmed") === "1" && (
+          <div
+            role="status"
+            className="mb-4 flex min-w-0 items-start gap-2.5 rounded-xl bg-signal-soft px-4 py-3 text-sm text-signal-ink"
+          >
+            <span className="min-w-0 flex-1 leading-relaxed">
+              Email confirmed. You can log in now.
+            </span>
+          </div>
+        )}
+
+        {mode === "login" && searchParams.get("error") === "confirm_failed" && (
+          <div
+            role="alert"
+            className="mb-4 flex min-w-0 items-start gap-2.5 rounded-xl bg-alert-soft px-4 py-3 text-sm text-alert-ink"
+          >
+            <span className="min-w-0 flex-1 leading-relaxed">
+              That link has expired. Log in to get a new confirmation email.
+            </span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className={mode === "register" ? "space-y-3" : "space-y-5"}>
           {mode === "register" && (
@@ -194,6 +342,15 @@ export default function AuthForm({ mode }: AuthFormProps) {
               className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/50 transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
               placeholder="Enter your email"
             />
+            {emailSuggestion && (
+              <button
+                type="button"
+                onClick={() => setEmail(emailSuggestion)}
+                className="text-left text-xs font-semibold text-brand-ink underline-offset-4 transition-colors hover:underline"
+              >
+                Did you mean {emailSuggestion}?
+              </button>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -362,6 +519,17 @@ export default function AuthForm({ mode }: AuthFormProps) {
               </svg>
               <span className="min-w-0 flex-1 leading-relaxed">{error}</span>
             </div>
+          )}
+
+          {unconfirmed && (
+            <button
+              type="button"
+              onClick={() => resendConfirmation(email)}
+              disabled={resendIn > 0}
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-line px-4 text-sm font-semibold text-ink transition duration-200 hover:bg-soft disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {resendIn > 0 ? `Resend in ${resendIn}s` : "Resend confirmation email"}
+            </button>
           )}
 
           <button

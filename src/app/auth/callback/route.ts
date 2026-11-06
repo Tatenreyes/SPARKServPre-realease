@@ -43,24 +43,12 @@ type PendingCookie = { name: string; value: string; options: CookieOptions };
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
 
-  const plan = planRecoveryCallback({
-    code: url.searchParams.get("code"),
-    tokenHash: url.searchParams.get("token_hash"),
-    type: url.searchParams.get("type"),
-    providerError: url.searchParams.get("error_code") ?? url.searchParams.get("error"),
-    next: url.searchParams.get("next"),
-  });
-
-  if (plan.action === "fail") {
-    return NextResponse.redirect(new URL(recoveryFailureRedirectPath(), url.origin));
-  }
-
   /**
-   * The session cookies are collected here instead of being written straight to
-   * a response, because the redirect target is only known once the exchange has
-   * been attempted. `setAll` is called by @supabase/ssr's storage when the
-   * SIGNED_IN / PASSWORD_RECOVERY event fires, which is what makes this the
-   * supported way to persist the session from a route handler.
+   * The session cookies are collected here instead of being written straight to a
+   * response, because the redirect target is only known once the exchange has been
+   * attempted. `setAll` is called by @supabase/ssr's storage when the SIGNED_IN /
+   * PASSWORD_RECOVERY event fires, which is what makes this the supported way to
+   * persist the session from a route handler.
    */
   const pendingCookies: PendingCookie[] = [];
 
@@ -76,6 +64,48 @@ export async function GET(request: NextRequest) {
       },
     }
   );
+
+  // ---- Email confirmation (signup) -------------------------------------------
+  // This route now serves two links, and they must not be confused: a recovery
+  // link mints an authorization to CHANGE a password, a confirmation link only
+  // proves the address. Signup links ask Supabase for `?type=signup` (see
+  // `AuthForm`), which is the only thing that separates them; everything else
+  // falls through to the recovery handling below, unchanged.
+  //
+  // The session the exchange creates is deliberately ended again: the email tells
+  // the customer to log in, and arriving already signed in would make the password
+  // they chose a moment ago look optional.
+  if (url.searchParams.get("type") === "signup") {
+    const code = url.searchParams.get("code");
+    const tokenHash = url.searchParams.get("token_hash");
+
+    const confirmation = code
+      ? await supabase.auth.exchangeCodeForSession(code)
+      : await supabase.auth.verifyOtp({ type: "signup", token_hash: tokenHash ?? "" });
+
+    if (!confirmation.error) {
+      await supabase.auth.signOut();
+    }
+
+    const destination = confirmation.error ? "/login?error=confirm_failed" : "/login?confirmed=1";
+    const response = NextResponse.redirect(new URL(destination, url.origin));
+    pendingCookies.forEach(({ name, value, options }) => {
+      response.cookies.set(name, value, options);
+    });
+    return response;
+  }
+
+  const plan = planRecoveryCallback({
+    code: url.searchParams.get("code"),
+    tokenHash: url.searchParams.get("token_hash"),
+    type: url.searchParams.get("type"),
+    providerError: url.searchParams.get("error_code") ?? url.searchParams.get("error"),
+    next: url.searchParams.get("next"),
+  });
+
+  if (plan.action === "fail") {
+    return NextResponse.redirect(new URL(recoveryFailureRedirectPath(), url.origin));
+  }
 
   const result =
     plan.action === "exchange_code"
