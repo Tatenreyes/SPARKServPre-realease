@@ -40,6 +40,10 @@
 # env files
 .env
 .env*.local
+# The staging environment file is as sensitive as the local one — it carries the
+# staging service-role key. `.env.staging.example` is the template that documents
+# it and is deliberately NOT matched by this pattern.
+.env.staging
 
 # vercel
 .vercel

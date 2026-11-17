@@ -248,7 +248,7 @@ function TimeBox({
           value={hour < 0 ? "" : hour}
           onChange={(event) => changeHour(Number(event.target.value))}
           disabled={disabled}
-          className={`${SELECT} flex-1 basis-[5.5rem]`}
+          className={`${SELECT} w-24`}
         >
           <option value="">Hour</option>
           {hours.map((option) => (
@@ -264,7 +264,7 @@ function TimeBox({
           value={minute < 0 ? "" : minute}
           onChange={(event) => commit(hour, Number(event.target.value))}
           disabled={disabled || minuteChoices.length === 0}
-          className={`${SELECT} basis-[4.75rem]`}
+          className={`${SELECT} w-[72px]`}
         >
           <option value="">Min</option>
           {minuteChoices.map((option) => (

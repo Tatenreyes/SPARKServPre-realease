@@ -21,7 +21,17 @@ export default async function AdminServiceConcernsPage() {
     .select("*")
     .order("created_at", { ascending: false });
 
-  const userIds = Array.from(new Set((tickets ?? []).map((t) => t.user_id)));
+  /**
+   * Two sets of user ids in one lookup: the customers who raised the concerns, and
+   * the administrators who resolved them. `resolved_by` would otherwise render as
+   * a bare uuid, and the whole point of the resolution columns is to make a closed
+   * concern explainable — including by whom.
+   */
+  const userIds = Array.from(
+    new Set(
+      (tickets ?? []).flatMap((t) => [t.user_id, t.resolved_by].filter(Boolean) as string[])
+    )
+  );
   const { data: users } = userIds.length
     ? await supabase.from("users").select("id, name, email").in("id", userIds)
     : { data: [] };

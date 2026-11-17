@@ -26,6 +26,9 @@
 | `supabase/migration_service_warranty.sql` | **Step 19.** A completed repair records the workmanship warranty it carries: `service_history.warranty_days` / `warranty_until`, the `service_warranty_days()` reader and the `stamp_service_warranty` BEFORE INSERT trigger. The job order prints a warranty date only when a row carries one — the system records the period and does not administer claims. |
 | `supabase/migration_queue_offer_guards.sql` | **Step 20.** Two queue corrections, both from the same incident (a technician read `#3` in the appliance he had just been given work in, and the audit showed one of his turns had been spent on a request that could never become a job). `technician_queue_snapshot()` gains `last_assigned_at`, so the screen can say the position is where the last acceptance left him; `assign_technician_to_request()` refuses a request that already has an owner (`already_assigned`), so a walk can no longer spend a turn on one. The file also writes the `queue_offer_guards_version` marker `npm run db:check` probes. |
 | `supabase/migration_customer_ratings.sql` | **Step 21.** The other direction of a rating. `customer_ratings` is the technician's score of the customer — readable by the technician who wrote it and by an administrator, and by nobody else, so a customer sees only an aggregate — and `ratings.tags` records the REASON a score was given (`src/lib/rating-tags.ts`). Direction is by **table**, not a `rater_role` column, so a technician's published average can never be computed from their own opinions of customers. Nothing reads either table for assignment: the queue stays a strict rotation. |
+| `supabase/migration_support_ticket_resolution.sql` | **Step 22.** How a service concern was resolved: `support_tickets.resolution_note`, `resolved_by`, `resolved_at`, plus an index on `resolved_at`. `PATCH /api/support-tickets/[id]` refuses a resolve with no note and stamps `resolved_by`/`resolved_at` from the authenticated administrator's own session, so "resolved" can no longer be a status with nothing behind it. **Applied** — `npm run db:check` probes the three columns and reports all 22 migrations applied (86 checks passed). If a deployment ever runs ahead of its database, that route answers `503 SERVICE_SETUP_REQUIRED` naming this file instead of a bare 500. |
+| `supabase/migration_set_user_role.sql` | **Prepared — NOT applied.** Role changes become transactional: `set_user_role(uuid, user_role)` writes `public.users.role` **and** keeps the `technicians` row in step in one transaction, so a promoted account appears on `/admin/technicians` and can be approved. Super-administrator only, re-checked inside the function; it never reads `user_metadata`, and it never deletes a `technicians` row (demotion revokes the approval, because the row carries the job history). Until it is applied, `PATCH /api/users/[id]/role` answers `503 SERVICE_SETUP_REQUIRED` naming this file rather than a bare 500. |
+
 
 | `supabase/migration_technician_queue.sql` | Historical, superseded by `schema.sql` + the redesign. Do not apply it on top of them. |
 | `migration_appliances_tickets.sql`, `migration_appliance_centric_flow.sql`, `migration_notifications.sql`, `migration_profile_photos.sql`, `migration_security_hardening.sql`, `migration_system_settings.sql`, `migration_visits_payments.sql`, `migration_fix_technician_signup.sql` | Pre-queue history: applied on the live project already, and folded into `schema.sql` for fresh installs. Not part of the upgrade path below. |
@@ -110,13 +113,13 @@ never reset), and the trigger is dropped before it is created. It deliberately d
 **not** re-declare `confirm_payment()`: stamping the row is the archive table's own
 invariant, so it covers every writer rather than one function.
 
-Step 20 is the queue turn guard and **is not applied yet** — `npm run db:check` lists
-`supabase/migration_queue_offer_guards.sql` under PENDING until it is. Apply it in the
-SQL Editor after step 19, one file at a time, then re-run the check (the file's marker
-row, `queue_offer_guards_version`, is the probe: both functions it replaces exist since
-steps 4 and 14, so their presence cannot prove this file ran). It needs no preflight —
-it changes no data and adds no constraint — and no ordering beyond the two files it
-re-declares functions from:
+Step 20 is the queue turn guard and **is applied** — `npm run db:check` reports the
+`queue_offer_guards_version` marker (all 22 migrations applied, 86 checks passed). Until
+that marker exists the check lists `supabase/migration_queue_offer_guards.sql` under
+PENDING, which is how it behaved before the file ran: both functions it replaces exist
+since steps 4 and 14, so their presence cannot prove this file ran, and the marker row is
+the only honest probe. It needs no preflight — it changes no data and adds no constraint —
+and no ordering beyond the two files it re-declares functions from:
 
 ```
 20. supabase/migration_queue_offer_guards.sql
@@ -129,6 +132,92 @@ signature gains a column, which `create or replace` cannot do), the walk is a pl
 `npm run audit:queue-turns`, which lists every `TURN_CONSUMED` whose request has no
 estimate and no booking, and every request still left in a walkable state with an owner
 attached, so a human decides per case.
+
+Step 21 is the second direction of a rating — `migration_customer_ratings.sql`, described
+in the table above. Step 22 is resolution notes on service concerns and **is applied**:
+`npm run db:check` probes the three columns and reports all 22 migrations applied (86
+checks passed). It adds three nullable columns and one partial index, so it needed no
+preflight and no ordering beyond the base `support_tickets` table and `users` (for the
+`resolved_by` reference). If a deployment ever runs ahead of its database, resolving a
+concern answers `503 SERVICE_SETUP_REQUIRED` naming this file rather than a bare 500,
+because a resolve requires a reason written into a column that would not exist yet:
+
+```
+21. supabase/migration_customer_ratings.sql
+22. supabase/migration_support_ticket_resolution.sql
+```
+
+It is a **once-only** file: the statements are plain `add column`s, so a second run stops
+on `column "resolution_note" already exists` instead of succeeding silently — which is
+what you want from a chain applied one file at a time by hand. Every column is nullable,
+so all existing rows stay valid, and there is no backfill to run: a concern resolved
+before this migration has no recorded reason, and the UI shows nothing rather than
+inventing one. `resolved_by` is stamped by `PATCH /api/support-tickets/[id]` from the
+authenticated administrator, never read from the request body.
+
+Step 23 is **prepared and NOT applied** — `supabase/migration_set_user_role.sql`. It closes
+the one pair of rows that could disagree: a role change wrote `public.users.role` while the
+`technicians` row is written by `handle_new_user()` at signup and by the administrator's
+repair, so promoting a customer produced an account that no screen could approve until
+somebody pressed "Repair records". `set_user_role(p_user_id, p_role)` does both writes in
+one transaction. It re-checks super-administrator (or service role) inside, is granted the
+same way `admin_queue_override` is, never reads `user_metadata`, creates the row
+**unapproved** (creating is not approving) and revokes approval rather than deleting on
+demotion, because the row carries the job history. It needs no preflight and no ordering
+beyond `public.users` and `public.technicians`, both from the base schema — and the queue
+triggers that keep a new row's membership in step come from
+`migration_queue_redesign.sql`.
+
+Two refusals stand in front of the one mistake the application could not undo:
+a super administrator cannot change their **own** role away from `super_admin` (another
+super administrator has to do it, so the decision leaves the account it affects), and the
+last **active** super administrator cannot be demoted by anyone — the service role
+included, because a deactivated super administrator cannot sign in. A deactivated super
+administrator is not a replacement, so promoting one and deactivating them does not open
+the door. If a project is ever locked out anyway, the owner in the SQL Editor sets the one
+JWT claim `prevent_role_change()` exempts and then updates the row; the header of the
+migration carries the two statements, and `npm run test:role-sync` asserts that this
+recovery path still works.
+
+The second refusal is a statement about the **set** of super administrators, so the whole
+function is serialized on one advisory lock —
+`pg_advisory_xact_lock(hashtext('sparkserv-user-role'))`, the namespaced-key pattern
+`trg_booking_no_overlap` (`booking_technician:`) and the queue engine (`sparkserv-queue:`)
+already use. Without it, two administrators demoting each other could each count the other
+as a valid replacement and leave the project with nobody; with it, the second call waits,
+counts the first's committed result and is refused by the guard rather than deadlocking.
+The `for update` on the peers is a second, narrower guard: it covers the other writers that
+can change the answer, such as an administrator deactivating a super administrator through
+`PATCH /api/users/[id]/status`. `npm run test:role-sync` proves the lock is taken and that
+it is the shared key rather than a per-user one; the interleaving itself needs two
+sessions, which one connection cannot provide (`TESTING.md` §1 keeps the two-session
+tests).
+
+The function returns `jsonb` rather than the `public.users` row type — the shape
+`admin_queue_override` and the other RPCs here return — so PostgREST's JSON is an object
+and does not depend on how a composite return is rendered. After applying the file, reload
+the PostgREST schema cache (Settings → API → Reload schema, or
+`notify pgrst, 'reload schema'`): until that happens `/rest/v1/rpc/set_user_role` is absent
+from the API even though the function exists, which is the same step every migration here
+needs.
+
+`security definer` with `search_path = public, pg_temp` — `pg_temp` named LAST rather than
+left to the implicit order, and every object reference schema-qualified, so nothing a
+caller created can be resolved in place of the real object. `EXECUTE` is revoked from
+`public` and `anon` and granted to `authenticated` + `service_role`, the pattern
+`admin_queue_override` set: the signed-in caller is judged by the check inside, not by the
+grant. `npm run test:role-sync` loads this file into an in-process Postgres (PGlite) with
+the real schema and queue engine and exercises promotion, demotion, both bypass attempts
+and both lockout guards; `npm run db:check` reports step 23 as PENDING until the file is
+applied, with the function itself as the probe. Until it is
+applied, `PATCH /api/users/[id]/role` answers `503 SERVICE_SETUP_REQUIRED` naming this file
+rather than a bare 500:
+
+```
+23. supabase/migration_set_user_role.sql   # prepared — NOT applied
+```
+
+
 
 One thing `db:check` **cannot** confirm: the `stamp_service_warranty` trigger. A
 `returns trigger` function is not callable as an RPC, so it never appears in the

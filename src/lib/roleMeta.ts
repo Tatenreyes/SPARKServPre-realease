@@ -43,4 +43,5 @@ export const ROLE_PROFILE_HREF: Partial<Record<UserRole, string>> = {
 /** Account/settings route per role, kept separate from the profile route. */
 export const ROLE_SETTINGS_HREF: Partial<Record<UserRole, string>> = {
   customer: "/customer/account",
+  technician: "/technician/settings",
 };

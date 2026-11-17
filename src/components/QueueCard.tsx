@@ -23,8 +23,8 @@ export const TONE_CHIP: Record<string, string> = {
  * technician in the rotation is listed, not just the signed-in one. The signed-in
  * technician is highlighted, never re-sorted, so the order stays truthful.
  *
- * Language matters here: position #1 means "next turn", not "next job". A
- * technician at #1 is still skipped for a request whose time clashes with their
+ * Language matters here: position 1 means "next turn", not "next job". A
+ * technician at 1 is still skipped for a request whose time clashes with their
  * schedule or exceeds their workload, and nobody is ever dropped from the queue
  * because of a future booking.
  */
@@ -61,7 +61,7 @@ export default function QueueCard({
             Your queue position
           </p>
           <p className="mt-2 font-display text-5xl font-bold leading-none text-brand-ink">
-            {myPosition ? `#${myPosition}` : "N/A"}
+            {myPosition ?? "N/A"}
           </p>
           <p className="mt-2 text-xs font-semibold text-ink">{queue.label}</p>
 
@@ -87,7 +87,7 @@ export default function QueueCard({
           )}
 
           <Link
-            href="/technician/profile"
+            href="/technician/availability"
             className="mt-4 inline-flex h-8 cursor-pointer items-center justify-center rounded-lg border border-line bg-surface px-3 text-[11px] font-semibold text-brand-ink transition duration-200 hover:bg-brand-soft"
           >
             Availability settings
@@ -108,7 +108,7 @@ export default function QueueCard({
           </div>
           {queue.nextTurnPosition !== null && (
             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-brand-soft px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-ink">
-              #{queue.nextTurnPosition} holds the next turn
+              {queue.nextTurnPosition} holds the next turn
             </span>
           )}
         </div>
@@ -142,7 +142,7 @@ export default function QueueCard({
                           : "bg-soft text-muted"
                     }`}
                   >
-                    {entry.position ? `#${entry.position}` : "N/A"}
+                    {entry.position ?? "N/A"}
                   </span>
 
                   <div className="min-w-0 flex-1">
@@ -236,7 +236,7 @@ export default function QueueCard({
                               : "bg-soft text-muted"
                         }`}
                       >
-                        {entry.position ? `#${entry.position}` : "N/A"}
+                        {entry.position ?? "N/A"}
                       </span>
                     </td>
                     <td className="py-3.5 pr-4 align-middle">

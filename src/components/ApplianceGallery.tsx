@@ -170,8 +170,12 @@ export default function ApplianceGallery() {
       const target = Math.max(0, Math.min(maxScroll, scroller.scrollLeft + event.deltaY));
       scroller.scrollLeft = target;
 
-      const cardWidth = slideRefs.current[0]?.offsetWidth ?? 1;
-      const nextIndex = Math.max(0, Math.min(GALLERY_ITEMS.length - 1, Math.round(target / cardWidth)));
+      /* The rail has a column-gap, so the step between cards is the distance
+         between two neighbouring slides rather than the card width alone. */
+      const first = slideRefs.current[0];
+      const second = slideRefs.current[1];
+      const stride = first ? (second ? second.offsetLeft - first.offsetLeft : first.offsetWidth) : 1;
+      const nextIndex = Math.max(0, Math.min(GALLERY_ITEMS.length - 1, Math.round(target / stride)));
       setCarouselIndex(nextIndex);
     }
 

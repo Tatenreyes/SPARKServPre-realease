@@ -81,42 +81,9 @@ async function queueOrder(applianceType = "refrigerator") {
 const orderNames = (rows) => rows.filter((r) => r.is_active).map((r) => r.name).join(" -> ");
 const positions = (rows) => JSON.stringify(rows.map((r) => [r.technician_id, r.queue_position]));
 
-/**
- * supabase/schema.sql uses public.is_admin() in its very first policy (the
- * appliances policy) but only defines it ~180 lines later, so the file is not a
- * standalone fresh install — it assumes the helper functions already exist from
- * an earlier release (its own comment at the helper block says as much).
- *
- * Rather than paste those definitions here (two sources of truth that drift),
- * the real block is extracted from schema.sql and executed before the first
- * policy that needs it. Only current_role()/is_admin() are extracted: the third
- * helper (technician_linked_to_request) queries tables that do not exist yet,
- * and SQL function bodies are resolved at CREATE time.
- */
-function extractHelperFunctions(sql) {
-  const start = sql.indexOf("create or replace function public.current_role()");
-  const end = sql.indexOf("-- Helper: does the calling technician have a link", start);
-  if (start === -1 || end === -1) {
-    throw new Error("could not locate the current_role()/is_admin() block in supabase/schema.sql");
-  }
-  return sql.slice(start, end);
-}
-
-/** First policy in schema.sql — everything before it is enums/tables/indexes. */
-function firstPolicyIndex(sql) {
-  const index = sql.indexOf('create policy "customer manages own appliances"');
-  if (index === -1) throw new Error("could not locate the first policy in supabase/schema.sql");
-  return index;
-}
-
-const schemaSql = read("supabase/schema.sql");
-const firstPolicy = firstPolicyIndex(schemaSql);
-
 console.log("== 1. Loading schema and migrations ==");
 await exec("scripts/sql-harness.sql (Supabase stubs)", read("scripts/sql-harness.sql"));
-await exec("supabase/schema.sql (extensions, enums, tables, indexes)", schemaSql.slice(0, firstPolicy));
-await exec("supabase/schema.sql helper functions (pre-created)", extractHelperFunctions(schemaSql));
-await exec("supabase/schema.sql (policies onward)", schemaSql.slice(firstPolicy));
+await exec("supabase/schema.sql", read("supabase/schema.sql"));
 // NOTE: supabase/migration_technician_queue.sql is deliberately NOT loaded — it
 // is the historical, standalone version of the queue tables that schema.sql now
 // contains inline, so running both would collide ("technician_queue_state

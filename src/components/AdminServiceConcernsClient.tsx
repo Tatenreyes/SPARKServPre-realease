@@ -82,6 +82,19 @@ export default function AdminServiceConcernsClient({
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterSelection>({});
+  /**
+   * The concern whose resolution note is being written, the note, and any
+   * rejection.
+   *
+   * Resolving is deliberately two steps: choosing "Resolved" opens this panel
+   * instead of saving, because the API refuses a resolve with no note behind it.
+   * Saving the status first and asking for the reason afterwards would leave a
+   * window where the row reads "resolved" and means nothing — which is exactly
+   * the state this column was added to remove.
+   */
+  const [noteForId, setNoteForId] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+  const [noteError, setNoteError] = useState<string | null>(null);
 
   /**
    * Three facets, all multi-select, because these are the three questions an admin
@@ -129,21 +142,53 @@ export default function AdminServiceConcernsClient({
 
   const narrowed = Object.values(filters).some((keys) => keys && keys.length > 0) || Boolean(search.trim());
 
-  async function updateStatus(id: string, status: TicketStatus) {
+  async function updateStatus(id: string, status: TicketStatus, resolutionNote?: string) {
     setBusyId(id);
+    setNoteError(null);
     try {
       const res = await fetch(`/api/support-tickets/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, resolution_note: resolutionNote ?? "" }),
       });
       const json = await res.json();
       if (res.ok) {
         setTickets((prev) => prev.map((t) => (t.id === id ? json.data : t)));
+        setNoteForId(null);
+        setNote("");
+      } else {
+        // The old version dropped a failed update on the floor: the select sprang
+        // back with no explanation, which reads as a broken control.
+        setNoteError(json.error ?? "That change was rejected.");
       }
+    } catch {
+      setNoteError("The change could not be saved. Check your connection and try again.");
     } finally {
       setBusyId(null);
     }
+  }
+
+  /** The select is a request, not the change: "resolved" needs a reason first. */
+  function requestStatusChange(id: string, status: TicketStatus, existingNote: string | null) {
+    setNoteError(null);
+    if (status === "resolved") {
+      setNoteForId(id);
+      setNote(existingNote ?? "");
+      return;
+    }
+    setNoteForId(null);
+    void updateStatus(id, status);
+  }
+
+  /**
+   * Who resolved it. The name comes from the same `userInfo` map the customer
+   * column uses — the page looks up resolver ids as well as customer ids — and it
+   * falls back to the fact rather than to an id, because an id tells a reader
+   * nothing.
+   */
+  function resolverName(id: string | null): string {
+    if (!id) return "Recorded by an administrator";
+    return userInfo[id]?.name ?? "Recorded by an administrator";
   }
 
   return (
@@ -208,12 +253,15 @@ export default function AdminServiceConcernsClient({
                         {t.priority}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 align-top">
                       <select
-                        value={t.status}
+                        value={noteForId === t.id ? "resolved" : t.status}
                         disabled={busyId === t.id}
-                        onChange={(e) => updateStatus(t.id, e.target.value as TicketStatus)}
-                        className="rounded-lg border border-line px-2 py-1 text-xs capitalize"
+                        onChange={(e) =>
+                          requestStatusChange(t.id, e.target.value as TicketStatus, t.resolution_note)
+                        }
+                        aria-label={`Status for ${t.subject}`}
+                        className="rounded-lg border border-line bg-surface px-2 py-1 text-xs capitalize text-ink outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15"
                       >
                         {STATUS_OPTIONS.map((s) => (
                           <option key={s} value={s} className="capitalize">
@@ -221,6 +269,92 @@ export default function AdminServiceConcernsClient({
                           </option>
                         ))}
                       </select>
+
+                      {/* What was actually done about it. The queue could say
+                          "resolved" and nothing else, which is not an answer to
+                          the question the next reader has. */}
+                      {t.resolution_note && noteForId !== t.id && (
+                        <div className="mt-2 max-w-sm rounded-lg border border-line bg-soft px-2.5 py-2">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
+                            How it was resolved
+                          </p>
+                          <p className="mt-1 text-xs leading-relaxed text-ink/80">
+                            {t.resolution_note}
+                          </p>
+                          <p className="mt-1 text-[11px] text-muted">
+                            {resolverName(t.resolved_by)}
+                            {t.resolved_at
+                              ? ` · ${new Date(t.resolved_at).toLocaleDateString()}`
+                              : ""}
+                          </p>
+                          {/* Re-selecting "Resolved" fires no change event, so an
+                              existing note would otherwise be write-once. */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNoteForId(t.id);
+                              setNote(t.resolution_note ?? "");
+                              setNoteError(null);
+                            }}
+                            className="mt-1.5 cursor-pointer text-[11px] font-semibold text-brand-ink underline-offset-2 hover:underline"
+                          >
+                            Edit note
+                          </button>
+                        </div>
+                      )}
+
+                      {noteForId === t.id && (
+                        <div className="mt-2 w-full max-w-sm rounded-lg border border-line bg-surface p-2.5">
+                          <label
+                            htmlFor={`resolution-${t.id}`}
+                            className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"
+                          >
+                            How was this resolved?
+                          </label>
+                          <textarea
+                            id={`resolution-${t.id}`}
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            rows={3}
+                            placeholder="e.g. Called the customer, the part was under warranty and was replaced on 12 Nov."
+                            className="mt-1.5 w-full rounded-lg border border-line bg-soft px-2.5 py-2 text-xs text-ink placeholder:text-ink/50 outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15"
+                          />
+                          <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                            Required. Saved with your account and the date, and shown to the
+                            customer.
+                          </p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => void updateStatus(t.id, "resolved", note)}
+                              disabled={busyId === t.id || !note.trim()}
+                              className="cursor-pointer rounded-full bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white transition duration-200 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              {busyId === t.id ? "Saving..." : "Save resolution"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setNoteForId(null);
+                                setNote("");
+                                setNoteError(null);
+                              }}
+                              className="cursor-pointer rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink/70 transition duration-200 hover:bg-soft"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {noteError && (
+                        <p
+                          role="alert"
+                          className="mt-2 max-w-sm rounded-lg bg-alert-soft px-2.5 py-1.5 text-[11px] text-alert-ink"
+                        >
+                          {noteError}
+                        </p>
+                      )}
                     </td>
                   </tr>
                 );

@@ -170,35 +170,38 @@ stopped issuing it, recovery would fail closed the same way — the manual pass 
 ### Upgrading an existing database
 
 `supabase/schema.sql` is the canonical single-file install — a fresh project
-only ever needs that one file. If your database was created from an *earlier*
-`schema.sql`, apply the migration files instead, **in this order**:
+only ever needs that one file. A database created from an *earlier* `schema.sql`
+is brought forward with the migration files, and **`DATABASE.md` §"Apply order"
+is the authoritative chain**: it is the one kept in step with the numbered steps,
+and it is the list to follow. Read it before applying anything.
 
-```
-1. migration_fix_technician_signup.sql
-2. migration_appliances_tickets.sql
-3. migration_visits_payments.sql
-4. migration_system_settings.sql
-5. migration_profile_photos.sql
-6. migration_profile_name_address.sql
-7. migration_security_hardening.sql
-8. migration_notifications.sql
-9. migration_technician_queue.sql
-10. migration_appliance_centric_flow.sql   # guarded — skips if already applied
-11. migration_sync_live_schema.sql         # appliance-centric columns; MUST precede 13
-12. migration_flow_hardening.sql           # offer expiry, integrity indexes
-13. migration_queue_redesign.sql           # queue model v2 — REQUIRES 11 and 12
-```
+The files fall into three groups, and only the third is applied on top of a
+current database:
 
-Every file is written to be safe to re-run. Two ordering constraints are real,
-not stylistic:
-
-* **11 → 12 → 13.** `migration_queue_redesign.sql` opens with a preflight block
-  that inspects `information_schema` and raises an explicit exception naming the
-  prerequisites if `service_requests.problem_description` or
-  `service_requests.offers_expires_at` are missing. It refuses to half-apply
-  rather than failing partway with a confusing `42703`.
-* **13 last.** It is the one that reinterprets queue behaviour; running it
-  against an unprepared schema gets the exception above.
+* **Pre-queue history** — `migration_appliances_tickets.sql`,
+  `migration_appliance_centric_flow.sql`, `migration_fix_technician_signup.sql`,
+  `migration_notifications.sql`, `migration_profile_photos.sql`,
+  `migration_security_hardening.sql`, `migration_system_settings.sql`,
+  `migration_visits_payments.sql`. Applied on the live project long ago, and
+  folded into `schema.sql` for fresh installs (`DATABASE.md` §"Migration files").
+  **Do not re-apply them.** Every file here is written to be re-runnable, but a
+  historical file can only replace a newer definition with an older one — which
+  is how re-running `migration_security_hardening.sql` would, before it was
+  corrected, have silently broken every role change made by the service role
+  (see the header of that file).
+* **Superseded** — `migration_technician_queue.sql`, replaced by `schema.sql`
+  plus the queue redesign. Do not apply it on top of them.
+* **The upgrade path** — the ordered chain in `DATABASE.md` §"Apply order". Two
+  of its ordering constraints are real, not stylistic:
+  * **`migration_sync_live_schema.sql` → `migration_flow_hardening.sql` →
+    `migration_queue_redesign.sql`.** `migration_queue_redesign.sql` opens with a
+    preflight block that inspects `information_schema` and raises an explicit
+    exception naming the prerequisites if `service_requests.problem_description`
+    or `service_requests.offers_expires_at` are missing. It refuses to
+    half-apply rather than failing partway with a confusing `42703`.
+  * **`migration_queue_redesign.sql` last.** It is the one that reinterprets
+    queue behaviour; running it against an unprepared schema gets the exception
+    above.
 
 **Then check what the database actually has — don't infer it:**
 
@@ -208,8 +211,9 @@ npm run db:check     # read-only; reports every migration as applied or pending
 
 This is worth running before anything else when the app misbehaves. A missing
 column reaches the browser as a blanket HTTP 500 with the real Postgres error
-only in the server log, so "500 on the request form" and "forgot migration 11"
-look identical from the outside. `db:check` prints the difference, and exits
+only in the server log, so "500 on the request form" and "forgot
+`migration_sync_live_schema.sql`" look identical from the outside. `db:check`
+prints the difference, and exits
 non-zero when anything is pending. It detects functions from PostgREST's OpenAPI
 document rather than calling them, because probing `expire_stale_offers()` by
 invocation would lapse real offers.

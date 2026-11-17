@@ -2,6 +2,14 @@ import Link from "next/link";
 import RequestRepairWizard from "@/components/RequestRepairWizard";
 import { ChevronRight } from "lucide-react";
 
+/**
+ * Rendered per request rather than once at build, because the wizard's clock
+ * anchors to the SERVER's clock (`Date.now()` below). A statically prerendered page
+ * would bake in the build instant and the clock would then be wrong for everyone.
+ * It lets a device whose own clock is set wrong still read the shop's real time.
+ */
+export const dynamic = "force-dynamic";
+
 export default function RequestRepairPage() {
   return (
     <div className="space-y-3">
@@ -21,7 +29,7 @@ export default function RequestRepairPage() {
         Tell us about your appliance and the issue. We&apos;ll help you get it fixed.
       </p>
       <div className="mt-6">
-        <RequestRepairWizard />
+        <RequestRepairWizard serverNow={Date.now()} />
       </div>
     </div>
   );

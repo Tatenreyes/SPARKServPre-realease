@@ -138,8 +138,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
         if (signUpData.user) {
           const profileRes = await fetch("/api/auth/ensure-profile", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: signUpData.user.id }),
           });
           if (!profileRes.ok) {
             throw new Error("Account was created, but the profile could not be initialized.");

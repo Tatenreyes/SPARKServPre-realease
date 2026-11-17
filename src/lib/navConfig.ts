@@ -4,6 +4,7 @@ import {
   CalendarClock,
   CircleDollarSign,
   ClipboardList,
+  Clock,
   Headset,
   Home,
   LayoutDashboard,
@@ -50,7 +51,11 @@ export function navForRole(role: UserRole): SidebarNavItem[] {
         { label: "Past Jobs", href: "/technician/past-jobs", icon: ClipboardList },
         { label: "Queue / Schedule", href: "/technician/queue", icon: CalendarClock },
         { label: "Messages", href: "/technician/messages", icon: MessageSquareText },
-        { label: "Profile & Availability", href: "/technician/profile", icon: UserRound },
+        // Availability, not "Profile & Availability": the profile is not a sidebar
+        // destination (the avatar menu owns it), and this screen is the half the
+        // rotation runs on. A `Clock` rather than the `CalendarClock` above,
+        // because two icons a reader cannot tell apart are not two destinations.
+        { label: "Availability", href: "/technician/availability", icon: Clock },
       ];
 
     case "admin":
@@ -165,13 +170,23 @@ export function bottomNavForRole(role: UserRole): BottomNavItem[] {
           label: "Schedule",
           href: "/technician/queue",
           icon: CalendarClock,
-          alsoMatches: ["/technician/queue", "/technician/bookings"],
+          // Availability belongs to this section: the rotation view and the windows
+          // that decide which of its jobs reach you are the same subject. The tab
+          // therefore stays lit on both screens.
+          alsoMatches: [
+            "/technician/queue",
+            "/technician/bookings",
+            "/technician/availability",
+          ],
         },
         {
           label: "Me",
           href: "/technician/profile",
           icon: UserRound,
-          alsoMatches: ["/technician/profile", "/technician/messages"],
+          // Settings is deliberately NOT a sidebar or bottom-bar entry: it is
+          // reached from the topbar avatar menu (`ROLE_SETTINGS_HREF`), so the tab
+          // only has to stay lit while the technician is on that page.
+          alsoMatches: ["/technician/profile", "/technician/settings", "/technician/messages"],
         },
       ];
 

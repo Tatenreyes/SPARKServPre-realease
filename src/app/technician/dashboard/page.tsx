@@ -12,6 +12,7 @@ import SupportBanner from "@/components/SupportBanner";
 import StatusBadge from "@/components/StatusBadge";
 import {
   BriefcaseBusiness,
+  CalendarCheck,
   CalendarClock,
   CheckCircle2,
   Headset,
@@ -292,10 +293,17 @@ export default async function TechnicianDashboard() {
               />
               <QuickAction
                 href="/technician/profile"
-                label="Profile & availability"
+                label="Profile & specialisations"
                 hint="Your specializations"
                 tone="bg-soft text-muted"
                 icon={<UserCircle2 className="h-4 w-4" />}
+              />
+              <QuickAction
+                href="/technician/availability"
+                label="Availability"
+                hint="Working hours & areas"
+                tone="bg-soft text-muted"
+                icon={<CalendarCheck className="h-4 w-4" />}
               />
             </div>
           </DashboardPanel>

@@ -44,7 +44,7 @@ cannot be traced to a path, the diagram is wrong and should be fixed.
 | Platform services | Supabase: Auth, Postgres, Storage, Realtime | `src/lib/supabase/*` |
 | Host | Vercel, single web application | `vercel.json`, `README.md` §5 |
 | Scheduled job | `GET /api/cron/assignment-tick`, `*/5 * * * *`, `CRON_SECRET`-gated | `vercel.json`, `src/app/api/cron/assignment-tick/route.ts` |
-| HTTP surface | 18 API route groups, 33 route handlers | `src/app/api/**/route.ts` |
+| HTTP surface | 18 API route groups, 35 route handlers | `src/app/api/**/route.ts` |
 | Database objects | 21 tables (17 in `schema.sql`, 4 in `migration_queue_redesign.sql`), 9 enum types, 44 RLS policies and 10 triggers in the base schema, 25 base functions + 27 queue-engine functions | `supabase/schema.sql`, `supabase/migration_queue_redesign.sql` |
 | Storage buckets | `profile-photos` (public), `service-request-photos` (size- and MIME-limited) | `supabase/schema.sql`, `supabase/migration_service_request_photos_bucket.sql` |
 | Browser push | Web Push with VAPID | `src/lib/push.ts`, `src/components/InstallPrompt.tsx` |
@@ -72,7 +72,12 @@ worth stating explicitly, because both are deliberate:
 * The role is read from `public.users`, never from the request body, and
   `prevent_role_change()` (a `protect_user_role` trigger) stops a user from promoting
   themselves. `src/lib/auth.ts` exposes `getCurrentUser()` and `requireRole()` for
-  server code, and `requireRole()` re-reads the row on every call.
+  server code, and `requireRole()` re-reads the row on every call. The same rule holds
+  for the one route that writes a `users` row outside the admin surface:
+  `POST /api/auth/ensure-profile` takes no identifier from the request, derives the row
+  it writes from the session (`auth.getUser()`, else `401`), and never changes an
+  existing role — the `technicians` row it may add follows the role **re-read from the
+  database**, not the signup metadata.
 * The privilege ladder is additive in one direction only: an administrator may *view* a
   customer's or a technician's surface, but no administrator shortcut exists inside the
   workflow — completing a repair still requires `confirm_payment()`, which re-reads the
@@ -260,9 +265,9 @@ flowchart TB
 
 | Group | Handlers | Responsibility |
 | --- | --- | --- |
-| `admin` | `queue-override`, `sms-test` | Reason-required queue override; the SMS test endpoint |
+| `admin` | `queue-override`, `sms-test`, `technicians/repair` | Reason-required queue override; the SMS test endpoint; the explicit repair of technician records a missing signup trigger left behind |
 | `appliances` | `route`, `[id]` | The customer's appliance register |
-| `auth` | `ensure-profile`, `recovery` | Profile creation after signup; the password-recovery marker route |
+| `auth` | `ensure-profile`, `recovery` | Session-authenticated profile healing — `401` without a session, the caller's own row only, and never a role change; the password-recovery marker route |
 | `bookings` | `route`, `[id]`, `[id]/rating` | Atomic booking creation, booking updates, the customer's rating |
 | `cron` | `assignment-tick` | The scheduled sweep (§6.4) |
 | `estimates` | `route`, `[id]`, `[id]/decision` | Itemised estimates and the customer's decision |
@@ -330,7 +335,7 @@ a label lives in the UI.** Nothing in `src/lib` decides who gets work.
 | Shell and navigation | `DashboardShell`, `DashboardTopbar`, `Sidebar`, `Navbar`, `DashboardHero`, `DashboardCard`, `QuickActions`, `Footer`, `BrandLogo`, `ThemeProvider`, `LoadingScreen`, `DashboardSkeleton`, `InstallPrompt`, `PlatformAnnouncementTicker`, `SupportBanner` | mostly server-rendered |
 | Mobile shell | `mobile/MobileBottomNav`, `MobilePageHeader`, `MobileStatGrid`, `MobileStatTile`, `MobileSectionLinks`, `MobileRepairCard`, `MobileNotificationsList`, `CollapsibleSection`, `SignOutRow` | client, below the mobile breakpoint |
 | Customer controls | `RequestRepairWizard`, `TroubleshootingPanel`, `ServiceLocationPicker`, `ServiceLocationMap`, `LeafletLocationMap`, `ServiceLocationCard`, `EstimatesClient`, `EstimateReviewCard`, `PaymentForm`, `RatingForm`, `CancelBookingControl`, `CustomerInspectionControl`, `RemoveRequestControl`, `ProgressTrackingClient`, `RequestDetailClient` | client |
-| Technician controls | `QueueCard`, `OfferResponseControl`, `EstimateForm`, `AvailabilityManager`, `TechnicianJobsClient`, `ScheduleTimeline`, `BookingStatusControl`, `AssignedTechnicianCard`, `CustomerRatingForm` | client |
+| Technician controls | `QueueCard`, `OfferResponseControl`, `EstimateForm`, `AvailabilityManager`, `TechnicianJobsClient`, `ScheduleTimeline`, `BookingStatusControl`, `AssignedTechnicianCard`, `CustomerRatingForm`, `AppearanceCard`, `ChangePasswordCard`, `PushSettingsCard` | client |
 | Administrator controls | `UserManagementClient`, `RoleControl`, `AdminStatusToggle`, `ApproveTechnicianButton`, `QueueOverrideControl`, `AdminPaymentsClient`, `AdminServiceConcernsClient`, `AdminSmsTest`, `SystemSettingsClient`, `ServiceConcernsClient` | client |
 | Admin filtering and warranty | `FilterDropdown` (a checkbox dropdown per facet: button variant for client lists, navigating variant for the server-rendered ones), `filterChipStyles` (the one filter-control recipe, in a non-client module so a server page can call it), `WarrantyBadge`; vocabularies and the multi-select rules in `src/lib/filter-options.ts`, the warranty reading in `src/lib/warranty.ts` | mixed |
 | Live and documents | `MessageThread`, `NotificationBell`, `ServiceTracking`, `AssignmentStatusCard`, `JobOrderDocument`, `PrintButton`, `StatusBadge`, `RecentRepairTable` | mixed |

@@ -66,6 +66,18 @@ export interface DateSelectProps {
    * expiry, the one date that may legitimately be either.
    */
   direction?: "past" | "future" | "any";
+  /**
+   * Size each control to its content (`w-28` / `w-16` / `w-20`) instead of letting
+   * the month select stretch to fill the row. Used where the picker shares a
+   * column with other content, e.g. the service-date column beside the calendar.
+   */
+  compact?: boolean;
+  /**
+   * Reports the chosen month (1-based, or 0) and year (or 0) whenever either
+   * changes, including a partial choice. Lets a companion calendar follow the
+   * dropdowns. Optional: nothing depends on it when a screen has no calendar.
+   */
+  onMonthYearChange?: (month: number, year: number) => void;
 }
 
 export default function DateSelect({
@@ -74,6 +86,8 @@ export default function DateSelect({
   value,
   onChange,
   direction = "past",
+  compact = false,
+  onMonthYearChange,
 }: DateSelectProps) {
   const parsed = parseIsoDate(value);
 
@@ -94,6 +108,15 @@ export default function DateSelect({
     setDay(next ? next.getDate() : 0);
     setYear(next ? next.getFullYear() : 0);
   }, [value]);
+
+  /**
+   * Mirror the month/year to the caller whenever they change, so a companion
+   * calendar can follow the dropdowns. Fires for a partial choice too (year 0),
+   * which is why it reports the pair rather than a complete date.
+   */
+  useEffect(() => {
+    onMonthYearChange?.(month, year);
+  }, [month, year, onMonthYearChange]);
 
   // Read once per mount: a range that shifted under the customer mid-form would be worse
   // than one that is a few hours stale.
@@ -169,7 +192,7 @@ export default function DateSelect({
           aria-label={`${label} month`}
           value={month || ""}
           onChange={(e) => chooseMonth(Number(e.target.value))}
-          className={`${SELECT} flex-1 basis-[8rem]`}
+          className={`${SELECT} ${compact ? "w-28" : "flex-1 basis-[8rem]"}`}
         >
           <option value="">Month</option>
           {MONTHS.map((name, index) => (
@@ -189,7 +212,7 @@ export default function DateSelect({
           value={day || ""}
           onChange={(e) => commit(month, Number(e.target.value), year)}
           disabled={chosen && !bounds}
-          className={`${SELECT} basis-[5.5rem]`}
+          className={`${SELECT} ${compact ? "w-16" : "basis-[5.5rem]"}`}
         >
           <option value="">Day</option>
           {dayNumbers.map((option) => (
@@ -204,7 +227,7 @@ export default function DateSelect({
           aria-label={`${label} year`}
           value={year || ""}
           onChange={(e) => chooseYear(Number(e.target.value))}
-          className={`${SELECT} basis-[6.5rem]`}
+          className={`${SELECT} ${compact ? "w-20" : "basis-[6.5rem]"}`}
         >
           <option value="">Year</option>
           {years.map((option) => (
