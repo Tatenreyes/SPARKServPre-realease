@@ -16,9 +16,12 @@
 
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, Crosshair, MapPin, X } from "lucide-react";
+import BarangaySelect from "@/components/BarangaySelect";
+import { formatCdoAddress, splitCdoAddress } from "@/lib/cdo-barangays";
 import ServiceLocationMap from "@/components/ServiceLocationMap";
 import {
   formatCoordinates,
+  MAX_ADDRESS_LENGTH,
   toServiceCoordinates,
   type ServiceCoordinates,
 } from "@/lib/geo";
@@ -46,6 +49,8 @@ export interface ServiceLocationPickerProps {
   helperText: string;
   address: string;
   onAddressChange: (value: string) => void;
+  barangay: string;
+  onBarangayChange: (value: string) => void;
   /** The CONFIRMED coordinates (or null). Owned by the wizard. */
   value: ServiceCoordinates | null;
   onChange: (value: ServiceCoordinates | null) => void;
@@ -66,6 +71,8 @@ export default function ServiceLocationPicker({
   helperText,
   address,
   onAddressChange,
+  barangay,
+  onBarangayChange,
   value,
   onChange,
   onPendingChange,
@@ -170,7 +177,7 @@ export default function ServiceLocationPicker({
     );
   }
 
-  const canReuseLastAddress = Boolean(lastLocation?.address && lastLocation.address !== address);
+  const canReuseLastAddress = Boolean(lastLocation?.address && lastLocation.address !== formatCdoAddress(address, barangay, MAX_ADDRESS_LENGTH));
 
   return (
     <div className="sm:col-span-2">
@@ -185,14 +192,23 @@ export default function ServiceLocationPicker({
         required={required}
         autoComplete="street-address"
         className={FIELD}
-        placeholder="House / unit, street, barangay, city"
+        maxLength={MAX_ADDRESS_LENGTH}
+        placeholder="House or unit number, street, subdivision"
       />
+
+      <div className="mt-3">
+        <BarangaySelect id={`${id}-barangay`} value={barangay} onChange={onBarangayChange} required={required} />
+      </div>
 
       {canReuseLastAddress && lastLocation && (
         <button
           type="button"
           onClick={() => {
-            if (lastLocation.address) onAddressChange(lastLocation.address);
+            if (lastLocation.address) {
+              const previous = splitCdoAddress(lastLocation.address);
+              onAddressChange(previous.street);
+              onBarangayChange(previous.barangay);
+            }
             if (lastLocation.coordinates) {
               // Restores the pin as well as the text: the previous request
               // stored both, so the customer does not have to re-place a point

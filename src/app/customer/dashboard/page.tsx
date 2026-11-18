@@ -1,3 +1,4 @@
+import { PHILIPPINE_TIME_ZONE } from "@/lib/philippine-time";
 import Link from "next/link";
 import { getDashboardGreeting } from "@/lib/dashboard-greeting";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
@@ -210,6 +211,7 @@ export default async function CustomerDashboard() {
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return "a date to be agreed";
     return date.toLocaleString("en-US", {
+      timeZone: PHILIPPINE_TIME_ZONE,
       month: "long",
       day: "numeric",
       hour: "numeric",

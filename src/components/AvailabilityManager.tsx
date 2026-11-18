@@ -1,5 +1,7 @@
 "use client";
 
+import BarangaySelect from "@/components/BarangaySelect";
+
 import { useCallback, useEffect, useState } from "react";
 import { CalendarClock, Clock, MapPin, Plus, Trash2 } from "lucide-react";
 import TimeSelect from "@/components/TimeSelect";
@@ -394,7 +396,7 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
         </header>
         <p className="mt-1 text-xs text-ink/70">
           Add the barangays in Cagayan de Oro where you can take repair jobs. For example,
-          add Carmen to match addresses that include Carmen. Leave the appliance type blank
+          choose Carmen to receive requests in that area. Leave the appliance type blank
           to use that area for every appliance you service.
         </p>
 
@@ -426,13 +428,7 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
         )}
 
         <div className="mt-3 flex flex-wrap items-end gap-2">
-          <input
-            value={area}
-            onChange={(e) => setArea(e.target.value)}
-            aria-label="Barangay"
-            placeholder="Barangay, e.g. Carmen"
-            className="rounded-lg border border-line px-3 py-1.5 text-sm"
-          />
+          <BarangaySelect id="technician-service-barangay" value={area} onChange={setArea} disabled={busy} />
           <input
             value={areaAppliance}
             onChange={(e) => setAreaAppliance(e.target.value)}
@@ -442,7 +438,7 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
           />
           <button
             onClick={addArea}
-            disabled={busy}
+            disabled={busy || !area}
             className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
           >
             <Plus className="h-3.5 w-3.5" />

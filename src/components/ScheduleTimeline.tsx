@@ -1,3 +1,4 @@
+import { PHILIPPINE_TIME_ZONE } from "@/lib/philippine-time";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
 
@@ -72,12 +73,12 @@ export default function ScheduleTimeline({
               <p className="text-xs font-semibold leading-tight text-ink">
                 {Number.isNaN(date.getTime())
                   ? "N/A"
-                  : date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                  : date.toLocaleTimeString("en-US", { timeZone: PHILIPPINE_TIME_ZONE, hour: "numeric", minute: "2-digit" })}
               </p>
               <p className="mt-0.5 text-[11px] uppercase tracking-[0.08em] text-muted">
                 {Number.isNaN(date.getTime())
                   ? ""
-                  : date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  : date.toLocaleDateString("en-US", { timeZone: PHILIPPINE_TIME_ZONE, month: "short", day: "numeric" })}
               </p>
             </div>
 

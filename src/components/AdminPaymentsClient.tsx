@@ -1,5 +1,6 @@
 "use client";
 
+import { PHILIPPINE_TIME_ZONE } from "@/lib/philippine-time";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, CheckCircle2, AlertTriangle } from "lucide-react";
@@ -248,7 +249,7 @@ export default function AdminPaymentsClient({
                         <span className="mt-1 inline-flex items-center gap-1.5">
                           <StatusBadge status={repair.status} size="sm" />
                           <span className="text-[11px] text-ink/70">
-                            {new Date(repair.scheduledAt).toLocaleDateString()}
+                            {new Date(repair.scheduledAt).toLocaleDateString("en-PH", { timeZone: PHILIPPINE_TIME_ZONE })}
                           </span>
                         </span>
                       )}

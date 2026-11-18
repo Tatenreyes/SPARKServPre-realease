@@ -1,3 +1,4 @@
+import { PHILIPPINE_TIME_ZONE } from "@/lib/philippine-time";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
@@ -42,8 +43,8 @@ export default async function CustomerBookingsPage() {
               <div className="flex min-w-0 items-center gap-4">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-ink"><CalendarDays className="h-5 w-5" /></span>
                 <div className="min-w-0">
-                  <p className="font-semibold text-ink">{new Date(b.scheduled_at).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</p>
-                  <p className="mt-1 truncate text-sm text-muted">{new Date(b.scheduled_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</p>
+                  <p className="font-semibold text-ink">{new Date(b.scheduled_at).toLocaleDateString("en-PH", { timeZone: PHILIPPINE_TIME_ZONE, weekday: "long", month: "short", day: "numeric" })}</p>
+                  <p className="mt-1 truncate text-sm text-muted">{new Date(b.scheduled_at).toLocaleTimeString("en-PH", { timeZone: PHILIPPINE_TIME_ZONE, hour: "numeric", minute: "2-digit" })}</p>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-3"><StatusBadge status={b.status} /><ChevronRight className="h-4 w-4 text-muted transition group-hover:translate-x-0.5 group-hover:text-brand-ink" /></div>

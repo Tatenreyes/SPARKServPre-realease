@@ -1,3 +1,4 @@
+import { formatPhilippineAppointment } from "@/lib/philippine-time";
 import Link from "next/link";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getTechnicianQueue } from "@/lib/assignment";
@@ -212,7 +213,7 @@ export default async function AdminDashboard() {
                       </p>
                       <p className="mt-1 truncate text-xs text-muted">
                         {technicianNameById.get(booking.technician_id) ?? "Unassigned technician"} ·{" "}
-                        {new Date(booking.scheduled_at).toLocaleString()}
+                        {formatPhilippineAppointment(booking.scheduled_at)}
                       </p>
                     </div>
                     <StatusBadge status={booking.status} />

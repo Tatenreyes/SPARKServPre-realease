@@ -24,6 +24,7 @@ import DateSelect from "@/components/DateSelect";
 import FieldCounter from "@/components/FieldCounter";
 import MonthCalendar, { manilaToday } from "@/components/MonthCalendar";
 import PhilippineClock from "@/components/PhilippineClock";
+import { formatCdoAddress } from "@/lib/cdo-barangays";
 import ServiceLocationPicker from "@/components/ServiceLocationPicker";
 import ServiceWindowFields from "@/components/ServiceWindowFields";
 import TroubleshootingPanel from "@/components/TroubleshootingPanel";
@@ -245,6 +246,8 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
   }, []);
 
   const [serviceAddress, setServiceAddress] = useState("");
+  const [serviceBarangay, setServiceBarangay] = useState("");
+  const fullServiceAddress = formatCdoAddress(serviceAddress, serviceBarangay);
   /**
    * The map pin the customer CONFIRMED, or null. Only a confirmed point is ever
    * submitted: `locationUnconfirmed` is true between placing a pin and pressing
@@ -693,6 +696,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
           photos: photoUrls,
           service_type: serviceType,
           location: serviceAddress,
+          barangay: serviceBarangay,
           // The confirmed map pin, or null when the customer chose to give the
           // written address only. Sent as a pair; the API rejects half a pair or
           // an out-of-range value with 400.
@@ -1412,7 +1416,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
               routed to the pin, and the address is what a human reads. */}
           <ServiceLocationPicker
             id="service-address"
-            label={serviceType === "pickup_return" ? "Pickup address *" : "Service address *"}
+            label={serviceType === "pickup_return" ? "Pickup address" : "Service address"}
             helperText={
               serviceType === "pickup_return"
                 ? "Where we collect the appliance from, and where we return it."
@@ -1420,6 +1424,8 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
             }
             address={serviceAddress}
             onAddressChange={setServiceAddress}
+            barangay={serviceBarangay}
+            onBarangayChange={setServiceBarangay}
             value={serviceCoordinates}
             onChange={setServiceCoordinates}
             onPendingChange={setLocationUnconfirmed}
@@ -1545,7 +1551,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
             label={
               serviceType === "pickup_return" ? "Pickup address" : "Service Address"
             }
-            value={serviceAddress || "N/A"}
+            value={fullServiceAddress || "N/A"}
           />
           <SummaryRow
             label="Map Location"
@@ -1649,7 +1655,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
                   label={
                     serviceType === "pickup_return" ? "Pickup Address" : "Service Address"
                   }
-                  value={serviceAddress}
+                  value={fullServiceAddress}
                   placeholder="Not provided"
                 />
                 <LiveRow

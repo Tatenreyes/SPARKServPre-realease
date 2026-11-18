@@ -1,3 +1,4 @@
+import { PHILIPPINE_TIME_ZONE } from "@/lib/philippine-time";
 import Link from "next/link";
 import { AlertTriangle, Check, ClipboardList, Plus } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
@@ -26,6 +27,7 @@ function formatStamp(iso?: string) {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleString("en-US", {
+    timeZone: PHILIPPINE_TIME_ZONE,
     month: "short",
     day: "numeric",
     hour: "numeric",

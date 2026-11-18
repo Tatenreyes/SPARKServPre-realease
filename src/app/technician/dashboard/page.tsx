@@ -1,3 +1,4 @@
+import { startOfPhilippineDay } from "@/lib/philippine-time";
 import Link from "next/link";
 import { getDashboardGreeting } from "@/lib/dashboard-greeting";
 import { createClient } from "@/lib/supabase/server";
@@ -47,8 +48,8 @@ export default async function TechnicianDashboard() {
     .eq("technician_id", user.id)
     .in("status", ["pending", "in_progress"]);
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  const todayStart = startOfPhilippineDay();
+  const tomorrowStart = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
   const { count: completedToday } = await supabase
     .from("bookings")
     .select("*", { count: "exact", head: true })
@@ -60,15 +61,16 @@ export default async function TechnicianDashboard() {
     .from("bookings")
     .select("*", { count: "exact", head: true })
     .eq("technician_id", user.id)
-    .in("status", ["pending", "confirmed"])
+    .eq("status", "pending")
     .gte("scheduled_at", todayStart.toISOString());
 
   const { data: todayBookings } = await supabase
     .from("bookings")
     .select("id, service_request_id, scheduled_at, status")
     .eq("technician_id", user.id)
-    .in("status", ["pending", "in_progress", "confirmed"])
+    .in("status", ["pending", "in_progress"])
     .gte("scheduled_at", todayStart.toISOString())
+    .lt("scheduled_at", tomorrowStart.toISOString())
     .order("scheduled_at", { ascending: true });
 
   const todayRequestIds = Array.from(

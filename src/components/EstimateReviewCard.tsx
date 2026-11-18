@@ -21,6 +21,7 @@
  *     succeed, the same copy the request page shows.
  */
 
+import { parsePhilippineAppointment } from "@/lib/philippine-time";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -188,8 +189,9 @@ export default function EstimateReviewCard({
   }
 
   async function book() {
-    if (!scheduledAt) {
-      setError("Pick a date and time first.");
+    const appointment = parsePhilippineAppointment(scheduledAt);
+    if (!appointment) {
+      setError("Pick a valid appointment date and time in Philippine time.");
       return;
     }
     setBusy(true);
@@ -202,7 +204,7 @@ export default function EstimateReviewCard({
           service_request_id: estimate.service_request_id,
           technician_id: estimate.technician_id,
           estimate_id: estimate.id,
-          scheduled_at: new Date(scheduledAt).toISOString(),
+          scheduled_at: appointment.toISOString(),
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -498,7 +500,7 @@ export default function EstimateReviewCard({
         <div className="mt-4 border-t border-line pt-4">
           <p className="flex items-center gap-1.5 text-xs font-semibold text-ink">
             <CalendarClock className="h-3.5 w-3.5 text-brand-ink" aria-hidden="true" />
-            Choose an appointment time
+            Choose an appointment time (Philippine time)
           </p>
           <p className="mt-1 text-xs leading-relaxed text-muted">
             The slot is checked against the technician&apos;s schedule and capacity when you
@@ -509,7 +511,8 @@ export default function EstimateReviewCard({
               type="datetime-local"
               value={scheduledAt}
               onChange={(e) => setScheduledAt(e.target.value)}
-              className="rounded-lg border border-line px-3 py-2 text-sm text-white"
+              aria-label="Appointment date and time (Philippine time)"
+              className="min-h-11 rounded-lg border border-line bg-surface px-3 py-2 text-base text-ink sm:text-sm"
             />
             <button
               type="button"

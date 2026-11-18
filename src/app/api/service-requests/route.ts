@@ -1,12 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
+import { formatCdoAddress, isCdoBarangay } from "@/lib/cdo-barangays";
 import { assignTechnician } from "@/lib/assignment";
 import { readRequestedWindow } from "@/lib/service-time";
 import { getIssueById } from "@/lib/appliance-issues";
 import { buildTechnicianProfile, type TechnicianProfile } from "@/lib/technician-profile";
 import { loadPublicTechnicianRatings } from "@/lib/technician-ratings";
 import {
+  MAX_ADDRESS_LENGTH,
   isValidLatitude,
   isValidLongitude,
   sanitizeAddress,
@@ -34,6 +36,7 @@ export async function POST(request: NextRequest) {
       photos,
       chatbot_resolved,
       location,
+      barangay,
       service_type,
       latitude,
       longitude,
@@ -81,7 +84,13 @@ export async function POST(request: NextRequest) {
     // ---- Service location -------------------------------------------------
     // The address is cleaned before it is stored: control characters (which
     // would corrupt a URL or a log line) are stripped and the length is capped.
-    const serviceAddress = sanitizeAddress(location);
+    const street = sanitizeAddress(location);
+    if (barangay != null && (!isCdoBarangay(barangay) || !street)) {
+      return NextResponse.json({ error: "Enter a service address and select a Cagayan de Oro barangay." }, { status: 400 });
+    }
+    const serviceAddress = street && isCdoBarangay(barangay)
+      ? formatCdoAddress(street, barangay, MAX_ADDRESS_LENGTH)
+      : street;
 
     // Coordinates are optional, but they are a PAIR: a latitude with no
     // longitude cannot place a marker, and the database rejects the combination

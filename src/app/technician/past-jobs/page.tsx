@@ -1,3 +1,4 @@
+import { PHILIPPINE_TIME_ZONE } from "@/lib/philippine-time";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
@@ -279,7 +280,7 @@ export default async function PastJobsPage() {
                       {request?.appliance_type.replace(/_/g, " ") ?? "Job"}
                     </p>
                     <p className="mt-0.5 text-xs text-ink/70">
-                      Was scheduled {new Date(booking.scheduled_at).toLocaleDateString()}
+                      Was scheduled {new Date(booking.scheduled_at).toLocaleDateString("en-PH", { timeZone: PHILIPPINE_TIME_ZONE })}
                     </p>
                   </div>
                   <CalendarX2 className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />

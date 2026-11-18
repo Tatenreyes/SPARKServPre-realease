@@ -50,9 +50,9 @@ export default function Footer({ variant = "default" }: { variant?: "default" | 
             <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${accent}`}>Contact</p>
             <ul className="mt-3 space-y-2.5 text-sm text-muted">
               <li>
-                <a href="mailto:support@sparkserv.com" className="inline-flex items-center gap-2 transition-colors duration-200 hover:text-ink">
+                <a href="mailto:supportsparkserv@gmail.com" className="inline-flex items-center gap-2 transition-colors duration-200 hover:text-ink">
                   <Mail className={`h-3.5 w-3.5 ${accent}`} />
-                  support@sparkserv.com
+                  supportsparkserv@gmail.com
                 </a>
               </li>
               <li className="inline-flex items-center gap-2">

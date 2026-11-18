@@ -1,3 +1,4 @@
+import { formatPhilippineAppointment } from "@/lib/philippine-time";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, MessageSquareText, ReceiptText } from "lucide-react";
@@ -100,7 +101,7 @@ export default async function CustomerBookingDetailPage({
             Booking with {technicianUser?.name ?? "your technician"}
           </h1>
           <p className="text-sm text-ink/70">
-            Scheduled: {new Date(booking.scheduled_at).toLocaleString()}
+            Scheduled: {formatPhilippineAppointment(booking.scheduled_at)}
           </p>
         </div>
         <StatusBadge status={booking.status} />

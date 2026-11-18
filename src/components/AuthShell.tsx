@@ -43,7 +43,7 @@ export default function AuthShell({
             Need help with your account?{" "}
             <a
               className="font-semibold text-brand-ink underline-offset-4 hover:underline"
-              href="mailto:support@sparkserv.com"
+              href="mailto:supportsparkserv@gmail.com"
             >
               Contact support
             </a>

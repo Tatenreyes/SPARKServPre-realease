@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPhilippineAppointment, PHILIPPINE_TIME_ZONE } from "@/lib/philippine-time";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -87,7 +88,7 @@ export default function TechnicianJobsClient({
                       {r?.appliance_type.replace(/_/g, " ") ?? "Job"}
                     </p>
                     <p className="mt-1 text-xs text-ink/70">
-                      {new Date(b.scheduled_at).toLocaleDateString()}
+                      {new Date(b.scheduled_at).toLocaleDateString("en-PH", { timeZone: PHILIPPINE_TIME_ZONE })}
                     </p>
                   </div>
                   <StatusBadge status={b.status} />
@@ -151,7 +152,7 @@ function JobCard({
           </p>
           <p className="text-sm text-ink/70">{request?.problem_description}</p>
           <p className="mt-1 text-xs text-ink/70">
-            Scheduled: {new Date(booking.scheduled_at).toLocaleString()}
+            Scheduled: {formatPhilippineAppointment(booking.scheduled_at)}
           </p>
         </div>
         <StatusBadge status={booking.status} />

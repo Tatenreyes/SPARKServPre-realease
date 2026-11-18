@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPhilippineAppointment, PHILIPPINE_TIME_ZONE } from "@/lib/philippine-time";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Clock, Image as ImageIcon, FileText } from "lucide-react";
@@ -103,7 +104,7 @@ export default function ProgressTrackingClient({
               <p className="mt-1 font-medium text-ink">{upcomingVisit.title}</p>
               {upcomingVisit.scheduled_at && (
                 <p className="text-sm text-ink/70">
-                  {new Date(upcomingVisit.scheduled_at).toLocaleString()}
+                  {formatPhilippineAppointment(upcomingVisit.scheduled_at)}
                 </p>
               )}
               <p className="text-sm text-ink/70">
@@ -147,7 +148,7 @@ export default function ProgressTrackingClient({
                     </div>
                     {v.scheduled_at && (
                       <p className="text-xs text-ink/70">
-                        {new Date(v.scheduled_at).toLocaleDateString()}
+                        {new Date(v.scheduled_at).toLocaleDateString("en-PH", { timeZone: PHILIPPINE_TIME_ZONE })}
                       </p>
                     )}
                   </div>

@@ -1,3 +1,4 @@
+import { formatPhilippineAppointment } from "@/lib/philippine-time";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
@@ -62,7 +63,7 @@ export default async function TechnicianConversationPage({
           </h1>
           <p className="mt-0.5 text-sm capitalize text-ink/70">
             {request?.appliance_type?.replace(/_/g, " ") ?? "Job"} ·{" "}
-            {new Date(booking.scheduled_at).toLocaleString()}
+            {formatPhilippineAppointment(booking.scheduled_at)}
           </p>
         </div>
 

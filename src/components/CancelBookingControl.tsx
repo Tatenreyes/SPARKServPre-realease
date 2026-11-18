@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPhilippineAppointment } from "@/lib/philippine-time";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarX } from "lucide-react";
@@ -70,7 +71,7 @@ export default function CancelBookingControl({
       ) : (
         <div className="mt-4 space-y-2">
           <p className="text-sm font-medium text-ink">
-            Cancel the appointment on {new Date(scheduledAt).toLocaleString()}?
+            Cancel the appointment on {formatPhilippineAppointment(scheduledAt)}?
           </p>
           <div className="flex flex-wrap gap-2">
             <button

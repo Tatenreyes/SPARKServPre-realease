@@ -1,3 +1,4 @@
+import { PHILIPPINE_TIME_ZONE } from "@/lib/philippine-time";
 import type { JobOrder } from "@/lib/job-order";
 import { parseIsoDate } from "@/lib/appliance-fields";
 
@@ -197,10 +198,12 @@ function formatDateTime(value: string | null): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "N/A";
   return date.toLocaleString("en-PH", {
+    timeZone: PHILIPPINE_TIME_ZONE,
     year: "numeric",
     month: "long",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   });
 }
