@@ -54,7 +54,7 @@ import {
   windowLabel,
 } from "@/lib/service-windows";
 import { matchIssue, type TroubleshootingOutcome } from "@/lib/issue-matching";
-import { getTroubleshootingGuide } from "@/lib/troubleshooting";
+import { getGuidedTroubleshootingSteps } from "@/lib/troubleshooting";
 import CollapsibleSection from "@/components/mobile/CollapsibleSection";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
@@ -173,6 +173,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
   /** The customer rejected the current suggestion, do not nag them again. */
   const [suggestionDismissed, setSuggestionDismissed] = useState(false);
   /** What the customer reported after the checks. Optional, always. */
+  const [doneSteps, setDoneSteps] = useState<string[]>([]);
   const [troubleshootingOutcome, setTroubleshootingOutcome] =
     useState<TroubleshootingOutcome | null>(null);
   const [problemDescription, setProblemDescription] = useState("");
@@ -362,7 +363,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
   const identifiedIssueId = selectedIssueId || confirmedIssueId || "";
   const identifiedIssue = getIssueById(applianceType, identifiedIssueId);
   /** The guide for the identified issue, null when none exists. */
-  const troubleshootingGuide = getTroubleshootingGuide(applianceType, identifiedIssueId);
+  const troubleshootingGuide = getGuidedTroubleshootingSteps(applianceType, identifiedIssueId);
 
   /**
    * Used to re-run the browser's own validation against fully visible fields.
@@ -454,6 +455,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
     setSelectedIssueId((current) => (getIssueById(applianceType, current) ? current : ""));
     setConfirmedIssueId(null);
     setSuggestionDismissed(false);
+    setDoneSteps([]);
     setTroubleshootingOutcome(null);
   }, [applianceType]);
 
@@ -462,6 +464,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
     setSelectedIssueId(issueId);
     setConfirmedIssueId(null);
     setSuggestionDismissed(false);
+    setDoneSteps([]);
     setTroubleshootingOutcome(null);
   }
 
@@ -470,6 +473,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
     setConfirmedIssueId(issueId);
     setSelectedIssueId("");
     setSuggestionDismissed(false);
+    setDoneSteps([]);
     setTroubleshootingOutcome(null);
   }
 
@@ -490,6 +494,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
     setSuggestionDismissed(false);
     if (confirmedIssueId) {
       setConfirmedIssueId(null);
+      setDoneSteps([]);
       setTroubleshootingOutcome(null);
     }
   }
@@ -689,6 +694,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
           // What the customer reported after the checks (null when they skipped
           // or never saw them). It is their report, not a verified repair.
           troubleshooting_outcome: troubleshootingOutcome,
+          completed_checks: doneSteps,
           // The legacy boolean mirrors the outcome so existing readers keep
           // working; `troubleshooting_outcome` is the detailed source of truth.
           chatbot_resolved: troubleshootingResolved,
@@ -1228,6 +1234,9 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
             identified, never merely because an appliance was selected. The panel gets no
             issue list of its own, the chips above are the one place a fault is chosen. */}
         <TroubleshootingPanel
+          key={JSON.stringify([applianceType, identifiedIssueId])}
+          doneSteps={doneSteps}
+          onStepDone={(title) => setDoneSteps((current) => current.includes(title) ? current : [...current, title])}
           applianceType={applianceType}
           match={issueMatch}
           identifiedIssueId={identifiedIssue?.id ?? null}

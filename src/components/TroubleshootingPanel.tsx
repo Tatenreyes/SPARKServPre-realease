@@ -17,8 +17,8 @@
  *   * every state speaks through `AssistantBubble`, so the panel has one voice.
  */
 
-import { useEffect, useState, type ReactNode } from "react";
-import { AlertTriangle, Check, Lightbulb, ShieldCheck } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { Lightbulb } from "lucide-react";
 import { getIssueLabel } from "@/lib/appliance-issues";
 import type { IssueMatchResult, TroubleshootingOutcome } from "@/lib/issue-matching";
 import {
@@ -42,6 +42,8 @@ export interface TroubleshootingPanelProps {
   onRejectSuggestion: () => void;
   /** The customer picked an issue from a list. */
   onChooseIssue: (issueId: string) => void;
+  doneSteps: string[];
+  onStepDone: (title: string) => void;
   onOutcomeChange: (outcome: TroubleshootingOutcome) => void;
   /** "Skip troubleshooting" / "Continue without troubleshooting". */
   onSkip: () => void;
@@ -60,6 +62,8 @@ export default function TroubleshootingPanel({
   onConfirmSuggestion,
   onRejectSuggestion,
   onChooseIssue,
+  doneSteps,
+  onStepDone,
   onOutcomeChange,
   onSkip,
   suggestionDismissed,
@@ -67,132 +71,65 @@ export default function TroubleshootingPanel({
 }: TroubleshootingPanelProps) {
   const identifiedLabel = getIssueLabel(applianceType, identifiedIssueId);
 
-  /**
-   * Which checks the customer has ticked off.
-   *
-   * Deliberately local and deliberately not persisted: it is reading progress, not a
-   * record of anything. It resets when the identified issue changes, because a different
-   * fault means a different checklist, and carrying "2 of 3 done" across that boundary
-   * would be a lie about work the customer never did.
-   */
-  const [doneSteps, setDoneSteps] = useState<string[]>([]);
+  const [stepIndex, setStepIndex] = useState<number | null>(null);
+  const step = stepIndex === null ? undefined : guide?.[stepIndex];
 
-  useEffect(() => {
-    setDoneSteps([]);
-  }, [identifiedIssueId]);
-
-  function toggleStep(title: string) {
-    setDoneSteps((current) =>
-      current.includes(title) ? current.filter((item) => item !== title) : [...current, title]
+  if (outcome === "unresolved" && identifiedLabel) {
+    return (
+      <AssistantBubble label="Troubleshooting summary">
+        <p className="text-sm text-ink">
+          Continue with your repair request. Your technician will see the reported
+          issue and any checks you marked as completed.
+        </p>
+      </AssistantBubble>
     );
   }
 
-  // ---- 1. An issue is identified: show ITS guide, never another one's --------
+  if (outcome === "skipped") return null;
+
   if (identifiedIssueId && identifiedLabel) {
-    const stepCount = guide?.length ?? 0;
-    const doneCount = guide ? doneSteps.filter((title) => guide.some((step) => step.title === title)).length : 0;
-
     return (
-      <AssistantBubble label={`Troubleshooting for ${identifiedLabel}`} onSkip={onSkip}>
-        <p className="text-sm font-semibold leading-relaxed text-ink">
-          Troubleshooting: {identifiedLabel}
+      <AssistantBubble label="Guided troubleshooting">
+        <p className="text-sm font-semibold text-ink">{identifiedLabel}</p>
+        <p className="mt-2 text-sm text-muted">{TROUBLESHOOTING_DISCLAIMER}</p>
+        <p className="mt-2 text-sm text-muted">
+          Skip the checks if you notice smoke, sparks, a burning smell, or damaged wiring.
+          Do not open the appliance or handle wiring.
         </p>
-        {stepCount > 0 && (
-          <p className="mt-1 text-sm leading-relaxed text-muted">Try these checks before requesting a visit.</p>
-        )}
-
-        {stepCount > 0 && (
-          <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
-            {doneCount} of {stepCount} done
-          </p>
-        )}
-
-        {guide?.length ? (
-          <ol className="mt-3 space-y-3">
-            {guide.map((step, index) => {
-              const done = doneSteps.includes(step.title);
-              return (
-                <li key={step.title} className="flex gap-3">
-                  <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
-                      done ? "bg-signal-500 text-white" : "bg-brand-soft text-brand-ink"
-                    }`}
-                  >
-                    {done ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : index + 1}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-xs font-semibold ${done ? "text-muted line-through" : "text-ink"}`}>
-                      {step.title}
-                    </p>
-                    <p className="mt-0.5 text-xs leading-relaxed text-muted">{step.detail}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => toggleStep(step.title)}
-                    aria-pressed={done}
-                    aria-label={`${done ? "Undo" : "Mark"} step ${index + 1}: ${step.title}`}
-                    className={`inline-flex h-11 shrink-0 cursor-pointer items-center rounded-lg border px-2.5 sm:h-8 text-[11px] font-semibold transition duration-200 ${
-                      done
-                        ? "border-signal-500/30 bg-signal-soft/60 text-signal-ink"
-                        : "border-line bg-surface text-ink/70 hover:bg-soft"
-                    }`}
-                  >
-                    {done ? "Done" : "Mark done"}
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        ) : (
-          <p className="mt-4 rounded-xl border border-line bg-soft/60 px-3.5 py-3 text-xs leading-relaxed text-muted">
-            {NO_GUIDE_MESSAGE}
-          </p>
-        )}
-
-        <p className="mt-4 flex items-start gap-1.5 text-xs leading-relaxed text-muted">
-          <ShieldCheck
-            className="mt-0.5 h-3.5 w-3.5 shrink-0 text-signal-ink"
-            aria-hidden="true"
-          />
-          {TROUBLESHOOTING_DISCLAIMER}
-        </p>
-        {/* ---- The one question, inside the same bubble: the assistant asks once, and
-            "Skip" stays the header control. Offering the same decision twice made it look
-            like two different ones. ---- */}
-        <div className="mt-4 border-t border-line pt-4">
-          <p className="text-xs font-semibold text-ink">
-            Did that fix it?{" "}
-            <span className="font-normal text-muted">(optional, but it helps your technician)</span>
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <OutcomeButton
-              active={outcome === "resolved"}
-              onClick={() => onOutcomeChange("resolved")}
-              label="Yes, it's working"
-            />
-            <OutcomeButton
-              active={outcome === "unresolved"}
-              onClick={() => onOutcomeChange("unresolved")}
-              label="No, still broken"
-            />
+        {!guide?.length ? (
+          <p className="mt-3 text-sm text-muted">{NO_GUIDE_MESSAGE}</p>
+        ) : stepIndex === null ? (
+          <div className="mt-3">
+            <GuideButton onClick={() => setStepIndex(0)} label="Try troubleshooting" />
           </div>
-
-          {/* No `resolved` note here: a resolved outcome replaces this entire form with its
-              own screen (see RequestRepairWizard), so that copy could never render. */}
-          {outcome === "unresolved" && (
-            <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-warn-soft/60 px-3 py-2.5 text-xs leading-relaxed text-warn-ink">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              Noted, the problem remains. Continue below and a qualified technician will
-              take it from here, with these checks already ruled out.
-            </p>
-          )}
-          {outcome === "skipped" && (
-            <p className="mt-3 rounded-xl bg-soft/70 px-3 py-2.5 text-xs leading-relaxed text-muted">
-              Troubleshooting skipped, no outcome is required. Continue whenever you are
-              ready.
-            </p>
-          )}
-        </div>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {step && (
+              <>
+                <div aria-live="polite" aria-atomic="true">
+                  <p className="text-xs text-muted">Step {stepIndex + 1} of {guide.length}</p>
+                  <p className="mt-1 text-sm font-semibold text-ink">{step.title}</p>
+                  <p className="mt-1 text-sm text-muted">{step.detail}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <GuideButton
+                    onClick={() => {
+                      onStepDone(step.title);
+                      setStepIndex(stepIndex + 1);
+                    }}
+                    label="Mark done and continue"
+                  />
+                  <GuideButton onClick={() => setStepIndex(stepIndex + 1)} label="Skip this check" />
+                </div>
+              </>
+            )}
+            {!step && <p className="text-sm text-muted">You have reached the end of the checks.</p>}
+            {doneSteps.length > 0 && (
+              <GuideButton onClick={() => onOutcomeChange("resolved")} label="The problem is fixed" />
+            )}
+          </div>
+        )}
+        <ContinueWithout onClick={() => stepIndex === null ? onSkip() : onOutcomeChange("unresolved")} />
       </AssistantBubble>
     );
   }
@@ -261,31 +198,20 @@ export default function TroubleshootingPanel({
     <AssistantBubble label="Troubleshooting unavailable">
       <p className="text-xs leading-relaxed text-muted">
         {suggestionDismissed
-          ? "No problem, pick the closest issue from the list above and its checks will appear here."
-          : "We couldn't identify the exact problem from your description. Pick the closest issue from the list above and its checks will appear here, or continue without troubleshooting: your request can still be submitted, and a technician will diagnose it on site."}
+          ? "No problem, pick the closest issue from the list above to see whether a guide is available."
+          : "We couldn't identify the exact problem from your description. Pick the closest issue from the list above to see whether a guide is available, or continue without troubleshooting: your request can still be submitted, and a technician will diagnose it on site."}
       </p>
       <ContinueWithout onClick={onSkip} />
     </AssistantBubble>
   );
 }
 
-/**
- * The assistant's identity row and its bubble.
- *
- * ONE definition for every state, so the panel speaks with a single voice: whichever
- * branch renders, the customer sees the same avatar, the same name, and the reply in the
- * same shell. A bubble carries all of its content at once, never one turn at a time
- * (see branch 1, where every check is visible on arrival).
- */
 function AssistantBubble({
   label,
-  onSkip,
   children,
 }: {
   /** What this bubble is, for assistive technology. */
   label: string;
-  /** Only where the bubble is long enough that leaving it needs its own control. */
-  onSkip?: () => void;
   children: ReactNode;
 }) {
   return (
@@ -296,15 +222,6 @@ function AssistantBubble({
           <Lightbulb className="h-3.5 w-3.5" aria-hidden="true" />
         </span>
         <p className="text-xs font-semibold text-ink">SPARKServ assistant</p>
-        {onSkip && (
-          <button
-            type="button"
-            onClick={onSkip}
-            className="ml-auto inline-flex min-h-[36px] cursor-pointer items-center rounded-lg border border-line bg-soft px-3 text-xs font-semibold text-ink/70 transition duration-200 hover:bg-brand-soft"
-          >
-            Skip troubleshooting
-          </button>
-        )}
       </div>
 
       <div
@@ -322,19 +239,17 @@ function ContinueWithout({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="mt-3 inline-flex min-h-[36px] cursor-pointer items-center text-xs font-semibold text-brand-ink underline-offset-2 hover:underline"
+      className="mt-3 inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-brand-ink underline-offset-2 hover:underline"
     >
-      Continue without troubleshooting
+      Continue to repair request
     </button>
   );
 }
 
-function OutcomeButton({
-  active,
+function GuideButton({
   onClick,
   label,
 }: {
-  active: boolean;
   onClick: () => void;
   label: string;
 }) {
@@ -342,12 +257,7 @@ function OutcomeButton({
     <button
       type="button"
       onClick={onClick}
-      aria-pressed={active}
-      className={`inline-flex min-h-[40px] cursor-pointer items-center rounded-xl border px-3.5 text-xs font-semibold transition duration-200 ${
-        active
-          ? "border-brand-300 bg-brand-soft text-brand-ink"
-          : "border-line bg-surface text-ink/75 hover:bg-soft"
-      }`}
+      className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-line bg-surface px-3.5 text-sm font-semibold text-ink hover:bg-soft"
     >
       {label}
     </button>

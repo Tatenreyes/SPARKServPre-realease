@@ -165,39 +165,23 @@ test("changing the appliance, issue or description clears the outcome", () => {
 
 // -------------------------------------------------- 5. the assistant in panel 2
 
-test("the assistant answers in a bubble that already contains the checks", () => {
-  assert.match(panel, /SPARKServ assistant/, "it is a conversation, not a form section");
-  assert.match(panel, /Troubleshooting: \{identifiedLabel\}/, "a confirmed issue is named directly");
-  assert.match(panel, /That sounds like.*Is that right\?/, "an inferred issue still asks the customer");
-  assert.equal(
-    [...panel.matchAll(/guide\.map\(/g)].length,
-    1,
-    "one pass over the guide: every check is rendered at once, never one per turn"
-  );
-  assert.match(panel, /NO_GUIDE_MESSAGE/, "a fault with no guide must say so, never guess");
+test("the assistant confirms the problem and opens the guide on request", () => {
+  assert.match(panel, /SPARKServ assistant/);
+  assert.match(panel, /That sounds like.*Is that right\?/);
+  assert.match(panel, /label="Try troubleshooting"/);
+  assert.match(panel, /guide\?\.\[stepIndex\]/);
+  assert.match(panel, /NO_GUIDE_MESSAGE/);
 });
 
-test("each check can be ticked off, and the progress is honest", () => {
-  assert.match(panel, /const \[doneSteps, setDoneSteps\] = useState<string\[\]>\(\[\]\);/);
-  assert.match(panel, /function toggleStep\(/);
-  assert.match(panel, /aria-pressed=\{done\}/);
-  assert.match(panel, /\{doneCount\} of \{stepCount\} done/);
-  assert.match(
-    panel,
-    /setDoneSteps\(\[\]\);\s*\n\s*\}, \[identifiedIssueId\]\);/,
-    "a different fault means a different checklist — the ticks must reset with the issue"
-  );
+test("skipping a check advances without recording it", () => {
+  assert.match(panel, /onStepDone\(step.title\)/);
+  assert.match(panel, /onClick=\{\(\) => setStepIndex\(stepIndex \+ 1\)\} label="Skip this check"/);
+  assert.match(wizard, /completed_checks: doneSteps/);
 });
 
-test("one question, two answers, and the skip stays in one place", () => {
-  assert.match(panel, /Did that fix it\?/);
-  assert.equal(
-    [...panel.matchAll(/<OutcomeButton/g)].length,
-    2,
-    "Skip is the header control; offering it a second time made one decision look like two"
-  );
-  assert.doesNotMatch(panel, /onOutcomeChange\("skipped"\)/);
-  assert.match(panel, /onClick=\{onSkip\}/);
+test("the customer can continue before or during the walkthrough", () => {
+  assert.match(panel, /Continue to repair request/);
+  assert.match(panel, /stepIndex === null \? onSkip\(\) : onOutcomeChange\("unresolved"\)/);
 });
 
 test("the safety disclaimer is never dropped from the chat", () => {
@@ -209,7 +193,7 @@ test("the panel carries no resolved note, because that state never renders it", 
   // "recorded as resolved" note in the panel could never be seen.
   assert.doesNotMatch(panel, /outcome === "resolved" &&/);
   assert.match(panel, /outcome === "unresolved" &&/);
-  assert.match(panel, /outcome === "skipped" &&/);
+  assert.match(panel, /outcome === "skipped"\) return null/);
 });
 
 // -------------------------------------------------- 6. one picker, one voice
@@ -251,8 +235,8 @@ test("the panel speaks with one voice", () => {
   );
   assert.equal(
     [...panel.matchAll(/<AssistantBubble /g)].length,
-    4,
-    "all four states (identified, matched, ambiguous, unmatched) use it"
+    5,
+    "the guide, summary, match, ambiguous and unmatched states use it"
   );
   assert.equal(
     [...panel.matchAll(/rounded-2xl rounded-tl-sm border border-line bg-surface/g)].length,

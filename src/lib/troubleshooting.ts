@@ -119,7 +119,7 @@ const CLEAR_VENTS: TroubleshootingStep = {
 
 const FILTER_CLEAN: TroubleshootingStep = {
   title: "Clean the filter",
-  detail: "Remove, rinse and dry the filter, then refit it before running the unit again.",
+  detail: "With the appliance switched off, follow the manual for a filter designed for routine cleaning. Skip this check if you need tools or must remove a service panel.",
 };
 
 const DRAIN_CHECK: TroubleshootingStep = {
@@ -338,4 +338,26 @@ export function getTroubleshootingGuide(
 
   const shared = GUIDES[issue.id];
   return shared?.length ? shared : null;
+}
+
+// Review each step before adding it to the customer walkthrough.
+const EXTERNAL_CHECKS = new Set([
+  "Check the setting",
+  "Check the mode and setting",
+  "Check the temperature dial",
+  "Check the door seal",
+  "Clear the vents and airflow",
+  "Clean the filter",
+  "Write down the error code",
+  "Note when the noise happens",
+  "Try the remote's basics",
+]);
+
+export function getGuidedTroubleshootingSteps(
+  applianceType: string,
+  issueId: string | null | undefined
+): TroubleshootingStep[] {
+  return (getTroubleshootingGuide(applianceType, issueId) ?? []).filter((step) =>
+    EXTERNAL_CHECKS.has(step.title)
+  );
 }

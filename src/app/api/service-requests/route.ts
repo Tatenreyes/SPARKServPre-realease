@@ -4,6 +4,7 @@ import { getCurrentUser, AuthError } from "@/lib/auth";
 import { formatCdoAddress, isCdoBarangay } from "@/lib/cdo-barangays";
 import { assignTechnician } from "@/lib/assignment";
 import { readRequestedWindow } from "@/lib/service-time";
+import { getGuidedTroubleshootingSteps } from "@/lib/troubleshooting";
 import { getIssueById } from "@/lib/appliance-issues";
 import { buildTechnicianProfile, type TechnicianProfile } from "@/lib/technician-profile";
 import { loadPublicTechnicianRatings } from "@/lib/technician-ratings";
@@ -32,6 +33,7 @@ export async function POST(request: NextRequest) {
       appliance_type,
       issue_id,
       troubleshooting_outcome,
+      completed_checks,
       problem_description,
       photos,
       chatbot_resolved,
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
       longitude,
     } = body;
 
-    if (!appliance_type || !problem_description) {
+    if (!appliance_type || typeof problem_description !== "string" || !problem_description.trim()) {
       return NextResponse.json(
         { error: "appliance_type and problem_description are required" },
         { status: 400 }
@@ -80,6 +82,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const completedChecks = Array.isArray(completed_checks)
+      ? getGuidedTroubleshootingSteps(appliance_type, identifiedIssue?.id)
+          .filter((step) => completed_checks.includes(step.title))
+          .map((step) => step.title)
+      : [];
+    const requestDescription = completedChecks.length
+      ? problem_description + "\n\nChecks reported by the customer: " + completedChecks.join("; ") + "."
+      : problem_description;
 
     // ---- Service location -------------------------------------------------
     // The address is cleaned before it is stored: control characters (which
@@ -141,7 +152,7 @@ export async function POST(request: NextRequest) {
         issue_category: identifiedIssue?.label ?? null,
         issue_id: identifiedIssue?.id ?? null,
         troubleshooting_outcome: outcome,
-        problem_description,
+        problem_description: requestDescription,
         photos: Array.isArray(photos) ? photos : [],
         // Derived from the reported outcome so the legacy boolean cannot
         // contradict it; callers that still send it keep the old behaviour when
