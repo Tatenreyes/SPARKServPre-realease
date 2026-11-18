@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getDashboardGreeting } from "@/lib/dashboard-greeting";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { habitualLowRaters, summariseRatings } from "@/lib/rating-summary";
@@ -354,8 +355,7 @@ export default async function CustomerDashboard() {
     cancelled: AlertTriangle,
   };
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const greeting = getDashboardGreeting();
 
   // Tighter vertical rhythm on a phone: at 360px a 24px gap between every
   // section is a scroll of nothing but margins, and a phone is where the person

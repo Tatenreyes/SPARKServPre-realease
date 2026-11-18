@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getDashboardGreeting } from "@/lib/dashboard-greeting";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { getTechnicianQueue, getTechnicianPendingOffers } from "@/lib/assignment";
@@ -112,8 +113,7 @@ export default async function TechnicianDashboard() {
     .order("created_at", { ascending: false })
     .limit(5);
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const greeting = getDashboardGreeting();
 
   const scheduleItems: ScheduleItem[] = (todayBookings ?? []).slice(0, 6).map((booking) => {
     const request = todayRequestMap.get(booking.service_request_id);
