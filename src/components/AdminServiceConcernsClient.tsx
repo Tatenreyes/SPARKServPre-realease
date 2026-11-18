@@ -207,53 +207,52 @@ export default function AdminServiceConcernsClient({
         <FilterDropdowns groups={groups} selected={filters} onChange={setFilters} />
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-line bg-surface shadow-card">
-        <table className="min-w-[720px] w-full text-left text-sm">
-          <thead className="border-b border-line bg-canvas text-xs uppercase tracking-wide text-ink/70">
-            <tr>
-              <th className="px-4 py-3 font-medium">Concern</th>
-              <th className="px-4 py-3 font-medium">Customer</th>
-              <th className="px-4 py-3 font-medium">Type &amp; Priority</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!filtered.length ? (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-ink/70">
-                  {narrowed ? "No concerns match these filters." : "No concerns found."}
-                </td>
-              </tr>
-            ) : (
-              filtered.map((t) => {
+      <div className="rounded-card border border-line bg-surface shadow-card">
+        {!filtered.length ? (
+          <p className="px-4 py-6 text-center text-sm text-muted">
+            {narrowed ? "No concerns match these filters." : "No concerns found."}
+          </p>
+        ) : (
+          <>
+            <div aria-hidden="true" className="hidden grid-cols-[2fr_1fr_0.9fr_1.3fr] gap-4 border-b border-line bg-canvas px-4 py-3 text-xs font-medium uppercase tracking-wide text-muted xl:grid">
+              <span>Concern</span>
+              <span>Customer</span>
+              <span>Type &amp; Priority</span>
+              <span>Status</span>
+            </div>
+            <ul className="divide-y divide-line">
+              {filtered.map((t) => {
                 const u = userInfo[t.user_id];
                 return (
-                  <tr key={t.id} className="border-b border-ink/5 last:border-0">
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-ink">{t.subject}</p>
+                  <li key={t.id} className="grid grid-cols-1 gap-4 px-4 py-4 text-sm xl:grid-cols-[2fr_1fr_0.9fr_1.3fr]">
+                    <div className="min-w-0">
+                      <p className="break-words font-medium text-ink">{t.subject}</p>
                       {/* The body of the ticket. Until now the admin screen showed
                           only the subject, so a ticket could be resolved without
                           anyone having read what the customer wrote. */}
-                      <p className="mt-0.5 line-clamp-2 max-w-md text-xs leading-relaxed text-ink/70">
+                      <p className="mt-0.5 max-w-md break-words text-sm xl:line-clamp-2 xl:text-xs leading-relaxed text-ink/70">
                         {t.message}
                       </p>
                       <p className="mt-0.5 text-xs text-ink/70">
                         {new Date(t.created_at).toLocaleDateString()}
                       </p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-ink/70">{u?.name ?? "N/A"}</p>
-                      <p className="text-xs text-ink/70">{u?.email}</p>
-                    </td>
-                    <td className="px-4 py-3">
+                    </div>
+                    <div className="min-w-0">
+                      <p className="mb-1 text-xs font-semibold text-muted xl:sr-only">Customer</p>
+                      <p className="break-words text-ink/70">{u?.name ?? "N/A"}</p>
+                      <p className="break-all text-xs text-ink/70">{u?.email}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="mb-1 text-xs font-semibold text-muted xl:sr-only">Type &amp; priority</p>
                       <p className="text-xs text-ink/70">{TYPE_LABEL[t.type]}</p>
                       <span
                         className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${PRIORITY_COLOR[t.priority]}`}
                       >
                         {t.priority}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 align-top">
+                    </div>
+                    <div className="min-w-0">
+                      <p className="mb-1 text-xs font-semibold text-muted xl:sr-only">Status</p>
                       <select
                         value={noteForId === t.id ? "resolved" : t.status}
                         disabled={busyId === t.id}
@@ -261,7 +260,7 @@ export default function AdminServiceConcernsClient({
                           requestStatusChange(t.id, e.target.value as TicketStatus, t.resolution_note)
                         }
                         aria-label={`Status for ${t.subject}`}
-                        className="rounded-lg border border-line bg-surface px-2 py-1 text-xs capitalize text-ink outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15"
+                        className="min-h-11 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm capitalize xl:min-h-0 xl:px-2 xl:py-1 xl:text-xs text-ink outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15"
                       >
                         {STATUS_OPTIONS.map((s) => (
                           <option key={s} value={s} className="capitalize">
@@ -323,7 +322,7 @@ export default function AdminServiceConcernsClient({
                             Required. Saved with your account and the date, and shown to the
                             customer.
                           </p>
-                          <div className="mt-2 flex items-center gap-2">
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
                             <button
                               type="button"
                               onClick={() => void updateStatus(t.id, "resolved", note)}
@@ -355,13 +354,13 @@ export default function AdminServiceConcernsClient({
                           {noteError}
                         </p>
                       )}
-                    </td>
-                  </tr>
+                    </div>
+                  </li>
                 );
-              })
-            )}
-          </tbody>
-        </table>
+              })}
+            </ul>
+          </>
+        )}
       </div>
     </div>
   );

@@ -146,16 +146,9 @@ export default function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setMenuOpen(false)}
-                  className="mt-1 rounded-xl border border-line px-3 py-3 text-center text-sm font-semibold text-muted transition-colors duration-200 hover:border-ink/40 hover:text-ink"
+                  className="mt-1 rounded-xl border border-line px-3 py-3 text-center sm:hidden text-sm font-semibold text-muted transition-colors duration-200 hover:border-ink/40 hover:text-ink"
                 >
                   Login
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setMenuOpen(false)}
-                  className="rounded-xl bg-brand-500 px-3 py-3 text-center text-sm font-semibold text-white transition-colors duration-200 hover:bg-brand-600"
-                >
-                  Sign Up
                 </Link>
               </div>
             </nav>

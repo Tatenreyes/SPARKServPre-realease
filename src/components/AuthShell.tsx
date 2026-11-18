@@ -14,8 +14,8 @@ export default function AuthShell({
   children,
 }: AuthShellProps) {
   return (
-    <main className="reference-palette grid min-h-[calc(100dvh-4rem)] bg-canvas md:grid-cols-2">
-      <div className="relative isolate hidden items-end overflow-hidden bg-[#071725] md:flex">
+    <main className="reference-palette grid min-h-[calc(100dvh-4rem)] bg-canvas lg:grid-cols-2">
+      <div className="relative isolate hidden items-end overflow-hidden bg-[#071725] lg:flex">
         <Image
           src={photo}
           alt=""
