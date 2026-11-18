@@ -194,20 +194,6 @@ img {
     background-image: linear-gradient(103deg, #eef5ff 0%, #dcebff 54%, #c4dbff 100%);
   }
 
-  /* Keep auth copy on a solid theme-aware plate while the background image
-     remains clear behind the copy instead of washing the whole image out. */
-  .auth-photo-scrim {
-    background-image: linear-gradient(
-      90deg,
-      rgb(var(--spark-surface)) 0%,
-      rgb(var(--spark-surface) / 0.98) 38%,
-      rgb(var(--spark-surface) / 0.88) 48%,
-      rgb(var(--spark-surface) / 0.58) 57%,
-      rgb(var(--spark-surface) / 0.12) 68%,
-      transparent 77%
-    );
-  }
-
   .service-art-float {
     animation: service-art-float 3.2s ease-in-out infinite;
   }
@@ -592,45 +578,6 @@ img {
   --spark-soft: 11 17 24;
   --spark-brand-ink: 129 237 244;
   --spark-brand-soft: 19 29 39;
-}
-
-/* Registration follows the purple, space-inspired reference artwork while
-   keeping the login and recovery screens on the normal dashboard palette. */
-.auth-signup-shell {
-  background: rgb(var(--spark-canvas));
-}
-
-.auth-signup-stage {
-  background-color: #120725;
-  background-image:
-    radial-gradient(circle at 13% 20%, rgb(255 255 255 / 0.9) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 72% 30%, rgb(255 255 255 / 0.72) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 35% 72%, rgb(77 210 255 / 0.7) 0 14%, transparent 34%),
-    linear-gradient(135deg, #100725 0%, #211047 52%, #0b2448 100%);
-  background-size: 118px 118px, 164px 164px, auto, auto;
-}
-
-/* Fixed dark glass: dark in BOTH themes. The form inside therefore carries the
-   `dark` class (see AuthShell) so every token resolves to its dark value — the
-   light `--spark-ink` would otherwise paint near-black text on this surface. */
-.auth-signup-form-panel {
-  border-radius: 1.5rem;
-  border: 1px solid rgb(255 255 255 / 0.16);
-  background: rgb(8 11 18 / 0.94);
-  padding: 1.25rem;
-  box-shadow: 0 24px 70px rgb(0 0 0 / 0.32);
-  backdrop-filter: blur(18px);
-}
-
-.auth-signup-form-panel input,
-.auth-signup-form-panel button[aria-pressed="false"] {
-  border-color: rgb(255 255 255 / 0.16);
-  background-color: rgb(15 23 32 / 0.92);
-}
-
-.auth-signup-form-panel input:focus {
-  border-color: #6b7280;
-  box-shadow: 0 0 0 4px rgb(107 114 128 / 0.16);
 }
 
 /* The named brand shades are fixed Tailwind values, so map them only inside

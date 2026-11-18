@@ -11,12 +11,8 @@ export default function RegisterPage() {
   return (
     <AuthShell
       headline="Join SPARKServ"
+      photo="/images/Microwave-Oven-Repairing.jpg"
       subhead="Request appliance repairs or apply to join the technician network in Cagayan de Oro."
-      backgroundImage="/images/signup-appliance-space.png"
-      backgroundImageAlt="Appliances available for SPARKServ repair"
-      backgroundImageFit="cover"
-      backgroundImageScrim={false}
-      panelStyle="signup"
     >
       {/* Same Suspense requirement as /login, see the note there. The register
           form is taller than the login form (name, role selector, two consent

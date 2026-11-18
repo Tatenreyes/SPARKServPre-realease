@@ -272,12 +272,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
       <div className="w-full max-w-[420px]">
         <div className={mode === "register" ? "mb-4" : "mb-8"}>
           <h1 className="font-display text-2xl font-bold text-ink leading-tight">
-            {mode === "login" ? "Welcome back" : "SIGN UP"}
+            {mode === "login" ? "Log in" : "Create an account"}
           </h1>
           <p className="mt-2 text-sm text-ink/70 leading-relaxed">
             {mode === "login"
               ? "Log in to manage your service requests and track repairs."
-              : "Sign up to get started with SPARKServ today."}
+              : "Choose Customer to request repairs or Technician to offer repair services."}
           </p>
         </div>
 
