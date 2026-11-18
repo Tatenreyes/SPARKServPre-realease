@@ -204,6 +204,7 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
   }
 
   const hasWorkingHours = windows.some((window) => window.is_active);
+  const timeLabel = serviceTimeZone === "Asia/Manila" ? "Philippine time" : serviceTimeZone;
 
   return (
     <div className="space-y-6">
@@ -224,7 +225,7 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
           <h2 className="font-display text-lg font-semibold text-ink">Weekly working hours</h2>
         </header>
         <p className="mt-1 text-xs text-ink/70">
-          All times are {serviceTimeZone}.
+          All times are shown in {timeLabel}.
           {hasWorkingHours
             ? " If the requested time falls outside your hours, you keep your queue position."
             : " No working hours are set. Your weekly schedule does not restrict offers."}
@@ -319,12 +320,13 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
           <h2 className="font-display text-lg font-semibold text-ink">Time off</h2>
         </header>
         <p className="mt-1 text-xs text-ink/70">
-          Block out a specific period, a day, an afternoon, a week. Requests overlapping it go
-          to someone else. Entered in {serviceTimeZone}. Past entries drop off this list on their own.
+          Add a date and time when you cannot take repairs in Cagayan de Oro. For example,
+          block Friday from 1:00 PM to 5:00 PM if you will be away. Requests during that time
+          can go to another technician. Use {timeLabel}.
         </p>
 
         {timeOff.length === 0 ? (
-          <p className="mt-3 text-sm text-ink/70">Nothing booked off.</p>
+          <p className="mt-3 text-sm text-ink/70">No upcoming time off.</p>
         ) : (
           <ul className="mt-3 divide-y divide-line">
             {timeOff.map((t) => (
@@ -391,14 +393,14 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
           <h2 className="font-display text-lg font-semibold text-ink">Service areas</h2>
         </header>
         <p className="mt-1 text-xs text-ink/70">
-          Where you are willing to travel. Leave this empty and you cover everywhere you are
-          qualified for. The match is on the area name inside the job&apos;s address, so use the
-          place name your customers use, &quot;Quezon City&quot;, not &quot;QC&quot;.
+          Add the barangays in Cagayan de Oro where you can take repair jobs. For example,
+          add Carmen to match addresses that include Carmen. Leave the appliance type blank
+          to use that area for every appliance you service.
         </p>
 
         {areas.length === 0 ? (
           <p className="mt-3 text-sm text-ink/70">
-            No areas set, you currently cover everywhere you are qualified for.
+            No barangays selected. Your offers are not limited by barangay.
           </p>
         ) : (
           <ul className="mt-3 divide-y divide-line">
@@ -427,13 +429,15 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
           <input
             value={area}
             onChange={(e) => setArea(e.target.value)}
-            placeholder="Area, e.g. Quezon City"
+            aria-label="Barangay"
+            placeholder="Barangay, e.g. Carmen"
             className="rounded-lg border border-line px-3 py-1.5 text-sm"
           />
           <input
             value={areaAppliance}
             onChange={(e) => setAreaAppliance(e.target.value)}
-            placeholder="Appliance type (optional), e.g. aircon"
+            aria-label="Appliance type (optional)"
+            placeholder="Appliance type, e.g. Electric Stove"
             className="rounded-lg border border-line px-3 py-1.5 text-sm"
           />
           <button
@@ -442,7 +446,7 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
             className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
           >
             <Plus className="h-3.5 w-3.5" />
-            Add area
+            Add barangay
           </button>
         </div>
       </section>
