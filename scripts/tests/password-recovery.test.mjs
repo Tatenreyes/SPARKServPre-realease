@@ -713,3 +713,11 @@ test("the password update sends only the password, never an identifier from the 
   assert.ok(!form.includes("useSearchParams"), "the update form must not read the URL");
   assert.ok(!/userId/.test(form), "the update form must not accept a user id");
 });
+
+test("password update keeps the success screen visible after recovery cleanup", () => {
+  const form = source("src/components/UpdatePasswordForm.tsx");
+  assert.match(form, /setDone\(true\)/);
+  assert.match(form, /fetch\(RECOVERY_CLEAR_PATH, \{ method: "DELETE" \}\)/);
+  assert.match(form, /signOut\(\{ scope: "local" \}\)/);
+  assert.doesNotMatch(form, /\.refresh\(|window\.location\.reload\(/);
+});

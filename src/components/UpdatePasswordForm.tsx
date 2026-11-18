@@ -2,7 +2,6 @@
 
 import { useState, useId } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import LoadingScreen from "@/components/LoadingScreen";
 import { CheckCircle2, Eye, EyeOff, Lock } from "lucide-react";
@@ -37,7 +36,6 @@ import {
  */
 export default function UpdatePasswordForm() {
   const supabase = createClient();
-  const router = useRouter();
 
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -94,8 +92,6 @@ export default function UpdatePasswordForm() {
       } catch {
         // Best-effort: the customer is about to log in with the new password.
       }
-
-      router.refresh();
     } catch (thrown) {
       setError(describeUpdatePasswordError(thrown instanceof Error ? thrown : null));
     } finally {
