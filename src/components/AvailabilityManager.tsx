@@ -203,6 +203,8 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
     );
   }
 
+  const hasWorkingHours = windows.some((window) => window.is_active);
+
   return (
     <div className="space-y-6">
       {error && (
@@ -222,34 +224,45 @@ export default function AvailabilityManager({ serviceTimeZone }: { serviceTimeZo
           <h2 className="font-display text-lg font-semibold text-ink">Weekly working hours</h2>
         </header>
         <p className="mt-1 text-xs text-ink/70">
-          You are only offered jobs that fit inside these windows. All times are {serviceTimeZone}.
-          {windows.length === 0
-            ? " You have none set, so you currently count as available at any time."
-            : " Requests outside them are passed to someone else, you keep your place in the queue."}
+          All times are {serviceTimeZone}.
+          {hasWorkingHours
+            ? " If the requested time falls outside your hours, you keep your queue position."
+            : " No working hours are set. Your weekly schedule does not restrict offers."}
         </p>
 
-        {windows.length > 0 && (
-          <ul className="mt-3 divide-y divide-line">
-            {windows.map((w) => (
-              <li key={w.id} className="flex items-center justify-between py-2 text-sm">
-                <span className="text-ink">
-                  <span className="font-medium">{WEEKDAYS[w.weekday] ?? `Day ${w.weekday}`}</span>{" "}
-                  <span className="text-ink/70">
-                    {formatClockTime(w.start_time)}, {formatClockTime(w.end_time)}
-                  </span>
-                </span>
-                <button
-                  onClick={() => remove("window", w.id)}
-                  disabled={busy}
-                  aria-label={`Remove ${WEEKDAYS[w.weekday]} window`}
-                  className="rounded-full p-1.5 text-ink/70 hover:bg-alert-soft hover:text-alert-ink disabled:opacity-40"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+        <ul className="mt-3 divide-y divide-line">
+          {WEEKDAYS.map((day, index) => {
+            const dayWindows = windows.filter((window) => window.weekday === index);
+            const dayHasHours = dayWindows.some((window) => window.is_active);
+            return (
+              <li key={day} className="grid gap-1 py-2 text-sm sm:grid-cols-[8rem_1fr]">
+                <p className="pt-1 font-semibold text-ink">{day}</p>
+                <div className="min-w-0">
+                  {!dayHasHours && (
+                    <p className="py-1 text-muted">{hasWorkingHours ? "Unavailable" : "No hours set"}</p>
+                  )}
+                  {dayWindows.map((window) => (
+                    <div key={window.id} className="flex items-center justify-between gap-3">
+                      <span className="text-ink/70">
+                        {formatClockTime(window.start_time)} to {formatClockTime(window.end_time)}
+                        {!window.is_active && " (inactive)"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => remove("window", window.id)}
+                        disabled={busy}
+                        aria-label={`Remove ${day} ${formatClockTime(window.start_time)} to ${formatClockTime(window.end_time)}`}
+                        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink/70 hover:bg-alert-soft hover:text-alert-ink disabled:opacity-40"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </li>
-            ))}
-          </ul>
-        )}
+            );
+          })}
+        </ul>
 
         <div className="mt-3 flex flex-wrap items-end gap-2">
           <select

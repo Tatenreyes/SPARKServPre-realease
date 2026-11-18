@@ -252,7 +252,7 @@ export function myQueueStanding(queue: ApplianceQueue): string {
     return "You are not part of this rotation right now. Add the appliance to your specializations to join it.";
   }
   if (queue.myPosition === 1) {
-    return "Your turn is next when you are eligible and available for a matching request, you can still be skipped if the requested time clashes with your schedule or exceeds your workload.";
+    return "First in line when you qualify for the request and are available at the requested time. A skip keeps your place.";
   }
   if (queue.myPosition === 2) {
     return "Your turn is approaching: you move up when the technician ahead of you accepts a request.";

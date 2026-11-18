@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getTechnicianQueue } from "@/lib/assignment";
+import { formatRequestedWindow, getServiceTimezone } from "@/lib/service-time";
 import {
   buildApplianceQueues,
   formatQueueTime,
@@ -100,6 +101,7 @@ export default async function AdminTechnicianQueuePage({
     : { data: [] };
   const requestMap = new Map((eventRequests ?? []).map((request) => [request.id, request]));
 
+  const serviceTimeZone = await getServiceTimezone(supabase);
   const skipEvents = events.filter((event) => event.action.startsWith("SKIPPED_")).slice(0, 10);
   const offerEvents = events
     .filter((event) =>
@@ -305,6 +307,16 @@ export default async function AdminTechnicianQueuePage({
                 const request = event.repair_request_id
                   ? requestMap.get(event.repair_request_id)
                   : undefined;
+                const matchingOffer = event.repair_request_id
+                  ? events.find((offer) =>
+                      offer.action === "OFFERED" &&
+                      offer.repair_request_id === event.repair_request_id &&
+                      offer.created_at === event.created_at
+                    )
+                  : undefined;
+                const requestedWindow = formatRequestedWindow(
+                  request?.requested_window_start, request?.requested_window_end, serviceTimeZone
+                );
                 return (
                   <li
                     key={event.id}
@@ -330,13 +342,13 @@ export default async function AdminTechnicianQueuePage({
                     )}
                     {request && (
                       <p className="mt-0.5 text-[11px] text-muted">
-                        Request #{request.id.slice(0, 8)} · requested{" "}
-                        {request.requested_window_start
-                          ? formatQueueTime(request.requested_window_start)
-                          : "no fixed window"}
-                        {request.requested_window_end
-                          ? `, ${formatQueueTime(request.requested_window_end)}`
-                          : ""}
+                        Request #{request.id.slice(0, 8)} - {requestedWindow ?? "No fixed window"}
+                      </p>
+                    )}
+                    {matchingOffer && (
+                      <p className="mt-1 text-xs font-medium text-ink">
+                        Offered to {nameById.get(matchingOffer.technician_id ?? "") ?? "another technician"}
+                        {matchingOffer.old_position !== null ? ` (position ${matchingOffer.old_position})` : ""}.
                       </p>
                     )}
                   </li>

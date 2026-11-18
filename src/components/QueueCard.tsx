@@ -108,7 +108,7 @@ export default function QueueCard({
           </div>
           {queue.nextTurnPosition !== null && (
             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-brand-soft px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-ink">
-              {queue.nextTurnPosition} holds the next turn
+              Position {queue.nextTurnPosition} is first in line when eligible
             </span>
           )}
         </div>
