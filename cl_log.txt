@@ -1,0 +1,3 @@
+c4a2299 security: authenticate profile initialization and prevent role promotion
+9f881a6 fix: the header mark sits on the bar itself, and the two logo blues swap
+1f7dfb9 feat: the brand mark swaps to its dark-canvas artwork in dark mode
