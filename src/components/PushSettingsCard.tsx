@@ -2,69 +2,41 @@
 
 import { useEffect, useState } from "react";
 import { BellRing, Check, Loader2, TriangleAlert } from "lucide-react";
-import { enablePushNotifications } from "@/lib/enablePush";
+import { disablePushNotifications, enablePushNotifications, getPushNotificationState } from "@/lib/enablePush";
 
-/**
- * Browser push, on or off.
- *
- * The topbar bell can only ever turn push ON (`NotificationBell`), so a
- * technician who changed their mind had to go find the setting in their browser.
- * This card owns both directions with the same helper (`enablePushNotifications`)
- * and the same API (`POST`/`DELETE /api/push-subscriptions`), and it is honest
- * about the three states that are not "on":
- *
- *   default     — we can ask, so the button offers to
- *   denied      — the browser is blocking us and only the browser can undo that
- *   unsupported — no PushManager, or no VAPID key configured on the server
- *
- * The subscription itself is the source of truth for "on", not the permission:
- * permission can be granted while this device has nothing registered, which is
- * exactly the state a fresh browser is in.
- */
-type PushState = "checking" | "off" | "on" | "denied" | "unsupported";
+type PushState = Awaited<ReturnType<typeof getPushNotificationState>> | "checking" | "unknown" | "cleanup";
 
 export default function PushSettingsCard() {
   const [state, setState] = useState<PushState>("checking");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [checkAttempt, setCheckAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-
-    async function read() {
-      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        if (!cancelled) setState("unsupported");
-        return;
-      }
-      if (Notification.permission === "denied") {
-        if (!cancelled) setState("denied");
-        return;
-      }
-
-      try {
-        const registration = await navigator.serviceWorker.getRegistration();
-        const subscription = await registration?.pushManager.getSubscription();
-        if (!cancelled) setState(subscription ? "on" : "off");
-      } catch {
-        if (!cancelled) setState("off");
-      }
-    }
-
-    read();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    getPushNotificationState().then((status) => {
+      if (!cancelled) setState(status);
+    }).catch(() => {
+      if (!cancelled) setState("unknown");
+    });
+    return () => { cancelled = true; };
+  }, [checkAttempt]);
 
   async function turnOn() {
     setBusy(true);
     setMessage(null);
+    setError(null);
     try {
       const result = await enablePushNotifications();
-      setState(result === "granted" ? "on" : result === "denied" ? "denied" : "unsupported");
       if (result === "granted") {
+        setState("on");
         setMessage("Push notifications are on for this device.");
+      } else {
+        setState(result === "default" ? "off" : result);
       }
+    } catch {
+      setError("Could not turn on push notifications. Try again.");
     } finally {
       setBusy(false);
     }
@@ -73,23 +45,18 @@ export default function PushSettingsCard() {
   async function turnOff() {
     setBusy(true);
     setMessage(null);
+    setError(null);
     try {
-      const registration = await navigator.serviceWorker.getRegistration();
-      const subscription = await registration?.pushManager.getSubscription();
-
-      if (subscription) {
-        // Delete the row FIRST: if the browser unsubscribes and the delete never
-        // lands, the server would keep pushing to an endpoint nobody receives.
-        await fetch("/api/push-subscriptions", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ endpoint: subscription.endpoint }),
-        }).catch(() => {});
-        await subscription.unsubscribe();
+      const result = await disablePushNotifications();
+      if (result === "removed") {
+        setState("off");
+        setMessage("Push notifications are off for this device.");
+      } else {
+        setState("cleanup");
+        setError("SPARKServ stopped sending push notifications. Try again to finish removing the browser subscription.");
       }
-
-      setState("off");
-      setMessage("Push notifications are off for this device.");
+    } catch {
+      setError("Could not turn off push notifications. Try again.");
     } finally {
       setBusy(false);
     }
@@ -114,10 +81,14 @@ export default function PushSettingsCard() {
                 ? "Blocked in your browser"
                 : state === "unsupported"
                   ? "Not available in this browser"
-                  : "Off for this device"}
+                  : state === "unknown"
+                    ? "Could not check this device"
+                    : state === "cleanup"
+                      ? "Browser cleanup incomplete"
+                      : "Off for this device"}
         </p>
 
-        {state === "on" && (
+        {(state === "on" || state === "cleanup") && (
           <button
             type="button"
             onClick={turnOff}
@@ -125,7 +96,17 @@ export default function PushSettingsCard() {
             className="inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-semibold text-ink transition-colors duration-200 hover:border-brand-600 hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-60 dark:hover:border-[#81EDF4] dark:focus-visible:ring-[#81EDF4]"
           >
             {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-            Turn off
+            {state === "cleanup" ? "Retry removal" : "Turn off"}
+          </button>
+        )}
+
+        {state === "unknown" && (
+          <button
+            type="button"
+            onClick={() => { setState("checking"); setCheckAttempt((count) => count + 1); }}
+            className="inline-flex min-h-11 items-center rounded-xl border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-brand-soft"
+          >
+            Check again
           </button>
         )}
 
@@ -152,10 +133,12 @@ export default function PushSettingsCard() {
 
       {state === "unsupported" && (
         <p className="mt-2 text-xs leading-relaxed text-muted">
-          This browser does not support push notifications. You will still see everything in
+          Push notifications are unavailable on this device. You will still see everything in
           the notification bell while you are signed in.
         </p>
       )}
+
+      {error && <p role="alert" className="mt-2 text-xs font-medium text-alert-ink">{error}</p>}
 
       {message && (
         <p role="status" className="mt-2 flex items-center gap-2 text-xs font-medium text-signal-ink">

@@ -167,7 +167,8 @@ test("changing the appliance, issue or description clears the outcome", () => {
 
 test("the assistant answers in a bubble that already contains the checks", () => {
   assert.match(panel, /SPARKServ assistant/, "it is a conversation, not a form section");
-  assert.match(panel, /That sounds like/, "the reply is a sentence, not a field label");
+  assert.match(panel, /Troubleshooting: \{identifiedLabel\}/, "a confirmed issue is named directly");
+  assert.match(panel, /That sounds like.*Is that right\?/, "an inferred issue still asks the customer");
   assert.equal(
     [...panel.matchAll(/guide\.map\(/g)].length,
     1,

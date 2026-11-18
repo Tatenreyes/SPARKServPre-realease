@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { AlertTriangle, Loader2, CheckCircle2, Clock, TimerIcon } from "lucide-react";
 import type { AssignmentStatus } from "@/types/database";
 import { customerAssignmentCopy } from "@/lib/queue";
@@ -13,7 +14,6 @@ export default function AssignmentStatusCard({
   technician,
   offersExpiresAt,
   qualifiedTechnicianAvailable = null,
-  onBackToAppliances,
 }: {
   status: AssignmentStatus;
   applianceType: string;
@@ -29,7 +29,6 @@ export default function AssignmentStatusCard({
    * `null` (the default) means the caller does not know and the neutral wording is used.
    */
   qualifiedTechnicianAvailable?: boolean | null;
-  onBackToAppliances?: () => void;
 }) {
   // Customers get states, never positions (spec §13, §31). The wording lives in
   // one place, `customerAssignmentCopy`, so this card, the request page and the
@@ -47,13 +46,13 @@ export default function AssignmentStatusCard({
         : status === "offered"
           ? "rounded-card border border-line bg-brand-soft/60 p-8"
           : "rounded-card border border-line bg-surface p-8";
-    const Icon = nobodyCoversIt ? AlertTriangle : status === "waiting" ? Clock : Loader2;
+    const Icon = nobodyCoversIt ? AlertTriangle : status === "matching" ? Loader2 : Clock;
 
     return (
       <div className={`flex flex-col items-center gap-3 text-center ${shell}`}>
         <Icon
           className={`h-6 w-6 ${
-            status === "matching" || status === "offered"
+            status === "matching"
               ? "animate-spin text-brand-ink"
               : nobodyCoversIt
                 ? "text-warn-ink"
@@ -66,13 +65,13 @@ export default function AssignmentStatusCard({
           {applianceType.replace(/_/g, " ")}
         </p>
         {status === "offered" && offersExpiresAt && <OfferCountdown expiresAt={offersExpiresAt} />}
-        {status === "waiting" && onBackToAppliances && (
-          <button
-            onClick={onBackToAppliances}
-            className="mt-1 cursor-pointer rounded-full border border-line px-4 py-2 text-sm font-medium text-ink/70 transition-colors hover:bg-surface"
+        {status === "waiting" && (
+          <Link
+            href="/customer/support"
+            className="mt-1 inline-flex min-h-11 items-center rounded-full border border-line bg-surface px-4 py-2 text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
           >
-            Back to appliance selection
-          </button>
+            Contact support
+          </Link>
         )}
       </div>
     );
@@ -116,7 +115,10 @@ function OfferCountdown({ expiresAt }: { expiresAt: string }) {
     return () => clearInterval(interval);
   }, [expiresAt]);
 
-  if (remainingMs <= 0) return null;
+  if (!Number.isFinite(remainingMs)) return null;
+  if (remainingMs <= 0) {
+    return <p className="text-xs text-muted">The reply window ended. Check back for an updated status.</p>;
+  }
 
   const minutes = Math.floor(remainingMs / 60_000);
   const seconds = Math.floor((remainingMs % 60_000) / 1000);
@@ -125,7 +127,7 @@ function OfferCountdown({ expiresAt }: { expiresAt: string }) {
   return (
     <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-xs font-semibold text-brand-ink">
       <TimerIcon className="h-3.5 w-3.5" />
-      Re-offering in {label}
+      Time left to reply: {label}
     </p>
   );
 }

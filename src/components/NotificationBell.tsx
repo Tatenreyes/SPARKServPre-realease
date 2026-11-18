@@ -10,7 +10,7 @@ import type { NotificationRow } from "@/types/database";
 export default function NotificationBell({ userId }: { userId: string }) {
   const [notifications, setNotifications] = useRealtimeNotifications(userId, []);
   const [open, setOpen] = useState(false);
-  const [pushStatus, setPushStatus] = useState<"idle" | "granted" | "denied" | "unsupported">(
+  const [pushStatus, setPushStatus] = useState<"idle" | "saving" | "error" | "granted" | "denied" | "unsupported">(
     "idle"
   );
 
@@ -48,16 +48,22 @@ export default function NotificationBell({ userId }: { userId: string }) {
   }
 
   async function handleEnablePush() {
-    const result = await enablePushNotifications();
-    setPushStatus(result);
+    setPushStatus("saving");
+    try {
+      const result = await enablePushNotifications();
+      setPushStatus(result === "default" ? "idle" : result);
+    } catch {
+      setPushStatus("error");
+    }
   }
 
   return (
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative rounded-full p-2 text-white/75 transition hover:bg-white/10 hover:text-white"
+        className="relative inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:h-9 sm:w-9"
         aria-label="Notifications"
+        aria-expanded={open}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
@@ -86,6 +92,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
           {pushStatus !== "granted" && (
             <button
               onClick={handleEnablePush}
+              disabled={pushStatus === "saving"}
               className="flex w-full items-center gap-2 border-b border-line px-4 py-2.5 text-left text-xs font-medium text-brand-ink hover:bg-brand-soft"
             >
               <BellRing className="h-3.5 w-3.5" />
@@ -93,7 +100,11 @@ export default function NotificationBell({ userId }: { userId: string }) {
                 ? "Push notifications blocked, enable them in your browser settings"
                 : pushStatus === "unsupported"
                   ? "Push notifications aren't supported in this browser"
-                  : "Turn on push notifications"}
+                  : pushStatus === "saving"
+                    ? "Turning on push notifications..."
+                    : pushStatus === "error"
+                      ? "Could not turn on push notifications. Try again"
+                      : "Turn on push notifications"}
             </button>
           )}
 

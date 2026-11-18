@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useUser } from "@/hooks/useUser";
-import { Menu, Phone, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -89,15 +89,6 @@ export default function Navbar() {
                 </span>
               ) : (
                 <>
-                  {!isLanding && (
-                    <a href="tel:+639123456789" className="hidden items-center gap-2.5 pr-1 xl:flex">
-                      <Phone className={`h-4 w-4 ${landingAccent}`} />
-                      <span className="leading-tight">
-                        <strong className="block text-xs font-bold text-ink">+63 912 345 6789</strong>
-                        <small className="block text-[9px] text-muted">Call for Immediate Support</small>
-                      </span>
-                    </a>
-                  )}
                   <Link
                     href="/login"
                     className="hidden h-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line px-5 text-xs font-semibold text-muted transition-colors duration-200 hover:border-ink/40 hover:bg-soft hover:text-ink sm:inline-flex"

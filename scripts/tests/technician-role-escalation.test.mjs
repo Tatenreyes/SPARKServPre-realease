@@ -450,7 +450,7 @@ test("the role control reports the API's refusal instead of pretending the chang
   );
   assert.match(
     control,
-    /setRole\(currentRole\)/,
+    /setDraftRole\(null\)/,
     "a refused change must snap the selection back to the role the database still has"
   );
   assert.match(control, /role="alert"/, "and the message must be announced, not merely coloured");
@@ -465,6 +465,16 @@ test("the role control reports the API's refusal instead of pretending the chang
     /HTTP \$\{response\.status\}/,
     "any other status still says which one it was, so a 400/403 is not a silent no-op"
   );
+});
+
+test("selecting a role only creates a draft until Save role is clicked", () => {
+  const control = read("src/components/RoleControl.tsx");
+  const select = control.match(/<select[\s\S]*?<\/select>/)?.[0] ?? "";
+  assert.match(select, /setDraftRole\(/);
+  assert.doesNotMatch(select, /fetch\(|saveRole/);
+  assert.match(control, /onClick=\{saveRole\}[\s\S]*?Save role/);
+  assert.match(control, /<strong>\{accountName\}<\/strong>/);
+  assert.match(control, /onClick=\{\(\) => setDraftRole\(null\)\}[\s\S]*?Cancel/);
 });
 
 test("the API passes the database's own refusals through as a 400", () => {

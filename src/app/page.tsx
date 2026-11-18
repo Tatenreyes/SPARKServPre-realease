@@ -25,8 +25,8 @@ import HowItWorksSteps from "@/components/HowItWorksSteps";
  * collected or verified.
  */
 const trustPoints = [
-  { icon: ShieldCheck, title: "Admin-Approved Technicians", body: "Profiles reviewed before joining the queue" },
-  { icon: UsersRound, title: "Fair Queue System", body: "Rotation-based assignments" },
+  { icon: ShieldCheck, title: "Admin-Approved Technicians", body: "Technician profiles reviewed before they can take jobs" },
+  { icon: UsersRound, title: "Matched to Your Appliance", body: "We look for an available technician who services your appliance" },
   { icon: FileText, title: "Transparent Estimates", body: "Approve costs upfront" },
   { icon: Clock3, title: "Service Tracking", body: "Updates from request to completion" },
 ];
@@ -35,7 +35,7 @@ export default function HomePage() {
   return (
     <div className="bg-canvas">
       {/* Hero. The photograph is the same wide technician shot used before
-          (`Backgound.jpg` is the real filename, there is no `Background.jpg`),
+          (`Backgound.jpg` is the real filename, there is no `Background.jpg`),cvb
           now paired with a single directional navy scrim instead of the old
           badge, trust row, and floating caption competing with the headline. */}
       <section className="relative isolate overflow-hidden bg-[#070D12]">

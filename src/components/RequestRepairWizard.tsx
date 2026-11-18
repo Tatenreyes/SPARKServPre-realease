@@ -754,10 +754,10 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
             <CheckCircle2 className="h-7 w-7" />
           </div>
           <h2 className="mt-4 font-display text-xl font-semibold text-ink">Repair Request Submitted</h2>
-          <p className="mt-2 text-sm text-muted">Your request has been submitted successfully. The system will check eligible technicians and place your request in the technician queue.</p>
+          <p className="mt-2 text-sm text-muted">Your request is saved. Check its status below or open it again later from My Repairs.</p>
           {assignmentPending && (
-            <p role="status" className="mx-auto mt-4 max-w-lg rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-              Your request is saved. Technician matching is taking longer than expected and will retry automatically. You can check this page for updates.
+            <p role="status" className="mx-auto mt-4 max-w-lg rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-warn-ink">
+              Technician matching is taking longer than expected. Open your repair status for updates.
             </p>
           )}
           <div className="mt-6">
@@ -777,11 +777,6 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
             technician={assignedTechnician}
             offersExpiresAt={offersExpiresAt}
             qualifiedTechnicianAvailable={qualifiedTechnicianAvailable}
-            onBackToAppliances={() => {
-              setSubmitted(false);
-              setServiceRequestId(null);
-              setAssignedTechnician(null);
-            }}
           />
         </div>
       </div>
@@ -847,7 +842,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
       // click handler: an invalid control inside a collapsed section cannot be
       // focused or scrolled to, so the browser abandons the submit silently.
       onInvalidCapture={() => setOpenSections(ALL_SECTIONS_OPEN)}
-      className="space-y-5 spark-sticky-action-offset md:!pb-0"
+      className="space-y-5"
     >
       {/* The route header owns the title; only the workflow note stays here so
           the form starts higher on the page. */}
@@ -1691,7 +1686,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
       </div>
 
       {/* Primary action. On a phone it is pinned to the bottom of the screen, the form is long and the button should never be a scroll away. */}
-      <div className="spark-sticky-action md:hidden">
+      <div className="spark-sticky-action px-4 pt-2 md:hidden">
         <button
           type="submit"
           disabled={submitting || warrantyBlocked}

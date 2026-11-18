@@ -94,11 +94,12 @@ export default function TroubleshootingPanel({
 
     return (
       <AssistantBubble label={`Troubleshooting for ${identifiedLabel}`} onSkip={onSkip}>
-        <p className="text-sm leading-relaxed text-ink">
-          That sounds like{" "}
-          <span className="font-semibold">{identifiedLabel}</span>. Most faults like this
-          are one of the checks below, worth a minute before you book a visit.
+        <p className="text-sm font-semibold leading-relaxed text-ink">
+          Troubleshooting: {identifiedLabel}
         </p>
+        {stepCount > 0 && (
+          <p className="mt-1 text-sm leading-relaxed text-muted">Try these checks before requesting a visit.</p>
+        )}
 
         {stepCount > 0 && (
           <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
@@ -130,7 +131,7 @@ export default function TroubleshootingPanel({
                     onClick={() => toggleStep(step.title)}
                     aria-pressed={done}
                     aria-label={`${done ? "Undo" : "Mark"} step ${index + 1}: ${step.title}`}
-                    className={`inline-flex h-8 shrink-0 cursor-pointer items-center rounded-lg border px-2.5 text-[11px] font-semibold transition duration-200 ${
+                    className={`inline-flex h-11 shrink-0 cursor-pointer items-center rounded-lg border px-2.5 sm:h-8 text-[11px] font-semibold transition duration-200 ${
                       done
                         ? "border-signal-500/30 bg-signal-soft/60 text-signal-ink"
                         : "border-line bg-surface text-ink/70 hover:bg-soft"

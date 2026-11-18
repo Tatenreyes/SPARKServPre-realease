@@ -255,6 +255,16 @@ test("the technician's published average cannot include their own ratings", () =
 
 // ------------------------------------------------- 5. who writes one, and who reads it
 
+test("both rating routes validate a JSON number before checking for duplicates", () => {
+  for (const endpoint of ["rating", "customer-rating"]) {
+    const route = read("src/app/api/bookings/[id]/" + endpoint + "/route.ts");
+    const validation = route.indexOf('typeof rating !== "number"');
+    assert.match(route, /const rating: unknown = body\.rating;/);
+    assert.ok(validation >= 0, endpoint + " rejects non-numeric input without coercing it");
+    assert.ok(validation < route.indexOf("const { data: existing }"));
+  }
+});
+
 test("the reverse route is technician-only, one per visit, and after the visit", () => {
   const route = source(REVERSE_ROUTE);
   assert.match(route, /user\.role !== "technician"/, "only a technician may rate a customer");

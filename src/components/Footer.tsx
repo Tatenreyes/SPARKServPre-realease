@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 
 const FOOTER_LINKS = [
@@ -49,12 +49,6 @@ export default function Footer({ variant = "default" }: { variant?: "default" | 
           <div>
             <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${accent}`}>Contact</p>
             <ul className="mt-3 space-y-2.5 text-sm text-muted">
-              <li>
-                <a href="tel:+639123456789" className="inline-flex items-center gap-2 transition-colors duration-200 hover:text-ink">
-                  <Phone className={`h-3.5 w-3.5 ${accent}`} />
-                  +63 912 345 6789
-                </a>
-              </li>
               <li>
                 <a href="mailto:support@sparkserv.com" className="inline-flex items-center gap-2 transition-colors duration-200 hover:text-ink">
                   <Mail className={`h-3.5 w-3.5 ${accent}`} />

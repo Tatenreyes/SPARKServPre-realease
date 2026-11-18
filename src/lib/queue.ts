@@ -306,12 +306,12 @@ export function customerAssignmentCopy(
     case "matching":
       return {
         title: "Checking technician availability",
-        body: "We are looking for a qualified technician who can cover the time you asked for.",
+        body: "We are checking which technicians can take this repair. You can leave this page and check your request later.",
       };
     case "offered":
       return {
         title: "Waiting for a technician to respond",
-        body: "A qualified technician is reviewing your request. If they do not respond in time we pass it to the next one automatically.",
+        body: "We sent an offer to a technician and are waiting for their reply. Once a technician accepts, they can send you an estimate.",
       };
     case "waiting": {
       // "Nobody covers this appliance yet" and "everybody is busy right now" are
@@ -321,7 +321,7 @@ export function customerAssignmentCopy(
       if (coverage?.qualifiedTechnicianAvailable === false) {
         return {
           title: "No technician covers this appliance yet",
-          body: "Your request is saved, but no approved technician services this appliance type at the moment, so it cannot be matched yet. Please contact support, we will tell you as soon as somebody can take it. There is nothing to wait for on this page.",
+          body: "Your request is saved. Contact support to ask when service for this appliance may be available.",
         };
       }
 
@@ -334,8 +334,8 @@ export function customerAssignmentCopy(
       // covers sits here for ever. When the caller does not know which case this is,
       // "every qualified technician is booked" is a false reassurance.
       return {
-        title: "Waiting for an eligible technician",
-        body: "We have not matched a qualified technician to this request yet. It stays in line, and we will match you as soon as one becomes available for this appliance and the time you asked for, so you can leave this page. If it is urgent, contact support and we will follow it up.",
+        title: "Waiting for a technician match",
+        body: "Your saved request stays in line while we look for a technician who can take it. If your schedule is flexible, contact support to ask about another time.",
       };
     }
     case "accepted":

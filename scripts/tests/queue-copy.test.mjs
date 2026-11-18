@@ -54,7 +54,7 @@ test("the waiting copy still promises the request keeps its place", () => {
   const text = customerAssignmentCopy("waiting").body.toLowerCase();
 
   assert.match(text, /stays in line/);
-  assert.match(text, /match you/);
+  assert.match(text, /look for a technician/);
 });
 
 test("the waiting copy offers somewhere to go", () => {

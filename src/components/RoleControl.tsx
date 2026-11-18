@@ -2,44 +2,28 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ROLE_LABEL } from "@/lib/roleMeta";
 import type { UserRole } from "@/types/database";
 
 const ROLES: UserRole[] = ["customer", "technician", "admin", "super_admin"];
 
-/**
- * The role dropdown on `/superadmin/admins`.
- *
- * WHY IT REPORTS ITS OWN FAILURES. It used to fire the PATCH, ignore the answer and
- * refresh, so a refused change left the dropdown showing a role the database had never
- * accepted — with nothing said about why. Every refusal has a reason a super
- * administrator needs:
- *
- *   * **400** — the role is not one of the four (a stale tab, or a hand-made request), or
- *     the database refused the change by one of its own rules, whose words are passed
- *     through: changing your **own** role away from `super_admin`, or removing the last
- *     **active** super administrator;
- *   * **401 / 403** — the session is not a super administrator any more;
- *   * **503 `SERVICE_SETUP_REQUIRED`** — this database has not had
- *     `supabase/migration_set_user_role.sql` applied, so `set_user_role()` does not exist
- *     and the change cannot be made transactionally yet.
- *
- * On any of them the selection snaps back to the role the database still has, so the
- * control can never claim a change that did not happen.
- */
 export default function RoleControl({
   userId,
+  accountName,
   currentRole,
 }: {
   userId: string;
+  accountName: string;
   currentRole: UserRole;
 }) {
   const router = useRouter();
-  const [role, setRole] = useState(currentRole);
+  const [savedRole, setSavedRole] = useState(currentRole);
+  const [draftRole, setDraftRole] = useState<UserRole | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleChange(newRole: UserRole) {
-    setRole(newRole);
+  async function saveRole() {
+    if (!draftRole || saving) return;
     setSaving(true);
     setError(null);
 
@@ -47,40 +31,69 @@ export default function RoleControl({
       const response = await fetch(`/api/users/${userId}/role`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: newRole }),
+        body: JSON.stringify({ role: draftRole }),
       });
 
       if (!response.ok) {
-        setRole(currentRole);
+        setDraftRole(null);
         setError(await failureMessage(response));
         return;
       }
 
+      setSavedRole(draftRole);
+      setDraftRole(null);
       router.refresh();
     } catch {
-      setRole(currentRole);
-      setError("The role could not be changed — the request did not reach the server.");
+      setDraftRole(null);
+      setError("Could not confirm the role change. Check the current role before trying again.");
+      router.refresh();
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="flex min-w-0 flex-col items-start gap-1.5">
+    <div className="flex min-w-0 flex-col items-start gap-2" aria-busy={saving}>
       <select
-        value={role}
+        value={draftRole ?? savedRole}
         disabled={saving}
-        aria-label="Role"
-        aria-busy={saving}
-        onChange={(e) => handleChange(e.target.value as UserRole)}
-        className="rounded-lg border border-line px-2 py-1.5 text-sm"
+        aria-label={`Role for ${accountName}`}
+        onChange={(event) => {
+          const nextRole = event.target.value as UserRole;
+          setDraftRole(nextRole === savedRole ? null : nextRole);
+          setError(null);
+        }}
+        className="min-h-11 rounded-lg border border-line bg-surface px-3 text-sm text-ink sm:min-h-9"
       >
-        {ROLES.map((r) => (
-          <option key={r} value={r}>
-            {r.replace("_", " ")}
-          </option>
+        {ROLES.map((role) => (
+          <option key={role} value={role}>{ROLE_LABEL[role]}</option>
         ))}
       </select>
+      {draftRole && (
+        <div className="max-w-xs rounded-lg border border-line bg-soft p-3">
+          <p className="break-words text-sm text-ink">
+            Change <strong>{accountName}</strong> from {ROLE_LABEL[savedRole]} to {ROLE_LABEL[draftRole]}?
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={saveRole}
+              disabled={saving}
+              className="min-h-11 rounded-lg bg-brand-600 px-3 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60 sm:min-h-9"
+            >
+              {saving ? "Saving..." : "Save role"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDraftRole(null)}
+              disabled={saving}
+              className="min-h-11 rounded-lg border border-line bg-surface px-3 text-sm font-semibold text-ink hover:bg-brand-soft disabled:opacity-60 sm:min-h-9"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       {error && (
         <p role="alert" className="max-w-xs text-xs leading-relaxed text-alert-ink">
           {error}

@@ -17,8 +17,7 @@ export default async function SuperAdminAdminsPage() {
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink">Administrators</h1>
       <p className="mt-1 text-sm text-ink/70">
-        Promote a trusted account to admin, or demote/deactivate an existing one. Changes
-        take effect immediately.
+        Choose a role for an account, review the change, then select Save role to apply it.
       </p>
 
       <section className="mt-6">
@@ -38,9 +37,9 @@ export default async function SuperAdminAdminsPage() {
                   <p className="font-medium text-ink">{u.name}</p>
                   <p className="text-xs text-ink/70">{u.email}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-start gap-2">
                   <AdminStatusToggle userId={u.id} isActive={u.is_active} />
-                  <RoleControl userId={u.id} currentRole={u.role} />
+                  <RoleControl key={u.role} userId={u.id} accountName={u.name} currentRole={u.role} />
                 </div>
               </div>
             ))
@@ -64,7 +63,7 @@ export default async function SuperAdminAdminsPage() {
                   {u.email} · <span className="capitalize">{u.role}</span>
                 </p>
               </div>
-              <RoleControl userId={u.id} currentRole={u.role} />
+              <RoleControl key={u.role} userId={u.id} accountName={u.name} currentRole={u.role} />
             </div>
           ))}
         </div>

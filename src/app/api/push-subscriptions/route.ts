@@ -2,6 +2,24 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, AuthError } from "@/lib/auth";
 
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) throw new AuthError("Not authenticated", 401);
+
+    const endpoint = request.headers.get("x-push-endpoint");
+    if (!endpoint) return NextResponse.json({ error: "Push endpoint is required" }, { status: 400 });
+
+    const { data, error } = await createClient().from("push_subscriptions")
+      .select("id").eq("user_id", user.id).eq("endpoint", endpoint).maybeSingle();
+    if (error) throw error;
+
+    return NextResponse.json({ enabled: Boolean(data) }, { headers: { "Cache-Control": "no-store" } });
+  } catch (err) {
+    return handleError(err);
+  }
+}
+
 // POST /api/push-subscriptions, save a browser's push subscription
 export async function POST(request: NextRequest) {
   try {
@@ -38,12 +56,17 @@ export async function DELETE(request: NextRequest) {
     if (!user) throw new AuthError("Not authenticated", 401);
 
     const { endpoint } = await request.json();
+    if (typeof endpoint !== "string" || !endpoint) {
+      return NextResponse.json({ error: "Push endpoint is required" }, { status: 400 });
+    }
+
     const supabase = createClient();
-    await supabase
+    const { error } = await supabase
       .from("push_subscriptions")
       .delete()
       .eq("user_id", user.id)
       .eq("endpoint", endpoint);
+    if (error) throw error;
 
     return NextResponse.json({ ok: true });
   } catch (err) {

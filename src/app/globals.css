@@ -486,8 +486,12 @@ img {
 @media (max-width: 767.98px) {
   /* Clearance for a sticky primary action, which is taller than the tab bar
      because it carries a button rather than a row of icons. */
+  html:has(.spark-sticky-action) {
+    scroll-padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .spark-sticky-action-offset {
-    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
   }
 }
 

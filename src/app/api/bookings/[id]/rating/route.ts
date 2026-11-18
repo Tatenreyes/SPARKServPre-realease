@@ -36,11 +36,11 @@ export async function POST(
     }
 
     const body = await request.json().catch(() => ({}));
-    const rating = Number(body.rating);
+    const rating: unknown = body.rating;
     const comment = typeof body.comment === "string" ? body.comment.trim() : "";
     const tags = sanitizeTags("customer_rates_technician", body.tags);
 
-    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    if (typeof rating !== "number" || !Number.isInteger(rating) || rating < 1 || rating > 5) {
       return NextResponse.json(
         { error: "Choose a rating from 1 to 5 stars." },
         { status: 400 }
