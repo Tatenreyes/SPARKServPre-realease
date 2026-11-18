@@ -22,6 +22,17 @@ export default function ProfileForm({ role }: ProfileFormProps) {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * Years of experience is held as the raw STRING the technician typed, not the
+   * number that gets saved.
+   *
+   * It used to be `value={experience_years}` with `Number(event.target.value)` on
+   * change, so clearing the field produced `Number("") === 0` and React painted
+   * the zero straight back: the field could not be emptied, which is what made it
+   * look like the zero was undeletable. An empty string now survives, and the
+   * number is derived once, at save time.
+   */
+  const [experienceInput, setExperienceInput] = useState("");
 
   useEffect(() => {
     fetch("/api/profile").then(async (response) => {
@@ -45,9 +56,19 @@ export default function ProfileForm({ role }: ProfileFormProps) {
       setProfile(normalized);
       if (result.technician) {
         setTechnician(result.technician);
+        // A stored 0 is shown as an empty field: "no experience entered yet" is
+        // truer than a literal 0, and the column defaults to 0 anyway.
+        const years = Number(result.technician.experience_years);
+        setExperienceInput(Number.isFinite(years) && years > 0 ? String(Math.floor(years)) : "");
       }
     }).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
   }, []);
+
+  /** What the API receives: blank means 0, and only whole years count. */
+  const experienceYears = (() => {
+    const parsed = Number(experienceInput);
+    return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
+  })();
 
   async function saveProfile(event: React.FormEvent) {
     event.preventDefault();
@@ -62,7 +83,7 @@ export default function ProfileForm({ role }: ProfileFormProps) {
         phone: profile.phone?.trim() || null,
         address: profile.address?.trim() || null,
         specializations: technician?.specializations ?? [],
-        experience_years: technician?.experience_years ?? 0,
+        experience_years: experienceYears,
         availability: technician?.availability ?? true,
       }),
     });
@@ -163,8 +184,20 @@ export default function ProfileForm({ role }: ProfileFormProps) {
               <p className="mt-1 text-xs text-muted">Click an appliance to add or remove it from your specializations.</p>
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-ink/80">Years of experience</label>
-              <input type="number" min="0" value={technician.experience_years} onChange={(event) => setTechnician({ ...technician, experience_years: Number(event.target.value) })} className="w-full rounded-lg border border-line bg-soft px-3 py-2.5 text-sm text-ink outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15" />
+              <label htmlFor="experience-years" className="mb-1.5 block text-xs font-semibold text-ink/80">Years of experience</label>
+              <input
+                id="experience-years"
+                type="number"
+                min="0"
+                step="1"
+                inputMode="numeric"
+                value={experienceInput}
+                onChange={(event) => setExperienceInput(event.target.value.replace(/[^0-9]/g, ""))}
+                onFocus={(event) => event.target.select()}
+                placeholder="0"
+                className="w-full rounded-lg border border-line bg-soft px-3 py-2.5 text-sm text-ink outline-none [appearance:textfield] placeholder:text-ink/50 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+              <p className="mt-1 text-xs text-muted">Leave blank if you are just starting out.</p>
             </div>
             <label className="flex items-center gap-3 self-end pb-2 text-sm font-medium text-ink/80">
               <input type="checkbox" checked={technician.availability} onChange={(event) => setTechnician({ ...technician, availability: event.target.checked })} className="h-4 w-4 accent-brand-600" />

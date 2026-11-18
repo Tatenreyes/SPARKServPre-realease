@@ -290,9 +290,11 @@ img {
      into the first slot, the third into the second, and so on. */
   .appliance-carousel {
     --appliance-card-width: 168px;
+    --appliance-gap: 0.75rem;
     position: relative;
     display: flex;
     align-items: flex-start;
+    column-gap: var(--appliance-gap);
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
@@ -306,9 +308,11 @@ img {
     display: none;
   }
 
-  /* Let the final card scroll all the way to the left edge of the rail. */
+  /* Let the final card scroll all the way to the left edge of the rail. The
+     trailing gap between the last card and the spacer is subtracted as well so
+     the card lands flush with the edge instead of overshooting by one gap. */
   .appliance-carousel-end-spacer {
-    flex: 0 0 calc(100% - var(--appliance-card-width));
+    flex: 0 0 calc(100% - var(--appliance-card-width) - var(--appliance-gap));
   }
 
   .appliance-slide {
@@ -327,12 +331,14 @@ img {
   @media (min-width: 640px) {
     .appliance-carousel {
       --appliance-card-width: 200px;
+      --appliance-gap: 1rem;
     }
   }
 
   @media (min-width: 1024px) {
     .appliance-carousel {
       --appliance-card-width: 220px;
+      --appliance-gap: 1.25rem;
     }
   }
 

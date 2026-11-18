@@ -121,7 +121,7 @@ export default async function TechnicianQueuePage({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <QueueStat
           label="Your best position"
-          value={bestPosition ? `#${bestPosition}` : "N/A"}
+          value={bestPosition?.toString() ?? "N/A"}
           hint={leadQueue ? leadQueue.label : "Not in a rotation"}
         />
         <QueueStat
@@ -163,7 +163,7 @@ export default async function TechnicianQueuePage({
               href={`/technician/queue?queue=${encodeURIComponent(queue.applianceType)}`}
               active={selected === queue.applianceType}
               label={queue.label}
-              badge={queue.myPosition ? `#${queue.myPosition}` : "N/A"}
+              badge={queue.myPosition?.toString() ?? "N/A"}
             />
           ))}
         </div>
@@ -180,7 +180,7 @@ export default async function TechnicianQueuePage({
             href="/technician/profile"
             className="mt-4 inline-flex h-9 items-center rounded-lg bg-brand-600 px-4 text-xs font-semibold text-white transition duration-200 hover:bg-brand-700"
           >
-            Profile &amp; availability
+            Profile &amp; specialisations
           </Link>
         </div>
       )}
@@ -194,7 +194,7 @@ export default async function TechnicianQueuePage({
           <div className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-3">
             <MiniFact
               label="Your position"
-              value={queue.myPosition ? `#${queue.myPosition}` : "Not in this rotation"}
+              value={queue.myPosition?.toString() ?? "Not in this rotation"}
             />
             <MiniFact label="Next eligible turn" value={nextTurnLabel(queue)} />
             <MiniFact
@@ -334,11 +334,11 @@ function RotationFact({ term, children }: { term: string; children: React.ReactN
   );
 }
 
-/** "Technician C (#1)", who the engine will consider first for this queue. */
+/** "Technician C (1)", who the engine will consider first for this queue. */
 function nextTurnLabel(queue: ApplianceQueue): string {
   if (queue.nextTurnPosition === null) return "Nobody in the rotation";
   const holder = queue.entries.find((entry) => entry.position === queue.nextTurnPosition);
-  if (!holder) return `#${queue.nextTurnPosition}`;
-  return `${holder.isSelf ? "You" : holder.name} (#${holder.position})`;
+  if (!holder) return String(queue.nextTurnPosition);
+  return `${holder.isSelf ? "You" : holder.name} (${holder.position})`;
 }
 

@@ -224,7 +224,7 @@ export default async function AdminTechnicianQueuePage({
                 <p className="mt-0.5 text-[11px] text-muted">
                   {queue.activeTechnicianCount} in rotation
                   {queue.nextTurnPosition !== null
-                    ? ` · next turn: #${queue.nextTurnPosition}`
+                    ? ` · next turn: ${queue.nextTurnPosition}`
                     : " · nobody in rotation"}
                   {activeFilter.key !== "all"
                     ? ` · filtered to ${activeFilter.label.toLowerCase()}`
@@ -262,13 +262,14 @@ export default async function AdminTechnicianQueuePage({
 
             <details className="mt-4 rounded-lg border border-line bg-soft/60 px-3 py-2">
               <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
-                Administrative override (audited)
+                Fix a technician&apos;s position in this queue (audited)
               </summary>
               <p className="mt-2 text-[11px] leading-relaxed text-muted">
-                Manual rotation changes are deliberately awkward: you must give a reason, and the
-                change is written to the queue audit trail with your account, the old position and the
-                new position. Never use this to hand work to a preferred technician, the rotation is
-                a fairness mechanism.
+                Use this only to correct the rotation by hand, for example someone back from leave,
+                a suspension, a specialisation change, or a turn that was consumed by mistake. A
+                written reason is required, and the change is saved to the queue audit trail with
+                your account and the old and new position. It moves a position inside the rotation;
+                it cannot hand a job to a technician you choose.
               </p>
               <div className="mt-3 space-y-2">
                 {queue.entries.map((entry) => (
@@ -517,7 +518,7 @@ function AdminQueueRow({ entry }: { entry: QueueEntry }) {
     >
       <td className="py-3 pr-4 align-middle">
         <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-soft px-2 text-xs font-bold text-muted">
-          {entry.position ? `#${entry.position}` : "N/A"}
+          {entry.position ?? "N/A"}
         </span>
       </td>
       <td className="py-3 pr-4 align-middle">
@@ -571,10 +572,10 @@ function AdminQueueRow({ entry }: { entry: QueueEntry }) {
 /** Reads as a sentence, so "why did nothing change" is answerable at a glance. */
 function positionChange(event: TechnicianQueueEventRow) {
   if (event.old_position === null && event.new_position === null) return "N/A";
-  if (event.old_position === event.new_position) return `#${event.new_position ?? "N/A"} (unchanged)`;
-  if (event.old_position === null) return `→ #${event.new_position}`;
-  if (event.new_position === null) return `#${event.old_position} → removed`;
-  return `#${event.old_position} → #${event.new_position}`;
+  if (event.old_position === event.new_position) return `${event.new_position ?? "N/A"} (unchanged)`;
+  if (event.old_position === null) return `→ ${event.new_position}`;
+  if (event.new_position === null) return `${event.old_position} → removed`;
+  return `${event.old_position} → ${event.new_position}`;
 }
 
 const ACTION_LABELS: Record<string, string> = {

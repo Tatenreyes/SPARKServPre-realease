@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -22,6 +22,8 @@ import {
 import AssignmentStatusCard from "@/components/AssignmentStatusCard";
 import DateSelect from "@/components/DateSelect";
 import FieldCounter from "@/components/FieldCounter";
+import MonthCalendar, { manilaToday } from "@/components/MonthCalendar";
+import PhilippineClock from "@/components/PhilippineClock";
 import ServiceLocationPicker from "@/components/ServiceLocationPicker";
 import ServiceWindowFields from "@/components/ServiceWindowFields";
 import TroubleshootingPanel from "@/components/TroubleshootingPanel";
@@ -106,7 +108,16 @@ const ALL_SECTIONS_OPEN: Record<SectionKey, boolean> = {
  * nothing but "Other" (see that module's header).
  */
 
-export default function RequestRepairWizard() {
+export interface RequestRepairWizardProps {
+  /**
+   * The server's clock at render time (`Date.now()`), passed down from the page so
+   * the display-only clock can show the shop's real time even when the customer's
+   * device clock is wrong. Optional: without it the clock falls back to the device.
+   */
+  serverNow?: number;
+}
+
+export default function RequestRepairWizard({ serverNow }: RequestRepairWizardProps = {}) {
   const router = useRouter();
   const supabase = createClient();
   // The wizard has to know who is signed in: a new `appliances` row needs
@@ -211,6 +222,28 @@ export default function RequestRepairWizard() {
    */
   const [windowStart, setWindowStart] = useState("");
   const [windowEnd, setWindowEnd] = useState("");
+  /**
+   * The month the calendar panel shows. Owned here rather than inside the calendar
+   * so a Month/Year dropdown change can move it, and the arrows can move it back.
+   * Seeded from the current month in the SERVICE timezone, not the browser's.
+   */
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const today = manilaToday();
+    return { year: today.getFullYear(), month: today.getMonth() + 1 };
+  });
+
+  /**
+   * Follow the date dropdowns. `DateSelect` reports a month (1-based) and a year
+   * (0 while unset) whenever either changes; the calendar only moves once both are
+   * known, so a half-chosen date cannot point it at a month nobody picked.
+   */
+  const handleMonthYearChange = useCallback((month: number, year: number) => {
+    if (!month || !year) return;
+    setCalendarMonth((prev) =>
+      prev.year === year && prev.month === month ? prev : { year, month }
+    );
+  }, []);
+
   const [serviceAddress, setServiceAddress] = useState("");
   /**
    * The map pin the customer CONFIRMED, or null. Only a confirmed point is ever
@@ -1378,7 +1411,7 @@ export default function RequestRepairWizard() {
           </div>
         </fieldset>
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <div className="mt-5 space-y-4">
           {/* Address + interactive map. One control, because the written address
               and the confirmed pin describe the same place: the technician is
               routed to the pin, and the address is what a human reads. */}
@@ -1398,49 +1431,67 @@ export default function RequestRepairWizard() {
             lastLocation={lastLocation}
           />
 
-          <div>
-            {/* Same control as the purchase date, on the other side of today: today up to
-                a year ahead. The time window below stays disabled until a date is chosen. */}
-            <DateSelect
-              id="preferred-date"
-              label="Preferred service date"
-              value={preferredDate}
-              onChange={setPreferredDate}
-              direction="future"
-            />
+          {/* Date + window on the left, the shop's clock and a month grid on the
+              right. Below 560px the two stack and the clock/calendar come first, so
+              a phone reads the time before it picks one. */}
+          <div className="grid gap-4 min-[560px]:grid-cols-2">
+            {/* Right column: live clock, then the calendar. First when stacked. */}
+            <div className="order-1 space-y-4 min-[560px]:order-2">
+              <PhilippineClock serverNow={serverNow} />
+              <MonthCalendar
+                value={preferredDate}
+                view={calendarMonth}
+                onViewChange={setCalendarMonth}
+                onSelect={setPreferredDate}
+              />
+            </div>
+
+            {/* Left column: the date picker and the arrival window. */}
+            <div className="order-2 space-y-4 min-[560px]:order-1">
+              {/* Same control as the purchase date, on the other side of today: today
+                  up to a year ahead. The time window below stays disabled until a
+                  date is chosen. */}
+              <DateSelect
+                id="preferred-date"
+                label="Preferred service date"
+                value={preferredDate}
+                onChange={setPreferredDate}
+                direction="future"
+                compact
+                onMonthYearChange={handleMonthYearChange}
+              />
+
+              <fieldset className="min-w-0">
+                <legend className="mb-1.5 block text-sm font-medium text-ink/80">
+                  Preferred time window{" "}
+                  <span className="font-normal text-muted">(optional)</span>
+                </legend>
+                <p className="mb-2 text-xs leading-relaxed text-muted">
+                  We work {windowLabel(SERVICE_HOURS.opens, SERVICE_HOURS.closes)} Philippine
+                  time and are closed for lunch from{" "}
+                  {windowLabel(SERVICE_HOURS.break.start, SERVICE_HOURS.break.end)}. Only
+                  technicians free in your window are offered the job.
+                </p>
+
+                {/* Two hour + minute boxes, not six selects over the whole day and not
+                    a dropdown of presets. The hour list is the shop's own day (`9 AM`,
+                    `10 AM`, `11 AM`, `1 PM` …), so the AM/PM is implied by the hour that
+                    is picked: 9 PM and 4 AM cannot be assembled at all. The end pool is
+                    bounded by the start and by the block it sits in, so a window across
+                    the lunch break is never offered rather than dropped in silence later. */}
+                <ServiceWindowFields
+                  start={windowStart}
+                  end={windowEnd}
+                  onStartChange={setWindowStart}
+                  onEndChange={setWindowEnd}
+                  disabled={!preferredDate}
+                />
+                {!preferredDate && (
+                  <p className="mt-1.5 text-xs text-muted">Pick a date above to choose a time.</p>
+                )}
+              </fieldset>
+            </div>
           </div>
-
-          {/* Full width: two arrival boxes and their quick fills need the room the
-              half-width cell would not give them. */}
-          <fieldset className="min-w-0 sm:col-span-2">
-            <legend className="mb-1.5 block text-sm font-medium text-ink/80">
-              Preferred time window{" "}
-              <span className="font-normal text-muted">(optional)</span>
-            </legend>
-            <p className="mb-2 text-xs leading-relaxed text-muted">
-              We work {windowLabel(SERVICE_HOURS.opens, SERVICE_HOURS.closes)} Philippine
-              time and are closed for lunch from{" "}
-              {windowLabel(SERVICE_HOURS.break.start, SERVICE_HOURS.break.end)}. Only
-              technicians free in your window are offered the job.
-            </p>
-
-            {/* Two hour + minute boxes, not six selects over the whole day and not a
-                dropdown of presets. The hour list is the shop's own day (`9 AM`,
-                `10 AM`, `11 AM`, `1 PM` …), so the AM/PM is implied by the hour that is
-                picked: 9 PM and 4 AM cannot be assembled at all. The end pool is
-                bounded by the start and by the block it sits in, so a window across
-                the lunch break is never offered rather than dropped in silence later. */}
-            <ServiceWindowFields
-              start={windowStart}
-              end={windowEnd}
-              onStartChange={setWindowStart}
-              onEndChange={setWindowEnd}
-              disabled={!preferredDate}
-            />
-            {!preferredDate && (
-              <p className="mt-1.5 text-xs text-muted">Pick a date above to choose a time.</p>
-            )}
-          </fieldset>
         </div>
 
         <p className="mt-2 text-xs leading-relaxed text-muted">

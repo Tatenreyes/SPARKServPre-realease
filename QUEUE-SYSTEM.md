@@ -229,7 +229,7 @@ calls them from server routes with the service-role client
 | Admin monitor | `/admin/technician-queue` — positions, statuses, next bookings, skips, offer activity, history, audited override |
 | Admin override endpoint | `POST /api/admin/queue-override` |
 | Technician availability (windows, time off, service areas) | `GET|POST /api/technician-availability` |
-| Availability editor screen | `/technician/profile` (`src/components/AvailabilityManager.tsx`) |
+| Availability editor screen | `/technician/availability` (`src/components/AvailabilityManager.tsx`) |
 | Migration-state gate | `npm run db:check` (`scripts/check-migration-state.mjs`) |
 
 ## Who sees what

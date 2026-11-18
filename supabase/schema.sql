@@ -77,11 +77,6 @@ create table public.appliances (
 
 alter table public.appliances enable row level security;
 
-create policy "customer manages own appliances"
-  on public.appliances for all
-  using (customer_id = auth.uid() or public.is_admin())
-  with check (customer_id = auth.uid() or public.is_admin());
-
 create index idx_appliances_customer on public.appliances(customer_id);
 
 -- =========================================================
@@ -391,6 +386,11 @@ security definer set search_path = public
 as $$
   select public.current_role() in ('admin', 'super_admin');
 $$;
+
+create policy "customer manages own appliances"
+  on public.appliances for all
+  using (customer_id = auth.uid() or public.is_admin())
+  with check (customer_id = auth.uid() or public.is_admin());
 
 -- Helper: is the caller a technician? Used by the queue RLS policies, which
 -- must let technicians read a whole appliance queue but must NOT let customers
@@ -2506,4 +2506,21 @@ create policy "technician and admin read customer ratings"
   on public.customer_ratings for select
   using (technician_id = auth.uid() or public.is_admin());
 
+
+-- =========================================================
+-- Added after initial release (see migration_support_ticket_resolution.sql) —
+-- included here too so a fresh install only needs one file.
+-- =========================================================
+
+-- How a service concern was resolved. Without these, "resolved" is a status with
+-- no explanation behind it. `resolved_by` is stamped by the API from the
+-- administrator's own session, never accepted from a request body.
+alter table public.support_tickets
+  add column resolution_note text,
+  add column resolved_by uuid references public.users(id),
+  add column resolved_at timestamptz;
+
+create index idx_support_tickets_resolved_at
+  on public.support_tickets(resolved_at desc)
+  where resolution_note is not null;
 

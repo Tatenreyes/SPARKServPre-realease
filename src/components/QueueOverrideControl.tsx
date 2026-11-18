@@ -94,7 +94,7 @@ export default function QueueOverrideControl({
         <p className="text-xs font-semibold text-ink">
           {technicianName}
           <span className="ml-2 font-normal text-muted">
-            {position ? `#${position}` : "out of rotation"}
+            {position ? `position ${position}` : "out of rotation"}
             {isActive ? "" : " · removed"}
           </span>
         </p>

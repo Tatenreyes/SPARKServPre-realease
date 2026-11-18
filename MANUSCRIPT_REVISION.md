@@ -137,7 +137,7 @@ implemented and compiled; the evidence column names where it lives.
 | Technician disclosure | Photo, name, verification badge, rating from real reviews, completed jobs, experience and specialisations — no contact details | `src/lib/technician-profile.ts` |
 | Notifications | In-app bell plus browser push, one entry point, sent after the write commits and never able to fail it | `src/lib/notifications.ts`, `src/lib/push.ts` |
 | Ratings | One rating per completed booking; feeds the technician card but **not** the queue | `src/app/api/bookings/[id]/rating/route.ts` |
-| Support tickets | General help requests, separate from repair requests | `src/components/SupportTicketsClient.tsx` |
+| Support tickets | General help requests, separate from repair requests | `src/components/AdminServiceConcernsClient.tsx`, `src/components/ServiceConcernsClient.tsx` |
 | Administration | Queue monitor, job monitoring, payments queue, users, technicians, support tickets, system settings | `src/app/admin/`, `src/app/superadmin/` |
 | Installable application | Web manifest, installable on a phone, defined offline fallback | `src/app/manifest.ts`, `public/sw.js` |
 | Accessible interface | Light and dark themes, contrast verified against WCAG 2.1 AA by computation | `npm run test:design` |

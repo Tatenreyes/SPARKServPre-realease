@@ -217,7 +217,9 @@ calculates the route; SPARKServ does not, and no Google Maps API key is involved
 ## Technician
 
 Navigation (`src/lib/navConfig.ts`): Dashboard · Pending Assignments · My Jobs ·
-**Queue / Schedule** · Messages · Profile & Availability.
+Past Jobs · **Queue / Schedule** · Messages · **Availability**. The profile and the
+account settings are not sidebar items: both are reached from the topbar avatar
+menu.
 
 ### 1. An offer arrives
 
@@ -248,12 +250,17 @@ specialised in. Each queue card shows position, technician, status and next
 booking:
 
 ```
-Washing Machine Queue                  Your queue position: #2
-#1  Technician A   Available     Jan 30, 9:00 AM
-#2  You            Available     Jan 25, 2:00 PM    ← highlighted
-#3  Technician C   On Job        Today, 3:00 PM
-#4  Technician D   Unavailable   —
+Washing Machine Queue                  Your queue position: 2
+
+Position  Technician    Status        Next booking
+1         Technician A  Available     Jan 30, 9:00 AM
+2         You           Available     Jan 25, 2:00 PM    ← highlighted
+3         Technician C  On Job        Today, 3:00 PM
+4         Technician D  Unavailable   —
 ```
+
+A position is shown as a plain number, never `#2`: the column, the badge and the
+panel all name what the number is, so the hash was noise on top of a label.
 
 * **The whole rotation is listed**, not just the signed-in technician — the
   single biggest fix in this redesign.
@@ -284,8 +291,8 @@ queue evaluates per request. A technician with a Jan 30 appointment is still
 offered Jan 24 work — the old behaviour of vanishing until a repair finished is
 gone.
 
-The technician edits all three on **Profile & Availability**
-(`/technician/profile` → `AvailabilityManager`), which reads and writes
+The technician edits all three on **Availability**
+(`/technician/availability` → `AvailabilityManager`), which reads and writes
 `/api/technician-availability`. That screen states the empty case explicitly,
 because a blank schedule reads as "switched off" to a human but means the exact
 opposite to the queue:

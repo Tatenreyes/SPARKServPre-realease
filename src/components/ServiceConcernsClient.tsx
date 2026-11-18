@@ -262,6 +262,29 @@ export default function ServiceConcernsClient({
                     year: "numeric",
                   })}
                 </p>
+
+                {/* What the customer actually asked: not just that it is closed,
+                    but what was done. The administrator is required to write this
+                    when they resolve a concern (see the support-tickets API). */}
+                {t.resolution_note && (
+                  <div className="mt-3 rounded-xl border border-line bg-soft px-3 py-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
+                      How we resolved this
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-ink/80">
+                      {t.resolution_note}
+                    </p>
+                    {t.resolved_at && (
+                      <p className="mt-1 text-[11px] text-muted">
+                        {new Date(t.resolved_at).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
+                    )}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -299,6 +322,12 @@ export default function ServiceConcernsClient({
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={t.status} />
+                      {t.resolution_note && (
+                        <p className="mt-2 max-w-xs text-xs leading-relaxed text-ink/70">
+                          <span className="font-semibold text-ink">How we resolved it: </span>
+                          {t.resolution_note}
+                        </p>
+                      )}
                     </td>
                   </tr>
                 ))}

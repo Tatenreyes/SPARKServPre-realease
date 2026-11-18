@@ -464,6 +464,11 @@ export interface SupportTicketRow {
   status: TicketStatus;
   type: TicketType;
   priority: TicketPriority;
+  /** How it was resolved. Required by the API when the status becomes `resolved`. */
+  resolution_note: string | null;
+  /** The administrator who resolved it, stamped from their session. */
+  resolved_by: string | null;
+  resolved_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -659,6 +664,18 @@ export interface Database {
       /** Admin-only (enforced in the function): reason is mandatory and audited. */
       admin_queue_override: {
         Args: { p_appliance_type: string; p_technician_id: string; p_action: string; p_reason: string };
+        Returns: Json;
+      };
+      /**
+       * Super-admin only, re-checked inside the function
+       * (`supabase/migration_set_user_role.sql`): writes `public.users.role` AND keeps
+       * the `technicians` row in step in one transaction, so a promoted account appears
+       * on `/admin/technicians` immediately. Returns the updated profile as `jsonb`. It
+       * refuses the two ways a project loses its last administrator — self-demotion and
+       * removing the last ACTIVE super admin — and never reads `user_metadata`.
+       */
+      set_user_role: {
+        Args: { p_user_id: string; p_role: UserRole };
         Returns: Json;
       };
       /** Server-only: recompute + cache a technician's operational status. */

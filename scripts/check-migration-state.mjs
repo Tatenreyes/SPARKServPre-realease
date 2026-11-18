@@ -463,6 +463,49 @@ const MIGRATIONS = [
     // before the base schema exists.
     prerequisiteOf: [],
   },
+  {
+    // Step 22, how a service concern was resolved. All three columns are real and
+    // probeable through PostgREST, so this step is reported pending until the file
+    // is applied — which matters here, because until it is, resolving a concern in
+    // /admin/service-concerns answers 503 SERVICE_SETUP_REQUIRED instead of saving
+    // the note. There is no function to use as a completion signal and the file
+    // writes no marker row, so the columns ARE the signal.
+    order: 22,
+    file: "supabase/migration_support_ticket_resolution.sql",
+    purpose:
+      "How a service concern was resolved: the required note and the administrator who wrote it (support_tickets.resolution_note / resolved_by / resolved_at)",
+    columns: [
+      ["support_tickets", "resolution_note"],
+      ["support_tickets", "resolved_by"],
+      ["support_tickets", "resolved_at"],
+    ],
+    tables: [],
+    functions: [],
+    // It adds columns to `support_tickets` and references `users` (for
+    // `resolved_by`), both of which arrive with schema.sql, so it must not be
+    // applied before the base schema exists.
+    prerequisiteOf: [],
+  },
+  {
+    // Step 23, PREPARED AND NOT APPLIED. The function it creates is visible through
+    // PostgREST's OpenAPI document, so it is the completion signal — which matters
+    // here, because until the file is applied `PATCH /api/users/[id]/role` answers
+    // 503 SERVICE_SETUP_REQUIRED naming it instead of changing a role. It replaces
+    // nothing and adds no column, so a function probe is the honest one; there is no
+    // marker row and none is needed.
+    order: 23,
+    file: "supabase/migration_set_user_role.sql",
+    purpose:
+      "Transactional role change: set_user_role() writes public.users.role and keeps the technicians row in step, refuses non-super-admins inside the function, and refuses both ways a project loses its last administrator (self-demotion, and removing the last ACTIVE super admin)",
+    columns: [],
+    tables: [],
+    functions: ["set_user_role"],
+    // It references `users` and `technicians`, both of which arrive with schema.sql —
+    // and the queue triggers that keep `technician_queue_state` in step with a newly
+    // created row come from migration_queue_redesign.sql — so it must not be applied
+    // before the base schema and the queue engine exist.
+    prerequisiteOf: [],
+  },
 ];
 
 /**
@@ -675,7 +718,10 @@ async function main() {
   }
 
   if (mustApply.length === 0) {
-    console.log(`All ${MIGRATIONS.length} migrations are applied. (${passes} checks passed)`);
+    console.log(`All ${passes} PostgREST checks passed across ${status.length - unverifiable.length} of ${status.length} migration steps.`);
+    if (unverifiable.length > 0) {
+      console.log(`Steps without PostgREST checks: ${unverifiable.length}.`);
+    }
     console.log("Next: npm run verify:queue");
     process.exit(0);
   }
