@@ -259,14 +259,31 @@ export async function expireStaleOffers(
   const outcome = (data ?? { count: 0, expired: [] }) as unknown as ExpiredOffersOutcome;
 
   for (const lapsed of outcome.expired ?? []) {
-    if (!lapsed.technician_id) continue;
-    await notify(supabase, {
-      userId: lapsed.technician_id,
-      type: "offer_expired",
-      title: "Job offer expired",
-      body: `Your offer for a ${applianceLabel(lapsed.appliance_type)} repair lapsed and was passed to the next technician.`,
-      link: "/technician/estimate-requests",
-    });
+    if (lapsed.technician_id) {
+      await notify(supabase, {
+        userId: lapsed.technician_id,
+        type: "offer_expired",
+        title: "Job offer expired",
+        body: `Your offer for a ${applianceLabel(lapsed.appliance_type)} service request has expired.`,
+        link: "/technician/estimate-requests",
+      });
+    }
+
+    const { data: request, error: readError } = await supabase
+      .from("service_requests")
+      .select("assigned_technician_id, assignment_status, offers_expires_at")
+      .eq("id", lapsed.request_id)
+      .single();
+    if (readError) throw readError;
+    if (request.assignment_status === "offered" && request.assigned_technician_id) {
+      await notify(supabase, {
+        userId: request.assigned_technician_id,
+        type: "job_offered",
+        title: "New job offer",
+        body: `A ${applianceLabel(lapsed.appliance_type)} service request is available. Open your pending assignments to respond.`,
+        link: "/technician/estimate-requests",
+      });
+    }
   }
 
   return outcome;
