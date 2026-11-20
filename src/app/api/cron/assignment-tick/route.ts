@@ -39,6 +39,27 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createServiceRoleClient();
 
+    // Preview deployments must never run a queue sweep against production.
+    if (process.env.VERCEL_ENV === "preview") {
+      let projectHost = "";
+      try {
+        projectHost = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").hostname;
+      } catch {
+        return NextResponse.json({ error: "Invalid staging project URL" }, { status: 503 });
+      }
+      if (projectHost !== "hhburrxniutmovczhpoi.supabase.co") {
+        return NextResponse.json({ error: "Preview is not configured for staging" }, { status: 503 });
+      }
+      const { data: marker, error: markerError } = await supabase
+        .from("system_settings")
+        .select("value")
+        .eq("key", "staging_environment")
+        .maybeSingle();
+      if (markerError || marker?.value !== "sparkserv-staging") {
+        return NextResponse.json({ error: "Staging configuration could not be verified" }, { status: 503 });
+      }
+    }
+
     // Both sweeps are single Postgres transactions: each lapsed offer is marked
     // in the audit trail, the request is re-offered to the next eligible
     // technician, and the technician who ignored the offer KEEPS their queue
