@@ -60,6 +60,11 @@ export function suggestEmailFix(email: string): string | null {
   return `${value.slice(0, at)}@${fixed}`;
 }
 
+/** Existing accounts only need a well-formed address to attempt sign-in. */
+export function validateLoginEmail(email: string): string | null {
+  return EMAIL_FORMAT.test(email.trim()) ? null : INVALID_EMAIL_MESSAGE;
+}
+
 /**
  * The message to show, or null when the address is worth sending to Supabase.
  * Normalised first, so `  Name@Gmail.COM  ` is judged as `name@gmail.com`.

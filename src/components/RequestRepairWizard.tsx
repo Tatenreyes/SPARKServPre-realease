@@ -23,7 +23,6 @@ import AssignmentStatusCard from "@/components/AssignmentStatusCard";
 import DateSelect from "@/components/DateSelect";
 import FieldCounter from "@/components/FieldCounter";
 import MonthCalendar, { manilaToday } from "@/components/MonthCalendar";
-import PhilippineClock from "@/components/PhilippineClock";
 import { formatCdoAddress } from "@/lib/cdo-barangays";
 import ServiceLocationPicker from "@/components/ServiceLocationPicker";
 import ServiceWindowFields from "@/components/ServiceWindowFields";
@@ -110,15 +109,12 @@ const ALL_SECTIONS_OPEN: Record<SectionKey, boolean> = {
  */
 
 export interface RequestRepairWizardProps {
-  /**
-   * The server's clock at render time (`Date.now()`), passed down from the page so
-   * the display-only clock can show the shop's real time even when the customer's
-   * device clock is wrong. Optional: without it the clock falls back to the device.
-   */
-  serverNow?: number;
+  requestKind?: "repair" | "maintenance";
 }
 
-export default function RequestRepairWizard({ serverNow }: RequestRepairWizardProps = {}) {
+const MAINTENANCE_APPLIANCES = ["Air Conditioner", "Refrigerator", "Washing Machine"];
+
+export default function RequestRepairWizard({ requestKind = "repair" }: RequestRepairWizardProps = {}) {
   const router = useRouter();
   const supabase = createClient();
   // The wizard has to know who is signed in: a new `appliances` row needs
@@ -139,6 +135,10 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
     boolean | null
   >(null);
 
+  const [maintenanceService, setMaintenanceService] = useState<"cleaning" | "maintenance" | "both">("both");
+  const [unitCount, setUnitCount] = useState(1);
+  const maintenanceServiceLabel = maintenanceService === "cleaning" ? "Cleaning" : maintenanceService === "maintenance" ? "Preventive maintenance" : "Cleaning and preventive maintenance";
+  const [airconType, setAirconType] = useState("");
   const [applianceType, setApplianceType] = useState("");
   /**
    * The Brand `<select>`'s value: "" | a listed brand | BRAND_OTHER.
@@ -177,6 +177,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
   const [troubleshootingOutcome, setTroubleshootingOutcome] =
     useState<TroubleshootingOutcome | null>(null);
   const [problemDescription, setProblemDescription] = useState("");
+  const [troubleshootingRequested, setTroubleshootingRequested] = useState(false);
   
   const [photos, setPhotos] = useState<
     { id: string; file: File; previewUrl: string }[]
@@ -206,11 +207,14 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
   } | null>(null);
 
   const [customerAppliances, setCustomerAppliances] = useState<ApplianceRow[]>([]);
+  const availableAppliances = requestKind === "maintenance"
+    ? customerAppliances.filter((appliance) => MAINTENANCE_APPLIANCES.includes(appliance.appliance_type))
+    : customerAppliances;
   const [useExistingAppliance, setUseExistingAppliance] = useState(false);
   const [selectedExistingId, setSelectedExistingId] = useState<string | null>(null);
 
-  const [serviceType, setServiceType] = useState("on_site");
   const [preferredDate, setPreferredDate] = useState("");
+  const [repairServiceType, setRepairServiceType] = useState<"home_service" | "pickup_return">("home_service");
   /**
    * The arrival window, as the two boxes the customer fills in: `""` in both means
    * "any time that day", which is what the API reads as no preference at all.
@@ -260,7 +264,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
   const [additionalNotes, setAdditionalNotes] = useState("");
 
   /** The warranty acknowledgment blocks submission only when it is actually due. */
-  const warrantyBlocked = warrantyStatus === "yes" && !warrantyAcknowledged;
+  const warrantyBlocked = requestKind === "repair" && warrantyStatus === "yes" && !warrantyAcknowledged;
 
   /**
    * Display strings shared by section 5's summary card and the desktop summary
@@ -274,13 +278,6 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
       : warrantyStatus === "no"
         ? "Not under warranty"
         : "Not sure";
-
-  const serviceTypeText =
-    serviceType === "on_site"
-      ? "On-site repair"
-      : serviceType === "home_service"
-        ? "Home service"
-        : "Pickup & return";
 
   /**
    * One source for the troubleshooting outcome, shared by the request-summary
@@ -296,30 +293,8 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
           ? "Skipped"
           : "";
 
-  /**
-   * Did troubleshooting solve it? Then there is nothing to dispatch, and the booking
-   * half of this form is not rendered at all (sections 3-5 below): a fault that is gone
-   * needs no photos, no service address and no appointment, and creating the request
-   * anyway would put a technician in the queue for work that no longer exists,
-   * consuming a turn in the fairness rotation for a visit nobody needs.
-   *
-   * Hidden means NOT RENDERED, never merely collapsed: a collapsed section can still
-   * hold a `required` control, and a browser cannot focus or scroll to one it cannot
-   * see (see ALL_SECTIONS_OPEN).
-   *
-   * `unresolved` and `skipped` both continue to the full form, trying the checks and
-   * still having a fault is the ordinary outcome, not a failure.
-   */
-  const needsVisit = troubleshootingOutcome !== "resolved";
-
-  /**
-   * Captured BEFORE the early return below narrows the union: after
-   * `if (!needsVisit) return`, TypeScript (correctly) knows the outcome cannot be
-   * "resolved" any more, so this comparison would be flagged as impossible further
-   * down. Keeping it derived rather than hardcoding `false` in the payload means the
-   * value stays right if the early return is ever changed.
-   */
   const troubleshootingResolved = troubleshootingOutcome === "resolved";
+  const showBookingDetails = requestKind === "maintenance" || troubleshootingOutcome === "skipped" || troubleshootingOutcome === "unresolved";
 
   /**
    * The window the two boxes mean, or null for "any time that day".
@@ -491,11 +466,13 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
    */
   function handleDescriptionChange(value: string) {
     setProblemDescription(value);
+    setTroubleshootingRequested(false);
     setSuggestionDismissed(false);
+    if (!showBookingDetails) setDoneSteps([]);
     if (confirmedIssueId) {
       setConfirmedIssueId(null);
       setDoneSteps([]);
-      setTroubleshootingOutcome(null);
+      setTroubleshootingOutcome(showBookingDetails ? "skipped" : null);
     }
   }
 
@@ -547,22 +524,22 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
-    setError(null);
-
-    /**
-     * Defence in depth for the resolved case. When troubleshooting fixed the fault the
-     * booking half of this form is not rendered, so its fields are empty by definition, * and the appliance insert runs before the request POST, which would leave a stray
-     * appliance row behind. The submit button is not reachable in that state; this makes
-     * the guarantee hold for a programmatic submit as well.
-     */
-    if (!needsVisit) {
-      setError(
-        "Nothing was booked, you told us the checks fixed the problem. If the fault is back, say so and we will continue."
-      );
-      setSubmitting(false);
+    if (!showBookingDetails) {
       return;
     }
+    if (requestKind === "maintenance" && !MAINTENANCE_APPLIANCES.includes(applianceType)) {
+      setError("Choose an appliance available for cleaning and maintenance.");
+      setOpenSections(ALL_SECTIONS_OPEN);
+      return;
+    }
+    if (requestKind === "repair" && !problemDescription.trim()) {
+      setError("Describe what happens when you use the appliance.");
+      setOpenSections(ALL_SECTIONS_OPEN);
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
 
     /**
      * The warranty acknowledgment is a hard gate, and it is enforced here as well
@@ -570,7 +547,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
      * past it. Wording matters: the customer is acknowledging that they were told
      * non-authorised work may affect coverage, they are not waiving anything.
      */
-    if (warrantyStatus === "yes" && !warrantyAcknowledged) {
+    if (requestKind === "repair" && warrantyStatus === "yes" && !warrantyAcknowledged) {
       setError(
         "Please confirm you have read the warranty notice before submitting your request."
       );
@@ -690,17 +667,19 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
           // suggestion they explicitly confirmed. A candidate the system merely
           // detected is never written as though they had confirmed it.
           issue_category: identifiedIssue?.label ?? null,
-          issue_id: identifiedIssue?.id ?? null,
+          issue_id: requestKind === "repair" ? identifiedIssue?.id ?? null : null,
           // What the customer reported after the checks (null when they skipped
           // or never saw them). It is their report, not a verified repair.
-          troubleshooting_outcome: troubleshootingOutcome,
-          completed_checks: doneSteps,
+          troubleshooting_outcome: requestKind === "repair" ? troubleshootingOutcome : null,
+          completed_checks: requestKind === "repair" ? doneSteps : [],
           // The legacy boolean mirrors the outcome so existing readers keep
           // working; `troubleshooting_outcome` is the detailed source of truth.
           chatbot_resolved: troubleshootingResolved,
-          problem_description: problemDescription,
+          problem_description: requestKind === "maintenance"
+            ? [`${maintenanceServiceLabel} requested for ${unitCount} ${unitCount === 1 ? "unit" : "identical units"}.`, applianceType === "Air Conditioner" && airconType ? `Aircon type: ${airconType}.` : "", problemDescription.trim()].filter(Boolean).join(" ")
+            : problemDescription,
           photos: photoUrls,
-          service_type: serviceType,
+          service_type: requestKind === "repair" ? repairServiceType : "on_site",
           location: serviceAddress,
           barangay: serviceBarangay,
           // The confirmed map pin, or null when the customer chose to give the
@@ -763,11 +742,11 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-signal-500 text-white">
             <CheckCircle2 className="h-7 w-7" />
           </div>
-          <h2 className="mt-4 font-display text-xl font-semibold text-ink">Repair Request Submitted</h2>
+          <h2 className="mt-4 font-display text-xl font-semibold text-ink">{requestKind === "maintenance" ? "Maintenance Request Submitted" : "Repair Request Submitted"}</h2>
           <p className="mt-2 text-sm text-muted">Your request is saved. Check its status below or open it again later from My Repairs.</p>
           {assignmentPending && (
             <p role="status" className="mx-auto mt-4 max-w-lg rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-warn-ink">
-              Technician matching is taking longer than expected. Open your repair status for updates.
+              Technician matching is taking longer than expected. Open your request status for updates.
             </p>
           )}
           <div className="mt-6">
@@ -775,7 +754,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
               onClick={() => router.push(`/customer/service-request/${serviceRequestId}`)}
               className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
             >
-              View Repair Status
+              View Request Status
             </button>
           </div>
         </div>
@@ -800,7 +779,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
    * intermittent fault (a fridge that defrosted overnight) is a common reason to answer
    * "that fixed it". The wording therefore never claims the appliance was repaired.
    */
-  if (!needsVisit) {
+  if (troubleshootingResolved) {
     return (
       <div className="max-w-2xl">
         {/* `spark-signal-card` is not decoration: it is the opt-in that keeps this card's
@@ -857,8 +836,9 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
       {/* The route header owns the title; only the workflow note stays here so
           the form starts higher on the page. */}
       <p className="text-sm leading-relaxed text-muted">
-        One form, start to finish, nothing is submitted until you press the
-        button at the end. We&apos;ll match you with a qualified technician.
+{requestKind === "maintenance"
+          ? "Tell us about your appliance and choose a preferred service time. The technician will review your request before confirming the details."
+          : "Choose your appliance and tell us what happened. You can try troubleshooting or continue to book a repair."}
       </p>
 
       {error && (
@@ -883,11 +863,11 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
         id="section-appliance"
         step={1}
         title="Appliance Information"
-        hint="What we're repairing, and the numbers off the label"
+        hint="Choose your appliance and enter its details"
         open={openSections.appliance}
         onToggle={() => toggleSection("appliance")}
       >
-        {customerAppliances.length > 0 && (
+        {availableAppliances.length > 0 && (
           <div className="rounded-xl bg-brand-soft/70 p-4">
             <label className="flex min-h-[44px] cursor-pointer items-center gap-3">
               <input
@@ -909,7 +889,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
                   className={`mt-3 ${FIELD}`}
                 >
                   <option value="">Select an appliance</option>
-                  {customerAppliances.map((a) => (
+                  {availableAppliances.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.appliance_type} {a.brand ? `• ${a.brand}` : ""}
                     </option>
@@ -948,7 +928,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
                 className={FIELD}
               >
                 <option value="">Select appliance</option>
-                {APPLIANCE_TYPES.map((type) => (
+                {(requestKind === "maintenance" ? MAINTENANCE_APPLIANCES : APPLIANCE_TYPES).map((type) => (
                   <option key={type} value={type}>
                     {type}
                   </option>
@@ -1012,6 +992,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
                 <FieldCounter value={otherBrand} max={MAX_BRAND_LENGTH} />
               </div>
             )}
+            {requestKind === "repair" && <>
             <div className="min-w-0">
               <label htmlFor="appliance-model" className="mb-1.5 block text-sm font-medium text-ink/80">
                 Model number
@@ -1095,11 +1076,12 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
               Model and serial numbers are usually on a sticker inside the door or
               on the back of the unit. A photo of that label in step 3 works too.
             </p>
+            </>}
             </>
           )}
         </div>
 
-        {warrantyStatus === "yes" && (
+        {requestKind === "repair" && warrantyStatus === "yes" && (
           <div className="mt-4 space-y-4">
             <div>
               <DateSelect
@@ -1142,8 +1124,8 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
                 />
                 <span className="text-xs leading-relaxed text-ink/80">
                   I have read and understood the warranty notice and acknowledge that
-                  proceeding with this repair may affect applicable warranty coverage.
-                  I still wish to submit this repair request.
+                  proceeding with this service may affect applicable warranty coverage.
+                  I still wish to submit this service request.
                 </span>
               </label>
 
@@ -1159,6 +1141,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
       </CollapsibleSection>
 
       {/* 2 ── Problem */}
+      {requestKind === "repair" ? (
       <CollapsibleSection
         id="section-problem"
         step={2}
@@ -1210,34 +1193,62 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
             })}
           </div>
           <p className="mt-1.5 text-xs leading-relaxed text-muted">
-            Tapping one shows its preliminary checks. Not sure? Leave this empty and
-            describe it below.
+            Choose the closest symptom to find basic troubleshooting checks, then describe what happened below.
           </p>
         </div>
 
         <div className="mt-4">
           <label htmlFor="problem-description" className="mb-1.5 block text-sm font-medium text-ink/80">
-            Describe the problem *
+            What happens when you use the appliance? *
           </label>
+          <p id="problem-description-hint" className="mb-2 text-sm text-muted">
+            Tell us when it started and mention any unusual sounds, smells, or error codes you noticed
+          </p>
           <textarea
             id="problem-description"
+            aria-describedby="problem-description-hint problem-description-example"
             value={problemDescription}
             onChange={(e) => handleDescriptionChange(e.target.value)}
             rows={5}
             required
             className={FIELD}
-            placeholder="Tell us what happened, when it started, any sounds, smells, error codes or recent changes."
           />
+          <p id="problem-description-example" className="mt-2 text-xs text-muted">
+            Example: My electric stove turns on, but the front burner stopped heating yesterday.
+          </p>
+          {!troubleshootingRequested && !showBookingDetails && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={problemDescription.trim().length < 2}
+                onClick={() => setTroubleshootingRequested(true)}
+                className="min-h-11 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+              >
+                Find troubleshooting checks
+              </button>
+              <button
+                type="button"
+                disabled={!problemDescription.trim()}
+                onClick={() => setTroubleshootingOutcome("skipped")}
+                className="min-h-11 rounded-xl border border-line px-4 py-2 text-sm font-semibold text-brand-ink hover:bg-soft disabled:opacity-50"
+              >
+                Continue to repair request
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Inline troubleshooting: only ever for an issue that has actually been
             identified, never merely because an appliance was selected. The panel gets no
             issue list of its own, the chips above are the one place a fault is chosen. */}
+        {troubleshootingRequested && (
         <TroubleshootingPanel
           key={JSON.stringify([applianceType, identifiedIssueId])}
           doneSteps={doneSteps}
           onStepDone={(title) => setDoneSteps((current) => current.includes(title) ? current : [...current, title])}
           applianceType={applianceType}
+          brand={effectiveBrand}
+          modelNumber={modelNumber}
           match={issueMatch}
           identifiedIssueId={identifiedIssue?.id ?? null}
           guide={troubleshootingGuide}
@@ -1248,12 +1259,49 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
           onOutcomeChange={setTroubleshootingOutcome}
           onSkip={() => setTroubleshootingOutcome("skipped")}
           suggestionDismissed={suggestionDismissed}
-          awaitingDescription={!problemDescription.trim()}
         />
+        )}
       </CollapsibleSection>
 
+      ) : (
+        <div className="space-y-4 rounded-card border border-line bg-surface p-4 sm:p-5">
+          <h2 className="text-base font-semibold text-ink">Maintenance details</h2>
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium text-ink">Which service do you need?</legend>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {([
+                ["cleaning", "Cleaning"],
+                ["maintenance", "Preventive maintenance"],
+                ["both", "Both services"],
+              ] as const).map(([value, label]) => (
+                <label key={value} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-line px-3 text-sm text-ink">
+                  <input type="radio" name="maintenance-service" value={value} checked={maintenanceService === value} onChange={() => setMaintenanceService(value)} />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <div>
+            <label htmlFor="maintenance-units" className="mb-1.5 block text-sm font-medium text-ink">Number of identical units</label>
+            <p id="maintenance-units-hint" className="mb-2 text-sm leading-relaxed text-muted">These units should have the same appliance type, brand and model. Submit a separate request for different appliances so each can be matched to a technician.</p>
+            <input id="maintenance-units" aria-describedby="maintenance-units-hint" type="number" min={1} max={20} required value={unitCount} onChange={(event) => setUnitCount(Number(event.target.value))} className={FIELD} />
+          </div>
+          {applianceType === "Air Conditioner" && (
+            <div>
+              <label htmlFor="aircon-type" className="mb-1.5 block text-sm font-medium text-ink">Aircon type (optional)</label>
+              <select id="aircon-type" value={airconType} onChange={(event) => setAirconType(event.target.value)} className={FIELD}>
+                <option value="">Not sure</option><option value="Window">Window type</option><option value="Split">Split type</option><option value="Other">Other</option>
+              </select>
+            </div>
+          )}
+          <div>
+            <label htmlFor="maintenance-notes" className="mb-1.5 block text-sm font-medium text-ink">Anything the technician should know? (optional)</label>
+            <textarea id="maintenance-notes" value={problemDescription} onChange={(event) => setProblemDescription(event.target.value)} rows={3} className={FIELD} placeholder="Add any details about the appliances or service needed" />
+          </div>
+        </div>
+      )}
       {/* 3 ── Photos */}
-      {needsVisit && (
+      {showBookingDetails && requestKind === "repair" && (
       <CollapsibleSection
         id="section-photos"
         step={3}
@@ -1359,7 +1407,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
       )}
 
       {/* 4 ── Service details */}
-      {needsVisit && (
+      {showBookingDetails && (
       <CollapsibleSection
         id="section-service"
         step={4}
@@ -1368,56 +1416,24 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
         open={openSections.service}
         onToggle={() => toggleSection("service")}
       >
-        <fieldset>
-          <legend className="mb-2 block text-sm font-medium text-ink/80">Service type *</legend>
-          {/* Cards side by side where the main column is wide enough; they stay
-              one-per-row on a phone, same 56px targets either way. */}
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {(
-              [
-                {
-                  value: "on_site",
-                  label: "On-site repair",
-                  hint: "Our technician comes to your address",
-                },
-                {
-                  value: "home_service",
-                  label: "Home service",
-                  hint: "A longer scheduled visit at your premises",
-                },
-                {
-                  value: "pickup_return",
-                  label: "Pickup & return",
-                  hint: "We collect the unit and bring it back when it's fixed",
-                },
-              ] as const
-            ).map((option) => (
-              <label
-                key={option.value}
-                className={`flex min-h-[56px] cursor-pointer items-start gap-3 rounded-xl border px-3.5 py-3 transition duration-200 ${
-                  serviceType === option.value
-                    ? "border-brand-300 bg-brand-soft"
-                    : "border-line bg-surface hover:bg-soft/70"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="service_type"
-                  value={option.value}
-                  checked={serviceType === option.value}
-                  onChange={(e) => setServiceType(e.target.value)}
-                  className="mt-0.5 h-5 w-5 shrink-0"
-                />
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-ink/85">
-                    {option.label}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-muted">{option.hint}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        {requestKind === "repair" ? (
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium text-ink">How would you like the appliance serviced?</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {([
+                { value: "home_service", label: "Home service", hint: "A technician comes to your address." },
+                { value: "pickup_return", label: "Pickup and return", hint: "The appliance is collected and returned after service." },
+              ] as const).map((option) => (
+                <label key={option.value} className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-xl border px-3.5 py-3 ${repairServiceType === option.value ? "border-brand-300 bg-brand-soft" : "border-line bg-surface hover:bg-soft"}`}>
+                  <input type="radio" name="service_type" value={option.value} checked={repairServiceType === option.value} onChange={() => setRepairServiceType(option.value)} className="mt-0.5 h-5 w-5 shrink-0" />
+                  <span><span className="block text-sm font-semibold text-ink">{option.label}</span><span className="mt-0.5 block text-xs text-muted">{option.hint}</span></span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ) : (
+          <p className="text-sm text-muted">The technician will visit the address you provide.</p>
+        )}
 
         <div className="mt-5 space-y-4">
           {/* Address + interactive map. One control, because the written address
@@ -1425,12 +1441,8 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
               routed to the pin, and the address is what a human reads. */}
           <ServiceLocationPicker
             id="service-address"
-            label={serviceType === "pickup_return" ? "Pickup address" : "Service address"}
-            helperText={
-              serviceType === "pickup_return"
-                ? "Where we collect the appliance from, and where we return it."
-                : "Where the technician should go. Add a landmark or gate instructions below if the address is hard to find."
-            }
+            label={requestKind === "repair" && repairServiceType === "pickup_return" ? "Pickup address" : "Service address"}
+            helperText={requestKind === "repair" && repairServiceType === "pickup_return" ? "Where the appliance will be collected and returned." : "Where the technician should go. Add a landmark or gate instructions below if the address is hard to find."}
             address={serviceAddress}
             onAddressChange={setServiceAddress}
             barangay={serviceBarangay}
@@ -1441,26 +1453,8 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
             lastLocation={lastLocation}
           />
 
-          {/* Date + window on the left, the shop's clock and a month grid on the
-              right. Below 560px the two stack and the clock/calendar come first, so
-              a phone reads the time before it picks one. */}
-          <div className="grid gap-4 min-[560px]:grid-cols-2">
-            {/* Right column: live clock, then the calendar. First when stacked. */}
-            <div className="order-1 space-y-4 min-[560px]:order-2">
-              <PhilippineClock serverNow={serverNow} />
-              <MonthCalendar
-                value={preferredDate}
-                view={calendarMonth}
-                onViewChange={setCalendarMonth}
-                onSelect={setPreferredDate}
-              />
-            </div>
-
-            {/* Left column: the date picker and the arrival window. */}
-            <div className="order-2 space-y-4 min-[560px]:order-1">
-              {/* Same control as the purchase date, on the other side of today: today
-                  up to a year ahead. The time window below stays disabled until a
-                  date is chosen. */}
+          <div className="grid items-center gap-5 lg:grid-cols-2">
+            <section className="min-w-0 space-y-3 rounded-xl border border-line bg-surface p-4" aria-label="Choose a preferred date">
               <DateSelect
                 id="preferred-date"
                 label="Preferred service date"
@@ -1470,25 +1464,19 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
                 compact
                 onMonthYearChange={handleMonthYearChange}
               />
-
-              <fieldset className="min-w-0">
-                <legend className="mb-1.5 block text-sm font-medium text-ink/80">
-                  Preferred time window{" "}
-                  <span className="font-normal text-muted">(optional)</span>
-                </legend>
-                <p className="mb-2 text-xs leading-relaxed text-muted">
-                  We work {windowLabel(SERVICE_HOURS.opens, SERVICE_HOURS.closes)} Philippine
-                  time and are closed for lunch from{" "}
-                  {windowLabel(SERVICE_HOURS.break.start, SERVICE_HOURS.break.end)}. Only
-                  technicians free in your window are offered the job.
+              <MonthCalendar
+                value={preferredDate}
+                view={calendarMonth}
+                onViewChange={setCalendarMonth}
+                onSelect={setPreferredDate}
+              />
+            </section>
+            <div className="min-w-0 space-y-4">
+              <fieldset className="min-w-0 rounded-xl border border-line bg-surface p-4">
+                <legend className="px-1 text-sm font-medium text-ink">Preferred arrival time <span className="font-normal text-muted">(optional)</span></legend>
+                <p className="mb-3 text-sm leading-relaxed text-muted">
+                  Service hours are {windowLabel(SERVICE_HOURS.opens, SERVICE_HOURS.closes)} Philippine time, with a break from {windowLabel(SERVICE_HOURS.break.start, SERVICE_HOURS.break.end)}.
                 </p>
-
-                {/* Two hour + minute boxes, not six selects over the whole day and not
-                    a dropdown of presets. The hour list is the shop's own day (`9 AM`,
-                    `10 AM`, `11 AM`, `1 PM` …), so the AM/PM is implied by the hour that
-                    is picked: 9 PM and 4 AM cannot be assembled at all. The end pool is
-                    bounded by the start and by the block it sits in, so a window across
-                    the lunch break is never offered rather than dropped in silence later. */}
                 <ServiceWindowFields
                   start={windowStart}
                   end={windowEnd}
@@ -1496,18 +1484,12 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
                   onEndChange={setWindowEnd}
                   disabled={!preferredDate}
                 />
-                {!preferredDate && (
-                  <p className="mt-1.5 text-xs text-muted">Pick a date above to choose a time.</p>
-                )}
+                {!preferredDate && <p className="mt-2 text-sm text-muted">Select a date to choose an arrival time.</p>}
+                <p className="mt-3 text-xs leading-relaxed text-muted">This is your preferred arrival window. The exact arrival time will be confirmed before the visit.</p>
               </fieldset>
             </div>
           </div>
         </div>
-
-        <p className="mt-2 text-xs leading-relaxed text-muted">
-          A window is when we may arrive, not how long the visit takes, and you confirm
-          the exact arrival time before the visit.
-        </p>
 
         <div className="mt-4">
           <label htmlFor="additional-notes" className="mb-1.5 block text-sm font-medium text-ink/80">
@@ -1528,7 +1510,7 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
       {/* 5 ── Summary. Below `xl` only: from `xl` up the sticky rail on the
           right carries the same values, so rendering both would duplicate the
           summary on one screen. */}
-      {needsVisit && (
+      {showBookingDetails && (
       <CollapsibleSection
         id="section-summary"
         step={5}
@@ -1539,27 +1521,20 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
         className="xl:hidden"
       >
         <dl className="grid gap-3 sm:grid-cols-2">
+          <SummaryRow label="Requested service" value={requestKind === "maintenance" ? maintenanceServiceLabel : "Appliance repair"} />
           <SummaryRow label="Appliance" value={applianceType || "N/A"} />
           <SummaryRow label="Brand" value={effectiveBrand || "N/A"} />
           {modelNumber && <SummaryRow label="Model Number" value={modelNumber} />}
           {serialNumber && <SummaryRow label="Serial Number" value={serialNumber} />}
+          {requestKind === "repair" && <SummaryRow label="Warranty Status" value={warrantyText} />}
+          {requestKind === "repair" && (<>
+            <SummaryRow label="Reported Problem" value={identifiedIssue?.label ?? "Not identified"} />
+            <SummaryRow label="Troubleshooting" value={outcomeText} />
+          </>)}
+          {requestKind === "maintenance" && <SummaryRow label="Number of units" value={String(unitCount)} />}
+          {requestKind === "repair" && <SummaryRow label="Service method" value={repairServiceType === "home_service" ? "Home service" : "Pickup and return"} />}
           <SummaryRow
-            label="Warranty Status"
-            value={warrantyText}
-          />
-          <SummaryRow
-            label="Reported Problem"
-            value={identifiedIssue?.label ?? "Not identified"}
-          />
-          <SummaryRow label="Troubleshooting" value={outcomeText} />
-          <SummaryRow
-            label="Service Type"
-            value={serviceTypeText}
-          />
-          <SummaryRow
-            label={
-              serviceType === "pickup_return" ? "Pickup address" : "Service Address"
-            }
+            label={requestKind === "repair" && repairServiceType === "pickup_return" ? "Pickup address" : "Service address"}
             value={fullServiceAddress || "N/A"}
           />
           <SummaryRow
@@ -1576,14 +1551,14 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
             label="Preferred Date & Time"
             value={scheduleText || "No preference"}
           />
-          <SummaryRow
+          {requestKind === "repair" && <SummaryRow
             label="Photos"
             value={
               photos.length
                 ? `${photos.length} attached`
                 : "None, optional"
             }
-          />
+          />}
         </dl>
 
         <p className="mt-4 border-t border-line pt-4 text-xs leading-relaxed text-muted">
@@ -1596,22 +1571,24 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
           {/* The single desktop submission control, inline at the end of the
               main form column, sharing state with the phone bar below (each is
               gated to its own breakpoint, so only one can ever be pressed). */}
-          <div className="hidden md:block">
-            <button
-              type="submit"
-              disabled={submitting || warrantyBlocked}
-              aria-describedby={warrantyBlocked ? "submit-blocked-reason-desktop" : undefined}
-              onClick={handleSubmitPointer}
-              className="w-full cursor-pointer rounded-xl bg-brand-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {submitting ? (uploadingPhotos ? "Uploading photos..." : "Submitting...") : "Submit repair request"}
-            </button>
-            {warrantyBlocked && (
-              <p id="submit-blocked-reason-desktop" className="mt-2 text-xs text-warn-ink">
-                Tick the warranty acknowledgment in step 1 to enable this.
-              </p>
-            )}
-          </div>
+          {showBookingDetails && (
+            <div className="hidden md:block">
+              <button
+                type="submit"
+                disabled={submitting || warrantyBlocked}
+                aria-describedby={warrantyBlocked ? "submit-blocked-reason-desktop" : undefined}
+                onClick={handleSubmitPointer}
+                className="w-full cursor-pointer rounded-xl bg-brand-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting ? (uploadingPhotos ? "Uploading photos..." : "Submitting...") : requestKind === "maintenance" ? "Submit maintenance request" : "Submit repair request"}
+              </button>
+              {warrantyBlocked && (
+                <p id="submit-blocked-reason-desktop" className="mt-2 text-xs text-warn-ink">
+                  Tick the warranty acknowledgment in step 1 to enable this.
+                </p>
+              )}
+            </div>
+          )}
         </div>
         {/* /main form column */}
 
@@ -1621,105 +1598,106 @@ export default function RequestRepairWizard({ serverNow }: RequestRepairWizardPr
             (96px) keeps it below the topbar while the form scrolls, and 96px is
             the taller of the bar's two heights, 64px, or 64px plus the 32px
             platform-announcement strip. */}
-        <aside aria-label="Request summary" className="hidden xl:block">
-          <div className="sticky top-24 space-y-4">
-            <section className="overflow-hidden rounded-card border border-line bg-surface shadow-[0_1px_2px_rgba(16,38,74,0.04)]">
-              <div className="border-b border-line px-4 py-4">
-                <h2 className="font-display text-sm font-semibold text-ink">
-                  Request Summary
-                </h2>
-                <p className="mt-1 text-xs leading-relaxed text-muted">
-                  Your request details will appear here.
+        {showBookingDetails && (
+          <aside aria-label="Request summary" className="hidden xl:block">
+            <div className="sticky top-24 space-y-4">
+              <section className="overflow-hidden rounded-card border border-line bg-surface shadow-[0_1px_2px_rgba(16,38,74,0.04)]">
+                <div className="border-b border-line px-4 py-4">
+                  <h2 className="font-display text-sm font-semibold text-ink">
+                    Request Summary
+                  </h2>
+                  <p className="mt-1 text-xs leading-relaxed text-muted">
+                    Your request details will appear here.
+                  </p>
+                </div>
+                <dl className="divide-y divide-line px-4">
+                  <LiveRow icon={Wrench} label="Requested service" value={requestKind === "maintenance" ? maintenanceServiceLabel : "Appliance repair"} />
+                  <LiveRow icon={LayoutGrid} label="Appliance" value={applianceType} />
+                  <LiveRow icon={Tag} label="Brand" value={effectiveBrand} />
+                  <LiveRow icon={Hash} label="Model Number" value={modelNumber} />
+                  {requestKind === "repair" && <LiveRow
+                    icon={ShieldCheck}
+                    label="Warranty Status"
+                    value={warrantyStatus === "unknown" ? "" : warrantyText}
+                  />}
+                  {requestKind === "repair" && <>
+                  <LiveRow
+                    icon={AlertCircle}
+                    label="Reported Problem"
+                    value={identifiedIssue?.label ?? ""}
+                    placeholder="not identified"
+                  />
+                  <LiveRow
+                    icon={Info}
+                    label="Troubleshooting"
+                    value={outcomeText}
+                    placeholder="not started"
+                  />
+                  </>}
+                  {requestKind === "maintenance" && <LiveRow icon={Info} label="Number of units" value={String(unitCount)} />}
+                  {requestKind === "repair" && <LiveRow icon={Wrench} label="Service method" value={repairServiceType === "home_service" ? "Home service" : "Pickup and return"} />}
+                  <LiveRow
+                    icon={MapPin}
+                    label={requestKind === "repair" && repairServiceType === "pickup_return" ? "Pickup address" : "Service address"}
+                    value={fullServiceAddress}
+                    placeholder="Not provided"
+                  />
+                  <LiveRow
+                    icon={MapPin}
+                    label="Map Location"
+                    value={
+                      serviceCoordinates
+                        ? formatCoordinates(serviceCoordinates)
+                        : locationUnconfirmed
+                          ? "pin not confirmed"
+                          : ""
+                    }
+                    placeholder="no pin placed"
+                  />
+                  <LiveRow
+                    icon={CalendarClock}
+                    label="Preferred Date & Time"
+                    value={scheduleText}
+                  />
+                  {requestKind === "repair" && <LiveRow
+                    icon={Camera}
+                    label="Photos"
+                    value={photos.length ? `${photos.length}/6 attached` : ""}
+                    placeholder="0/6 (optional)"
+                  />}
+                </dl>
+                <p className="flex items-start gap-2 border-t border-line px-4 py-3 text-[11px] leading-relaxed text-muted">
+                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  This summary updates automatically as you fill in the form.
                 </p>
-              </div>
-              <dl className="divide-y divide-line px-4">
-                <LiveRow icon={LayoutGrid} label="Appliance" value={applianceType} />
-                <LiveRow icon={Tag} label="Brand" value={effectiveBrand} />
-                <LiveRow icon={Hash} label="Model Number" value={modelNumber} />
-                <LiveRow
-                  icon={ShieldCheck}
-                  label="Warranty Status"
-                  value={warrantyStatus === "unknown" ? "" : warrantyText}
-                />
-                <LiveRow
-                  icon={AlertCircle}
-                  label="Reported Problem"
-                  value={identifiedIssue?.label ?? ""}
-                  placeholder="not identified"
-                />
-                <LiveRow
-                  icon={Info}
-                  label="Troubleshooting"
-                  value={outcomeText}
-                  placeholder="not started"
-                />
-                <LiveRow
-                  icon={Wrench}
-                  label="Service Type"
-                  value={serviceTypeText}
-                  placeholder="not set"
-                />
-                <LiveRow
-                  icon={MapPin}
-                  label={
-                    serviceType === "pickup_return" ? "Pickup Address" : "Service Address"
-                  }
-                  value={fullServiceAddress}
-                  placeholder="Not provided"
-                />
-                <LiveRow
-                  icon={MapPin}
-                  label="Map Location"
-                  value={
-                    serviceCoordinates
-                      ? formatCoordinates(serviceCoordinates)
-                      : locationUnconfirmed
-                        ? "pin not confirmed"
-                        : ""
-                  }
-                  placeholder="no pin placed"
-                />
-                <LiveRow
-                  icon={CalendarClock}
-                  label="Preferred Date & Time"
-                  value={scheduleText}
-                />
-                <LiveRow
-                  icon={Camera}
-                  label="Photos"
-                  value={photos.length ? `${photos.length}/6 attached` : ""}
-                  placeholder="0/6 (optional)"
-                />
-              </dl>
-              <p className="flex items-start gap-2 border-t border-line px-4 py-3 text-[11px] leading-relaxed text-muted">
-                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                This summary updates automatically as you fill in the form.
-              </p>
-            </section>
-          </div>
-        </aside>
+              </section>
+            </div>
+          </aside>
+        )}
       </div>
 
       {/* Primary action. On a phone it is pinned to the bottom of the screen, the form is long and the button should never be a scroll away. */}
-      <div className="spark-sticky-action px-4 pt-2 md:hidden">
-        <button
-          type="submit"
-          disabled={submitting || warrantyBlocked}
-          aria-describedby={warrantyBlocked ? "submit-blocked-reason" : undefined}
-          onClick={handleSubmitPointer}
-          className="flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-brand-500 px-6 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-brand-600 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {submitting ? (uploadingPhotos ? "Uploading photos..." : "Submitting...") : "Submit repair request"}
-        </button>
-        <p
-          id="submit-blocked-reason"
-          className="mt-1.5 text-center text-[11px] text-muted"
-        >
-          {warrantyBlocked
-            ? "Tick the warranty acknowledgment in step 1 to enable this."
-            : "Nothing is charged until you approve an estimate."}
-        </p>
-      </div>
+      {showBookingDetails && (
+        <div className="spark-sticky-action px-4 pt-2 md:hidden">
+          <button
+            type="submit"
+            disabled={submitting || warrantyBlocked}
+            aria-describedby={warrantyBlocked ? "submit-blocked-reason" : undefined}
+            onClick={handleSubmitPointer}
+            className="flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-brand-500 px-6 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-brand-600 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {submitting ? (uploadingPhotos ? "Uploading photos..." : "Submitting...") : requestKind === "maintenance" ? "Submit maintenance request" : "Submit repair request"}
+          </button>
+          <p
+            id="submit-blocked-reason"
+            className="mt-1.5 text-center text-[11px] text-muted"
+          >
+            {warrantyBlocked
+              ? "Tick the warranty acknowledgment in step 1 to enable this."
+              : "Nothing is charged until you approve an estimate."}
+          </p>
+        </div>
+      )}
     </form>
   );
 }

@@ -370,8 +370,8 @@ export default async function TechnicianDashboard() {
         icon={Headset}
         title="Need assistance?"
         body="Reach the admin team about assignments, schedules or anything blocking a job."
-        href="/technician/messages"
-        ctaLabel="Message support"
+        href="/technician/support"
+        ctaLabel="Contact support"
       />
     </div>
   );

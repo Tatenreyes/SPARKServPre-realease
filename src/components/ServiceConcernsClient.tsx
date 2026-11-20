@@ -169,6 +169,9 @@ export default function ServiceConcernsClient({
                   </option>
                 ))}
               </select>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted">
+                High means the issue needs prompt attention. Critical means the service is blocked or an urgent safety issue needs immediate attention.
+              </p>
             </div>
           </div>
           <div>

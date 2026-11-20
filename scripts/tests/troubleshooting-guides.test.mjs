@@ -15,6 +15,7 @@ import assert from "node:assert/strict";
 import {
   NO_GUIDE_MESSAGE,
   TROUBLESHOOTING_DISCLAIMER,
+  getGuidedTroubleshootingSteps,
   getTroubleshootingGuide,
 } from "../../src/lib/troubleshooting.ts";
 import { APPLIANCE_ISSUES, getApplianceIssues } from "../../src/lib/appliance-issues.ts";
@@ -154,6 +155,32 @@ test("every catalogue issue either has a guide or is explicitly the 'other' case
   for (const [applianceType, issues] of Object.entries(APPLIANCE_ISSUES)) {
     if (getApplianceIssues(applianceType).some((issue) => issue.id === "other")) {
       assert.equal(getTroubleshootingGuide(applianceType, "other"), null, applianceType);
+    }
+  }
+});
+
+test("the walkthrough leads with checks for the appliance and symptom", () => {
+  assert.equal(getGuidedTroubleshootingSteps("Electric Stove", "not-heating")[0].title,
+    "Identify the burner that stopped heating");
+  assert.equal(getGuidedTroubleshootingSteps("Electric Stove", "not-turning-on")[0].title,
+    "Look for a control-lock indicator");
+  assert.equal(getGuidedTroubleshootingSteps("Washing Machine", "not-spinning")[0].title,
+    "Check the load and the lid");
+  assert.equal(getGuidedTroubleshootingSteps("Electric Fan", "not-spinning")[0].title,
+    "Note how the fan stopped");
+  assert.equal(getGuidedTroubleshootingSteps("Refrigerator", "error-code")[0].title,
+    "Write down the error code");
+  assert.deepEqual(getGuidedTroubleshootingSteps("Refrigerator", null), []);
+});
+
+test("every named appliance symptom has a specific customer check", () => {
+  for (const [applianceType, issues] of Object.entries(APPLIANCE_ISSUES)) {
+    for (const issue of issues) {
+      if (issue.id === "other") continue;
+      const steps = getGuidedTroubleshootingSteps(applianceType, issue.id);
+      const symptom = applianceType + " / " + issue.id;
+      assert.ok(steps.length, symptom);
+      assert.notEqual(steps[0].title, "Note when the symptom happens", symptom);
     }
   }
 });

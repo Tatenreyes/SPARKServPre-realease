@@ -12,6 +12,12 @@ import type { MessageRow } from "@/types/database";
 export function useRealtimeMessages(bookingId: string, initialMessages: MessageRow[] = []) {
   const [messages, setMessages] = useState<MessageRow[]>(initialMessages);
 
+  function addMessage(message: MessageRow) {
+    setMessages((current) =>
+      current.some((existing) => existing.id === message.id) ? current : [...current, message]
+    );
+  }
+
   useEffect(() => {
     const supabase = createClient();
 
@@ -26,7 +32,7 @@ export function useRealtimeMessages(bookingId: string, initialMessages: MessageR
           filter: `booking_id=eq.${bookingId}`,
         },
         (payload) => {
-          setMessages((current) => [...current, payload.new as MessageRow]);
+          addMessage(payload.new as MessageRow);
         }
       )
       .subscribe();
@@ -36,5 +42,5 @@ export function useRealtimeMessages(bookingId: string, initialMessages: MessageR
     };
   }, [bookingId]);
 
-  return messages;
+  return { messages, addMessage };
 }

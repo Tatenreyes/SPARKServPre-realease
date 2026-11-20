@@ -193,6 +193,30 @@ const GUIDES: Record<string, TroubleshootingStep[]> = {
     STOP_AND_BOOK,
   ],
   "not-heating": [POWER_OUTLET, TEMP_SETTING, NO_OPEN, STOP_AND_BOOK],
+  "electric-stove/not-heating": [
+    {
+      title: "Identify the burner that stopped heating",
+      detail: "From what you already noticed, note which burner was affected and whether the others worked. Compare the selected control and heat setting with your model's manual. Leave the burners off and let the cooktop cool.",
+    },
+    NO_OPEN,
+    STOP_AND_BOOK,
+  ],
+  "electric-stove/not-turning-on": [
+    {
+      title: "Look for a control-lock indicator",
+      detail: "If your stove has touch controls, look for a lock symbol and check its meaning in your model's manual. Note whether the display was blank or the controls lit up but did not respond.",
+    },
+    NO_OPEN,
+    STOP_AND_BOOK,
+  ],
+  "electric-fan/not-spinning": [
+    {
+      title: "Note how the fan stopped",
+      detail: "With the fan switched off, note whether it hummed, stopped suddenly, or never started. Keep your fingers and tools outside the grille.",
+    },
+    NO_OPEN,
+    STOP_AND_BOOK,
+  ],
   "microwave-oven/not-heating": [
     {
       title: "Check the setting and the door",
@@ -281,7 +305,7 @@ const GUIDES: Record<string, TroubleshootingStep[]> = {
   "weak-suction": [
     {
       title: "Empty it and clean the filter",
-      detail: "Empty the bin, clean the filter and look for a blockage in the hose.",
+      detail: "With the vacuum off, check the bin and the user-accessible filter. Follow the owner manual for normal cleaning and keep the service panels closed.",
     },
     NO_OPEN,
     STOP_AND_BOOK,
@@ -342,22 +366,116 @@ export function getTroubleshootingGuide(
 
 // Review each step before adding it to the customer walkthrough.
 const EXTERNAL_CHECKS = new Set([
+  "Identify the burner that stopped heating",
+  "Look for a control-lock indicator",
+  "Note how the fan stopped",
+  "Check the load and the lid",
+  "Check the setting and the door",
+  "Check the base and the lid",
+  "Check the pot and the plate",
+  "Check the mode switch",
+  "Check the water supply",
+  "Empty it and clean the filter",
+  "Check volume and mute",
+  "Check the ice maker basics",
   "Check the setting",
   "Check the mode and setting",
   "Check the temperature dial",
   "Check the door seal",
   "Clear the vents and airflow",
   "Clean the filter",
-  "Write down the error code",
   "Note when the noise happens",
   "Try the remote's basics",
 ]);
+
+const GUIDED_OBSERVATIONS: Record<string, TroubleshootingStep> = {
+  "not-turning-on": {
+    title: "Look for signs of power",
+    detail: "Note whether the display or indicator was blank, or came on but did not respond. Leave plugs, wiring and breakers alone if there is damage or moisture.",
+  },
+  "leaking-water": {
+    title: "Identify where the water appeared",
+    detail: "With the appliance off, look from a dry spot and note whether the water appeared inside, underneath, or at a visible connection. Stay clear of water near electrical parts.",
+  },
+  "not-draining": {
+    title: "Note where water remains",
+    detail: "With the appliance off, note where water is visible. If a drain hose is already in view, look for a kink without moving the appliance or disconnecting anything.",
+  },
+  "not-filling": {
+    title: "Check the visible water supply",
+    detail: "With the washer off, look for a closed supply tap or a kink in the visible inlet hose. Keep the hose connected and avoid moving the washer.",
+  },
+  "no-display": {
+    title: "Check the screen and selected input",
+    detail: "Note whether the power light is on and whether the screen says No Signal. If the TV menu opens normally, check which source is selected.",
+  },
+  "screen-flickering": {
+    title: "Check where the picture flickers",
+    detail: "From what you observed, note whether the flicker affects one app or input, or also appears in the television menu.",
+  },
+  "lines-on-screen": {
+    title: "Check where the lines appear",
+    detail: "From what you observed, note whether the lines appear on one source or also on the television menu.",
+  },
+  "not-defrosting": {
+    title: "Note where frost builds up",
+    detail: "Look for frost around the door seal, inside the compartment, or both. Leave the ice in place and avoid using tools to remove it.",
+  },
+  "induction-cooker/not-heating": {
+    title: "Check cookware compatibility",
+    detail: "With the cooker off and cool, compare the pan type and base size with the model manual. Note if the pan was centered on the cooking zone.",
+  },
+  "water-heater/not-heating": {
+    title: "Check the temperature setting",
+    detail: "Look at the external controls and note the temperature setting and any indicator lights. Leave the cover closed and the appliance off if it leaks.",
+  },
+  "clothes-dryer/not-spinning": {
+    title: "Check the door and cycle",
+    detail: "With the dryer off, look for clothing caught in the door and note which cycle was selected.",
+  },
+  "clothes-dryer/not-draining": {
+    title: "Check the water tank indicator",
+    detail: "If your dryer has a condensate tank, check whether the display showed a full-tank warning. Use the model manual to identify the tank and its normal maintenance.",
+  },
+  "clothes-dryer/not-heating": {
+    title: "Check the dryer cycle setting",
+    detail: "Note whether the selected cycle is timed, heated, or air-only. Check the cycle description in the manual for your model.",
+  },
+  "electric-fan/weak-airflow": {
+    title: "Check the fan speed and grille",
+    detail: "With the fan off, note the speed setting and look for dust on the outside of the grille. Keep fingers and tools out of the grille.",
+  },
+};
 
 export function getGuidedTroubleshootingSteps(
   applianceType: string,
   issueId: string | null | undefined
 ): TroubleshootingStep[] {
-  return (getTroubleshootingGuide(applianceType, issueId) ?? []).filter((step) =>
-    EXTERNAL_CHECKS.has(step.title)
+  const issue = getIssueById(applianceType, issueId);
+  if (!issue) return [];
+
+  if (issue.id === "error-code") {
+    return [{
+      title: CAPTURE_CODE.title,
+      detail: "If the display already shows an error code or warning light, write it down or take a photo. Look up the exact code in the manual for your model.",
+    }];
+  }
+
+  const symptom = issue.id === "leaking" ? "leaking-water" : issue.id;
+  const observation = GUIDED_OBSERVATIONS[`${applianceSlug(applianceType)}/${symptom}`];
+  if (observation) return [observation];
+
+  const checks = (getTroubleshootingGuide(applianceType, issueId) ?? []).filter(
+    (step) => EXTERNAL_CHECKS.has(step.title)
   );
+
+  if (checks.length) return checks;
+
+  const sharedObservation = GUIDED_OBSERVATIONS[symptom];
+  if (sharedObservation) return [sharedObservation];
+
+  return [{
+    title: "Note when the symptom happens",
+    detail: "From what you already noticed, describe when the problem starts and whether it happens every time. Leave the appliance off if using it seems unsafe.",
+  }];
 }

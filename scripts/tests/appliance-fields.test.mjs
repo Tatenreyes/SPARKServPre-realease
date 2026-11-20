@@ -593,7 +593,7 @@ test("the window is two hour + minute boxes, with the AM/PM implied", () => {
   assert.match(wizard, /disabled=\{!preferredDate\}/, "no window before a date is chosen");
   assert.match(
     wizard,
-    /<legend[\s\S]{0,120}Preferred time window/,
+    /<legend[\s\S]{0,120}Preferred arrival time/,
     "labelled as a fieldset legend, since two controls cannot share one htmlFor"
   );
   assert.doesNotMatch(

@@ -36,25 +36,57 @@ const DATE = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 });
 
-export default function PhilippineClock({ serverNow }: { serverNow?: number }) {
+export default function PhilippineClock() {
   const [now, setNow] = useState<Date | null>(null);
+  const [syncState, setSyncState] = useState<"syncing" | "synced" | "unavailable">("syncing");
 
   useEffect(() => {
-    /**
-     * Anchor to the server's clock when it is known, so a device whose own clock is
-     * set wrong — a VM that never synced, a phone set by hand — still reads the
-     * shop's real time. `offset` is how far the device clock is from the server's;
-     * when the two agree it is ~0 and nothing changes.
-     */
-    const offset = typeof serverNow === "number" ? serverNow - Date.now() : 0;
-    const tick = () => setNow(new Date(Date.now() + offset));
-
-    // One immediate tick, then once a second. The interval is cleared on unmount so
-    // a section the customer collapses or navigates away from stops re-rendering.
+    let cancelled = false;
+    let requestVersion = 0;
+    let serverAnchor: { time: number; performanceTime: number } | null = null;
+    const tick = () => {
+      const time = serverAnchor
+        ? serverAnchor.time + performance.now() - serverAnchor.performanceTime
+        : Date.now();
+      setNow(new Date(time));
+    };
+    async function sync() {
+      const version = ++requestVersion;
+      const startedAt = performance.now();
+      try {
+        const response = await fetch("/api/time", { cache: "no-store" });
+        if (!response.ok) throw new Error("Time unavailable");
+        const data: { now?: unknown } = await response.json();
+        const receivedAt = performance.now();
+        if (typeof data.now !== "number" || !Number.isFinite(data.now)) throw new Error("Invalid time");
+        if (cancelled || version !== requestVersion) return;
+        serverAnchor = { time: data.now, performanceTime: (startedAt + receivedAt) / 2 };
+        setSyncState("synced");
+        tick();
+      } catch {
+        if (cancelled || version !== requestVersion) return;
+        serverAnchor = null;
+        setSyncState("unavailable");
+        tick();
+      }
+    }
+    function handleVisibility() {
+      if (document.visibilityState === "visible") void sync();
+    }
     tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [serverNow]);
+    void sync();
+    const tickInterval = setInterval(tick, 1000);
+    const syncInterval = setInterval(() => {
+      if (document.visibilityState === "visible") void sync();
+    }, 60_000);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      cancelled = true;
+      clearInterval(tickInterval);
+      clearInterval(syncInterval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
 
   return (
     <div className="flex items-center gap-3 rounded-card border border-line bg-surface p-4 shadow-card">
@@ -75,6 +107,9 @@ export default function PhilippineClock({ serverNow }: { serverNow?: number }) {
         <p className="mt-0.5 text-xs text-muted">
           {now ? DATE.format(now) : "\u00A0"}
         </p>
+        {syncState === "unavailable" && (
+          <p role="status" className="mt-1 text-xs text-warn-ink">Could not check server time. Showing your device time.</p>
+        )}
       </div>
 
       <span className="shrink-0 self-start text-xs font-semibold uppercase tracking-wide text-muted">
