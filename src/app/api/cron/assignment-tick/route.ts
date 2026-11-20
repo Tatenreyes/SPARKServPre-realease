@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-/** Verify scheduler authorization without accessing the database or processing jobs. */
+/** Verify scheduler authorization without reading or changing customer requests. */
 export async function HEAD(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (!secret) return new NextResponse(null, { status: 503 });
