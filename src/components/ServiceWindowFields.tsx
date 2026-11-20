@@ -80,7 +80,36 @@ export default function ServiceWindowFields({
 
   return (
     <div className="min-w-0">
-      <div className="grid gap-3 sm:grid-cols-2">
+      {/* One tap for the two answers most customers want, and the way back to "no
+          preference". These are the day's own blocks (`FLEXIBLE_WINDOWS`), not a list
+          typed here, so moving the lunch break moves the chips. */}
+      <div role="group" aria-label="Quick fill" className="mb-4 flex flex-wrap gap-2">
+        <QuickFill
+          selected={!start && !end}
+          disabled={disabled}
+          onClick={() => {
+            onStartChange("");
+            onEndChange("");
+          }}
+        >
+          Any time
+        </QuickFill>
+        {FLEXIBLE_WINDOWS.map((window) => (
+          <QuickFill
+            key={window.key}
+            selected={start === window.start && end === window.end}
+            disabled={disabled}
+            onClick={() => {
+              onStartChange(window.start);
+              onEndChange(window.end);
+            }}
+          >
+            {window.key === "morning" ? "Morning" : "Afternoon"} ·{" "}
+            {windowLabel(window.start, window.end)}
+          </QuickFill>
+        ))}
+      </div>
+      <div className="grid gap-3">
         <TimeBox
           id="preferred-window-start"
           label="Earliest arrival"
@@ -128,35 +157,7 @@ export default function ServiceWindowFields({
         </p>
       )}
 
-      {/* One tap for the two answers most customers want, and the way back to "no
-          preference". These are the day's own blocks (`FLEXIBLE_WINDOWS`), not a list
-          typed here, so moving the lunch break moves the chips. */}
-      <div role="group" aria-label="Quick fill" className="mt-3 flex flex-wrap gap-2">
-        <QuickFill
-          selected={!start && !end}
-          disabled={disabled}
-          onClick={() => {
-            onStartChange("");
-            onEndChange("");
-          }}
-        >
-          Any time
-        </QuickFill>
-        {FLEXIBLE_WINDOWS.map((window) => (
-          <QuickFill
-            key={window.key}
-            selected={start === window.start && end === window.end}
-            disabled={disabled}
-            onClick={() => {
-              onStartChange(window.start);
-              onEndChange(window.end);
-            }}
-          >
-            {window.key === "morning" ? "Morning" : "Afternoon"} ·{" "}
-            {windowLabel(window.start, window.end)}
-          </QuickFill>
-        ))}
-      </div>
+
     </div>
   );
 }
@@ -240,7 +241,7 @@ function TimeBox({
       <div
         role="group"
         aria-labelledby={`${id}-label`}
-        className="flex flex-wrap items-center gap-2"
+        className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2"
       >
         <select
           id={`${id}-hour`}
@@ -248,7 +249,7 @@ function TimeBox({
           value={hour < 0 ? "" : hour}
           onChange={(event) => changeHour(Number(event.target.value))}
           disabled={disabled}
-          className={`${SELECT} w-24`}
+          className={`${SELECT} min-w-0 w-full`}
         >
           <option value="">Hour</option>
           {hours.map((option) => (
@@ -264,7 +265,7 @@ function TimeBox({
           value={minute < 0 ? "" : minute}
           onChange={(event) => commit(hour, Number(event.target.value))}
           disabled={disabled || minuteChoices.length === 0}
-          className={`${SELECT} w-[72px]`}
+          className={`${SELECT} min-w-0 w-full`}
         >
           <option value="">Min</option>
           {minuteChoices.map((option) => (

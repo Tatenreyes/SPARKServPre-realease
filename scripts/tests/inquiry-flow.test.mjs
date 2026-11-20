@@ -30,16 +30,16 @@ const panel = readFileSync(new URL(PANEL, ROOT), "utf8");
 
 // -------------------------------------------------- 1. the rule
 
-test("only a resolved outcome skips the booking half of the form", () => {
-  assert.match(wizard, /const needsVisit = troubleshootingOutcome !== "resolved";/);
+test("booking opens only after skipping or reporting an unresolved problem", () => {
+  assert.match(wizard, /const showBookingDetails = requestKind === "maintenance" \|\| troubleshootingOutcome === "skipped" \|\| troubleshootingOutcome === "unresolved";/);
   assert.match(wizard, /const troubleshootingResolved = troubleshootingOutcome === "resolved";/);
 });
 
 test("the three booking sections are gated on it", () => {
   assert.equal(
-    [...wizard.matchAll(/\{needsVisit && \(/g)].length,
-    3,
-    "Photos, Service details and Summary must each be behind needsVisit"
+    [...wizard.matchAll(/\{showBookingDetails && (?:requestKind === "repair" && )?\(/g)].length,
+    6,
+    "the booking sections, desktop summary and both submit controls stay hidden"
   );
 
   for (const id of ["section-photos", "section-service", "section-summary"]) {
@@ -48,8 +48,8 @@ test("the three booking sections are gated on it", () => {
     const before = wizard.slice(Math.max(0, at - 120), at);
     assert.match(
       before,
-      /\{needsVisit && \(/,
-      `${id} must be inside the needsVisit block, not merely collapsed`
+      /\{showBookingDetails && (?:requestKind === "repair" && )?\(/,
+      `${id} must be inside the booking details block, not merely collapsed`
     );
   }
 });
@@ -58,7 +58,7 @@ test("the two sections that survive a resolved fault are not gated", () => {
   for (const id of ["section-appliance", "section-problem"]) {
     const at = wizard.indexOf(`id="${id}"`);
     const before = wizard.slice(Math.max(0, at - 120), at);
-    assert.doesNotMatch(before, /\{needsVisit && \(/, `${id} must always render`);
+    assert.doesNotMatch(before, /\{showBookingDetails && \(/, `${id} must always render`);
   }
 });
 
@@ -68,7 +68,7 @@ test("the two sections that survive a resolved fault are not gated", () => {
 // `if (!needsVisit) {` in the file is the submit guard inside handleSubmit — so an
 // unqualified indexOf would slice the wrong region entirely.
 const resolvedScreenStart = wizard.indexOf(
-  "if (!needsVisit) {",
+  "if (troubleshootingResolved) {",
   wizard.indexOf("if (submitted && serviceRequestId)")
 );
 const resolvedScreenEnd = wizard.indexOf("<form", resolvedScreenStart);
@@ -129,7 +129,7 @@ test("the resolved copy never claims the appliance was repaired", () => {
 
 test("the submit handler refuses before it can create anything", () => {
   const handler = wizard.indexOf("async function handleSubmit");
-  const guard = wizard.indexOf("if (!needsVisit) {", handler);
+  const guard = wizard.indexOf("if (!showBookingDetails) {", handler);
   // Searched from the handler, not from the top of the file: the wizard also LOADS the
   // customer's appliances with `.from("appliances")` long before this, and matching that
   // first occurrence made the ordering assertion meaningless.
@@ -166,7 +166,7 @@ test("changing the appliance, issue or description clears the outcome", () => {
 // -------------------------------------------------- 5. the assistant in panel 2
 
 test("the assistant confirms the problem and opens the guide on request", () => {
-  assert.match(panel, /SPARKServ assistant/);
+  assert.match(panel, /Troubleshooting guide/);
   assert.match(panel, /That sounds like.*Is that right\?/);
   assert.match(panel, /label="Try troubleshooting"/);
   assert.match(panel, /guide\?\.\[stepIndex\]/);
@@ -176,7 +176,7 @@ test("the assistant confirms the problem and opens the guide on request", () => 
 test("skipping a check advances without recording it", () => {
   assert.match(panel, /onStepDone\(step.title\)/);
   assert.match(panel, /onClick=\{\(\) => setStepIndex\(stepIndex \+ 1\)\} label="Skip this check"/);
-  assert.match(wizard, /completed_checks: doneSteps/);
+  assert.match(wizard, /completed_checks: requestKind === "repair" \? doneSteps : \[\]/);
 });
 
 test("the customer can continue before or during the walkthrough", () => {
@@ -245,10 +245,8 @@ test("the panel speaks with one voice", () => {
   );
 });
 
-test("nothing speaks before the customer has said anything", () => {
-  assert.match(
-    panel,
-    /if \(awaitingDescription\) return null;/,
-    "an empty card under an untouched textarea is noise"
-  );
+test("troubleshooting stays hidden until the customer explicitly requests checks", () => {
+  assert.match(wizard, /troubleshootingRequested && \(\s*<TroubleshootingPanel/);
+  assert.match(wizard, /onClick=\{\(\) => setTroubleshootingRequested\(true\)\}/);
+  assert.match(wizard, /setProblemDescription\(value\);\s*setTroubleshootingRequested\(false\);/);
 });

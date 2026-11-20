@@ -3,6 +3,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { FilterDropdownLinks } from "@/components/FilterDropdown";
 import { ACTIVE_BOOKING_STATUSES } from "@/lib/booking-status";
 import { requireRows } from "@/lib/query-rows";
+import { startOfPhilippineDay } from "@/lib/philippine-time";
 import {
   buildFacets,
   resolveActive,
@@ -98,10 +99,8 @@ export default async function AdminProgressManagementPage({
   // "Visits Today" is a DAY, so the bound needs both ends. With only
   // `.gte(...)` the tile counted every visit scheduled today OR LATER, a
   // next-month appointment inflated today's number.
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const today = startOfPhilippineDay();
+  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
   const visitsTodayResult = await supabase
     .from("visits")
     .select("*", { count: "exact", head: true })
@@ -229,7 +228,7 @@ function firstTimeFixRate(
   const completedBookings = bookings.filter((b) => b.status === "completed");
   if (!completedBookings.length) return "N/A";
   const fixedFirstTry = completedBookings.filter(
-    (b) => visits.filter((v) => v.booking_id === b.id).length <= 1
+    (b) => visits.filter((v) => v.booking_id === b.id).length === 1
   ).length;
   return `${Math.round((fixedFirstTry / completedBookings.length) * 100)}%`;
 }

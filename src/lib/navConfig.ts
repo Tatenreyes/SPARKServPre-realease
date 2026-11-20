@@ -99,7 +99,8 @@ export function navForRole(role: UserRole): SidebarNavItem[] {
           label: "Service Requests",
           icon: Wrench,
           children: [
-            { label: "Service Inquiry", href: "/customer/request-repair", icon: Plus },
+            { label: "Request a Repair", href: "/customer/request-repair", icon: Plus },
+            { label: "Maintenance", href: "/customer/request-maintenance", icon: Plus },
             { label: "Estimates", href: "/customer/estimates", icon: ClipboardList },
             { label: "Bookings", href: "/customer/bookings", icon: CalendarClock },
             { label: "Payments", href: "/customer/payments", icon: CircleDollarSign },
@@ -257,6 +258,7 @@ export function bottomNavForRole(role: UserRole): BottomNavItem[] {
           alsoMatches: [
             "/customer/repairs",
             "/customer/request-repair",
+            "/customer/request-maintenance",
             "/customer/service-request",
             "/customer/estimates",
             "/customer/bookings",
@@ -289,7 +291,7 @@ export function bottomNavForRole(role: UserRole): BottomNavItem[] {
  * its bottom-navigation clearance for the taller sticky-action clearance on the
  * same condition, so nothing is either hidden or left with a dead gap.
  */
-const IMMERSIVE_ROUTES = ["/customer/request-repair"];
+const IMMERSIVE_ROUTES = ["/customer/request-repair", "/customer/request-maintenance"];
 
 export function isImmersiveRoute(pathname: string): boolean {
   return IMMERSIVE_ROUTES.some(

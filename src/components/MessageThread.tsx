@@ -24,24 +24,32 @@ export default function MessageThread({
   otherUserId,
   initialMessages,
 }: MessageThreadProps) {
-  const messages = useRealtimeMessages(bookingId, initialMessages);
+  const { messages, addMessage } = useRealtimeMessages(bookingId, initialMessages);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSend() {
-    if (!input.trim()) return;
+    if (!input.trim() || sending) return;
+    const content = input.trim();
     setSending(true);
+    setError(null);
     try {
-      await fetch("/api/messages", {
+      const response = await fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           booking_id: bookingId,
           receiver_id: otherUserId,
-          content: input.trim(),
+          content,
         }),
       });
-      setInput("");
+      const result = await response.json();
+      if (!response.ok || !result.data) throw new Error("Message could not be sent.");
+      addMessage(result.data as MessageRow);
+      setInput((current) => current.trim() === content ? "" : current);
+    } catch {
+      setError("Your message could not be sent. Please try again.");
     } finally {
       setSending(false);
     }
@@ -67,6 +75,7 @@ export default function MessageThread({
           </div>
         ))}
       </div>
+      {error && <p role="alert" className="px-3 pt-2 text-sm text-alert-ink">{error}</p>}
       <div className="flex gap-2 border-t border-line p-3">
         <input
           value={input}

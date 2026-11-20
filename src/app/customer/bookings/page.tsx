@@ -23,7 +23,6 @@ export default async function CustomerBookingsPage() {
           <h1 className="mt-2 text-3xl font-semibold text-ink">Your bookings</h1>
           <p className="mt-2 text-sm text-muted">Keep every technician visit in one clear timeline.</p>
         </div>
-        <Link href="/customer/request-repair" className="spark-button-primary h-11 px-4">Book a repair</Link>
       </div>
       {!bookings?.length ? (
         <div className="spark-card flex flex-col items-center justify-center px-6 py-16 text-center">

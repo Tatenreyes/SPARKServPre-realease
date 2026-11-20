@@ -27,8 +27,18 @@ import {
   type TroubleshootingStep,
 } from "@/lib/troubleshooting";
 
+const MANUFACTURER_SUPPORT = new Map([
+  ["samsung", "https://www.samsung.com/ph/support/user-manuals-and-guide/"],
+  ["lg", "https://www.lg.com/ph/support/product-support/manuals-software/"],
+  ["whirlpool", "https://www.whirlpool.com/services/manuals.html"],
+  ["bosch", "https://www.bosch-home.com/us/owner-support/owner-manuals"],
+  ["haier", "https://www.haier.com/ph/service-support/"],
+]);
+
 export interface TroubleshootingPanelProps {
   applianceType: string;
+  brand: string;
+  modelNumber: string;
   /** What the matcher found for the current description. */
   match: IssueMatchResult;
   /** The identified issue: explicitly selected or a confirmed suggestion. */
@@ -49,12 +59,12 @@ export interface TroubleshootingPanelProps {
   onSkip: () => void;
   /** A suggestion was already rejected for the current description. */
   suggestionDismissed: boolean;
-  /** The customer has not described anything yet. */
-  awaitingDescription: boolean;
 }
 
 export default function TroubleshootingPanel({
   applianceType,
+  brand,
+  modelNumber,
   match,
   identifiedIssueId,
   guide,
@@ -67,8 +77,9 @@ export default function TroubleshootingPanel({
   onOutcomeChange,
   onSkip,
   suggestionDismissed,
-  awaitingDescription,
 }: TroubleshootingPanelProps) {
+  const manufacturerSupport = MANUFACTURER_SUPPORT.get(brand.trim().toLowerCase());
+  const model = modelNumber.trim();
   const identifiedLabel = getIssueLabel(applianceType, identifiedIssueId);
 
   const [stepIndex, setStepIndex] = useState<number | null>(null);
@@ -90,16 +101,19 @@ export default function TroubleshootingPanel({
   if (identifiedIssueId && identifiedLabel) {
     return (
       <AssistantBubble label="Guided troubleshooting">
+        <p className="text-sm text-muted">{applianceType}</p>
         <p className="text-sm font-semibold text-ink">{identifiedLabel}</p>
-        <p className="mt-2 text-sm text-muted">{TROUBLESHOOTING_DISCLAIMER}</p>
-        <p className="mt-2 text-sm text-muted">
-          Skip the checks if you notice smoke, sparks, a burning smell, or damaged wiring.
-          Do not open the appliance or handle wiring.
+        <p className="mt-2 text-base leading-relaxed text-muted">{TROUBLESHOOTING_DISCLAIMER}</p>
+        <p className="mt-2 rounded-lg bg-warn-soft px-3 py-2 text-base leading-relaxed text-warn-ink">
+          <strong>Safety first.</strong> Stop using the appliance if you see smoke, sparks,
+          or damaged wiring, or smell burning or gas. Skip the checks.
+          Keep service panels closed and leave wiring to a technician.
         </p>
         {!guide?.length ? (
           <p className="mt-3 text-sm text-muted">{NO_GUIDE_MESSAGE}</p>
         ) : stepIndex === null ? (
           <div className="mt-3">
+            <p className="mb-2 text-base leading-relaxed text-muted">If an error code is already showing, write it down before starting the checks.</p>
             <GuideButton onClick={() => setStepIndex(0)} label="Try troubleshooting" />
           </div>
         ) : (
@@ -107,9 +121,9 @@ export default function TroubleshootingPanel({
             {step && (
               <>
                 <div aria-live="polite" aria-atomic="true">
-                  <p className="text-xs text-muted">Step {stepIndex + 1} of {guide.length}</p>
-                  <p className="mt-1 text-sm font-semibold text-ink">{step.title}</p>
-                  <p className="mt-1 text-sm text-muted">{step.detail}</p>
+                  <p className="text-sm text-muted">Step {stepIndex + 1} of {guide.length}</p>
+                  <p className="mt-1 text-lg font-semibold leading-snug text-ink">{step.title}</p>
+                  <p className="mt-1 text-base leading-relaxed text-ink">{step.detail}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <GuideButton
@@ -123,19 +137,39 @@ export default function TroubleshootingPanel({
                 </div>
               </>
             )}
-            {!step && <p className="text-sm text-muted">You have reached the end of the checks.</p>}
+            {!step && <p className="text-base leading-relaxed text-muted">If the problem persists, continue to a repair request. Have your model number and any error code ready if available.</p>}
             {doneSteps.length > 0 && (
               <GuideButton onClick={() => onOutcomeChange("resolved")} label="The problem is fixed" />
             )}
           </div>
         )}
+        <details className="mt-3 text-sm text-muted">
+          <summary className="w-fit cursor-pointer font-semibold text-ink">Find your owner manual</summary>
+          <p className="mt-2">
+            {model
+              ? <>Look up model <strong>{model}</strong> for instructions specific to your appliance.</>
+              : "Look for the model number on the appliance label or in its paperwork."}
+          </p>
+          {manufacturerSupport ? (
+            <a
+              href={manufacturerSupport}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex min-h-11 items-center font-semibold text-brand-ink underline underline-offset-2"
+            >
+              Open {brand} support (new tab)
+            </a>
+          ) : (
+            <p className="mt-1">Use the manufacturer&apos;s official support site to find the manual.</p>
+          )}
+        </details>
         <ContinueWithout onClick={() => stepIndex === null ? onSkip() : onOutcomeChange("unresolved")} />
       </AssistantBubble>
     );
   }
 
   // ---- 2. A supported issue was recognised: ask before showing anything -----
-  if (!awaitingDescription && !suggestionDismissed && match.kind === "match") {
+  if (!suggestionDismissed && match.kind === "match") {
     const label = getIssueLabel(applianceType, match.issueId);
     if (label) {
       return (
@@ -162,13 +196,14 @@ export default function TroubleshootingPanel({
               No, let me pick
             </button>
           </div>
+          <ContinueWithout onClick={onSkip} />
         </AssistantBubble>
       );
     }
   }
 
   // ---- 3. Several equally specific issues: the customer chooses -------------
-  if (!awaitingDescription && !suggestionDismissed && match.kind === "ambiguous") {
+  if (!suggestionDismissed && match.kind === "ambiguous") {
     return (
       <AssistantBubble label="Choose the problem">
         <p className="text-sm leading-relaxed text-ink">
@@ -192,8 +227,6 @@ export default function TroubleshootingPanel({
   //
   // Nothing at all until the customer has said something. An empty card under an
   // untouched textarea is noise, and the issue chips are already on screen above.
-  if (awaitingDescription) return null;
-
   return (
     <AssistantBubble label="Troubleshooting unavailable">
       <p className="text-xs leading-relaxed text-muted">
@@ -221,7 +254,7 @@ function AssistantBubble({
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-ink">
           <Lightbulb className="h-3.5 w-3.5" aria-hidden="true" />
         </span>
-        <p className="text-xs font-semibold text-ink">SPARKServ assistant</p>
+        <p className="text-sm font-semibold text-ink">Troubleshooting guide</p>
       </div>
 
       <div

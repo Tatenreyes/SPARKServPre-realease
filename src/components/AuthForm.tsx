@@ -8,7 +8,7 @@ import LoginLoadingScreen from "@/LoginLoadingScreen";
 import AccountCreatingScreen from "@/components/AccountCreatingScreen";
 import { Eye, EyeOff, UserRoundCog, Wrench, Lock, Mail, User } from "lucide-react";
 import { MIN_PASSWORD_LENGTH, PASSWORD_HINT } from "@/lib/password";
-import { suggestEmailFix, validateEmail } from "@/lib/validateEmail";
+import { suggestEmailFix, validateEmail, validateLoginEmail } from "@/lib/validateEmail";
 
 interface AuthFormProps {
   mode: "login" | "register";
@@ -144,7 +144,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           }
         }
       } else {
-        const emailError = validateEmail(email);
+        const emailError = validateLoginEmail(email);
         if (emailError) {
           setError(emailError);
           return;
